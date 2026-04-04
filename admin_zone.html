@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zone Management | Digital Farm Admin</title>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --admin-primary: #0891b2;
+            --admin-hover: #0e7490;
+            --primary-green: #22c55e;
+            --bg-dark: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            background-image: radial-gradient(circle at 0% 0%, rgba(8, 145, 178, 0.05), transparent 40%);
+            color: var(--text-main);
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: #010411;
+            position: fixed;
+            padding: 25px;
+            color: white;
+            border-right: 1px solid var(--glass-border);
+            overflow-y: auto;
+            z-index: 100;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 40px;
+            color: var(--admin-primary);
+            text-decoration: none;
+        }
+        .logo-box {
+            width: 40px;
+            height: 40px;
+            background: rgba(8, 145, 178, 0.1);
+            border: 1px solid var(--admin-primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.3s;
+            margin-bottom: 5px;
+        }
+        .menu a.active, .menu a:hover { background: rgba(8, 145, 178, 0.1); color: var(--admin-primary); }
+        .menu-footer {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+        }
+        .menu-footer a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #f87171;
+            font-weight: 700;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+        .menu-footer a:hover { background: rgba(248, 113, 113, 0.08); }
+
+        /* LAYOUT COMPONENTS */
+        .topbar { margin-left: 260px; width: calc(100% - 260px); height: 75px; background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(15px); display: flex; justify-content: space-between; align-items: center; padding: 0 40px; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
+        .topbar h2 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .user-profile {
+            background: rgba(255,255,255,0.05);
+            padding: 8px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            border: 1px solid var(--glass-border);
+        }
+        .main { margin-left: 260px; padding: 40px; }
+        .card { background: var(--card-bg); backdrop-filter: blur(10px); padding: 24px; border-radius: 20px; border: 1px solid var(--glass-border); }
+
+        /* STAT CARDS (Image 43e765) */
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px; }
+        .stat-card { background: white; border-radius: 16px; padding: 25px; text-align: center; color: #1e293b; transition: 0.3s; }
+        .stat-card i { color: var(--primary-green); margin-bottom: 10px; }
+        .stat-card h4 { font-size: 28px; font-weight: 800; color: var(--primary-green); }
+        .stat-card p { font-size: 12px; color: #64748b; font-weight: 600; }
+
+        /* ZONE MANAGEMENT (Image 624c85) */
+        .zone-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .zone-row { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 20px 30px; background: white; border-radius: 12px; 
+            margin-bottom: 12px; color: #1e293b; transition: 0.2s;
+        }
+        .zone-row:hover { transform: translateX(5px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .zone-name { font-weight: 700; font-size: 16px; }
+        .edit-wards-link { color: var(--admin-primary); font-size: 13px; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 5px; }
+        .map-section { margin-top: 30px; }
+        .zone-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #64748b;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .zone-badge {
+            background: #ecfeff;
+            color: var(--admin-hover);
+            border: 1px solid rgba(8, 145, 178, 0.18);
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .map-box {
+            min-height: 280px;
+            border-radius: 18px;
+            border: 1px dashed rgba(8, 145, 178, 0.24);
+            background:
+                radial-gradient(circle at top right, rgba(8, 145, 178, 0.12), transparent 35%),
+                linear-gradient(180deg, rgba(15, 23, 42, 0.85), rgba(2, 6, 23, 0.95));
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .map-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+            background-size: 34px 34px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 85%);
+        }
+        .map-legend {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .legend-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+        .legend-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .map-copy {
+            max-width: 360px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        .map-copy h4 {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 12px 0 8px;
+        }
+        .map-copy p {
+            margin: 0;
+            color: var(--text-dim);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .helper-text {
+            color: #64748b;
+            font-size: 12px;
+            margin-top: -8px;
+            margin-bottom: 14px;
+        }
+
+        /* BUTTONS */
+        .btn-green { background: var(--primary-green); color: white; padding: 10px 20px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .btn-orange { background: #f59e0b; color: white; padding: 10px 20px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .btn-cyan { background: var(--admin-primary); color: white; padding: 10px 20px; border-radius: 8px; font-weight: 700; display: flex; align-items: center; gap: 8px; font-size: 14px; }
+        .btn-green, .btn-orange, .btn-cyan { border: none; cursor: pointer; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.68);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            padding: 20px;
+        }
+        .modal-overlay.open { display: flex; }
+        .zone-modal {
+            width: min(540px, 100%);
+            background: white;
+            border-radius: 22px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+            padding: 28px 34px 34px;
+            color: #1f2937;
+        }
+        .zone-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .zone-modal-header h3 {
+            margin: 0;
+            color: #28a745;
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .modal-close {
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 4px;
+        }
+        .zone-modal label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #374151;
+        }
+        .zone-modal input {
+            width: 100%;
+            border: 3px solid #28a745;
+            border-radius: 16px;
+            padding: 18px 22px;
+            font-size: 18px;
+            outline: none;
+            color: #374151;
+            margin-bottom: 20px;
+        }
+        .zone-modal-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+        .zone-modal-actions button {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        .zone-modal select {
+            width: 100%;
+            border: 2px solid #d1d5db;
+            border-radius: 14px;
+            padding: 16px 18px;
+            font-size: 16px;
+            outline: none;
+            color: #374151;
+            margin-bottom: 18px;
+            background: white;
+        }
+
+        @media(max-width:1024px){
+            .sidebar { display: none; }
+            .topbar, .main { margin-left: 0; width: 100%; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media(max-width:768px){
+            .main { padding: 24px; }
+            .zone-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            .zone-header .flex { flex-wrap: wrap; }
+            .zone-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 14px;
+            }
+            .map-box { min-height: 240px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <a class="logo" href="admin_dashboard.html">
+        <div class="logo-box"><i data-lucide="sprout"></i></div>
+        Digital Farm
+    </a>
+    <div class="menu">
+        <a href="admin_dashboard.html"><i data-lucide="home"></i> Dashboard</a>
+        <a href="admin_farmer_directory.html"><i data-lucide="users"></i> Farmer Directory</a>
+        <a href="admin_zone.html" class="active"><i data-lucide="clipboard-list"></i> Zone</a>
+        <a href="admin_blog.html"><i data-lucide="book-open"></i> Blog</a>
+        <a href="admin_complaint_review.html"><i data-lucide="check-square"></i> Compliance</a>
+        <a href="admin_feedback_review.html"><i data-lucide="bell"></i> Feedback</a>
+    </div>
+    <div class="menu-footer">
+        <a href="index.html"><i data-lucide="log-out"></i> Logout</a>
+    </div>
+</div>
+
+<div class="topbar">
+    <h2>Zone Management Center</h2>
+    <div class="user-profile">
+        <i data-lucide="user-cog" size="16"></i>
+        <span>Admin: Root_A1</span>
+    </div>
+</div>
+
+<div class="main">
+    <div class="stat-grid">
+        <div class="stat-card">
+            <i data-lucide="map" size="28"></i>
+            <h4 id="count-zones">06</h4>
+            <p>Active Regions</p>
+        </div>
+        <div class="stat-card">
+            <i data-lucide="clipboard-check" size="28"></i>
+            <h4>142</h4>
+            <p>Farms Audited</p>
+        </div>
+        <div class="stat-card">
+            <i data-lucide="alert-circle" size="28"></i>
+            <h4>02</h4>
+            <p>Critical Alerts</p>
+        </div>
+        <div class="stat-card">
+            <i data-lucide="shield" size="28"></i>
+            <h4>98%</h4>
+            <p>Secure Node Sync</p>
+        </div>
+    </div>
+
+    <div class="zone-header">
+        <h3 class="text-xl font-extrabold text-white">City Zones Management</h3>
+        <div class="flex gap-3">
+            <button class="btn-green" id="openAddZoneModal"><i data-lucide="plus" size="18"></i> Add Zone</button>
+            <button class="btn-orange" id="openEditZoneModal"><i data-lucide="edit-3" size="18"></i> Edit Zones</button>
+            <button class="btn-cyan" id="viewMapButton"><i data-lucide="map" size="18"></i> View Map</button>
+        </div>
+    </div>
+
+    <div id="zoneList">
+        <div class="zone-row" data-zone="Zone 1">
+            <div>
+                <span class="zone-name">Zone 1</span>
+                <div class="zone-meta">
+                    <span class="zone-badge">North Cluster</span>
+                    <span>12 wards linked</span>
+                </div>
+            </div>
+            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
+        </div>
+        <div class="zone-row" data-zone="Zone 2">
+            <div>
+                <span class="zone-name">Zone 2</span>
+                <div class="zone-meta">
+                    <span class="zone-badge">Central Belt</span>
+                    <span>10 wards linked</span>
+                </div>
+            </div>
+            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
+        </div>
+        <div class="zone-row" data-zone="Zone 3">
+            <div>
+                <span class="zone-name">Zone 3</span>
+                <div class="zone-meta">
+                    <span class="zone-badge">East Corridor</span>
+                    <span>14 wards linked</span>
+                </div>
+            </div>
+            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
+        </div>
+        <div class="zone-row" data-zone="Zone 4">
+            <div>
+                <span class="zone-name">Zone 4</span>
+                <div class="zone-meta">
+                    <span class="zone-badge">West Edge</span>
+                    <span>8 wards linked</span>
+                </div>
+            </div>
+            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
+        </div>
+        <div class="zone-row" data-zone="Zone 5">
+            <div>
+                <span class="zone-name">Zone 5</span>
+                <div class="zone-meta">
+                    <span class="zone-badge">South Farms</span>
+                    <span>11 wards linked</span>
+                </div>
+            </div>
+            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
+        </div>
+        <div class="zone-row" data-zone="Zone 6">
+            <div>
+                <span class="zone-name">Zone 6</span>
+                <div class="zone-meta">
+                    <span class="zone-badge">Perimeter Watch</span>
+                    <span>9 wards linked</span>
+                </div>
+            </div>
+            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
+        </div>
+    </div>
+
+    <div class="card map-section" id="zoneMapSection">
+        <h3 class="text-cyan-500 font-extrabold text-xs uppercase tracking-widest mb-6">Zone Map</h3>
+        <div class="map-box">
+            <div class="map-grid"></div>
+            <div class="map-legend">
+                <span class="legend-pill"><span class="legend-dot" style="background:#22c55e;"></span> Stable</span>
+                <span class="legend-pill"><span class="legend-dot" style="background:#f59e0b;"></span> Watch</span>
+                <span class="legend-pill"><span class="legend-dot" style="background:#ef4444;"></span> Critical</span>
+            </div>
+            <div class="map-copy">
+                <i data-lucide="map" class="opacity-20" size="52"></i>
+                <h4>GIS Zone View Ready</h4>
+                <p>Use this section to monitor region coverage, ward distribution, and zone-level risk sync before assigning farms.</p>
+            </div>
+            <div style="position: absolute; bottom: 10px; font-size: 10px; color: var(--text-dim);">GIS Sync: Online</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="zoneModalOverlay">
+    <div class="zone-modal">
+        <div class="zone-modal-header">
+            <h3>Add New Zone</h3>
+            <button class="modal-close" id="closeZoneModal" type="button" aria-label="Close">
+                <i data-lucide="x" size="34"></i>
+            </button>
+        </div>
+        <label for="newZoneName">New Zone Name (e.g., Zone 7)</label>
+        <input type="text" id="newZoneName" placeholder="Zone 7">
+        <p class="helper-text">Use a unique zone name so ward assignments remain clear across the admin center.</p>
+        <div class="zone-modal-actions">
+            <button type="button" id="submitZoneButton">Add Zone</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="editZoneModalOverlay">
+    <div class="zone-modal">
+        <div class="zone-modal-header">
+            <h3>Edit Zone</h3>
+            <button class="modal-close" id="closeEditZoneModal" type="button" aria-label="Close">
+                <i data-lucide="x" size="34"></i>
+            </button>
+        </div>
+        <label for="zoneSelect">Select Zone</label>
+        <select id="zoneSelect"></select>
+        <label for="editZoneName">Updated Zone Name</label>
+        <input type="text" id="editZoneName" placeholder="Rename zone">
+        <div class="zone-modal-actions">
+            <button type="button" id="saveZoneEditButton">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+
+    const zoneModalOverlay = document.getElementById('zoneModalOverlay');
+    const editZoneModalOverlay = document.getElementById('editZoneModalOverlay');
+    const openAddZoneModal = document.getElementById('openAddZoneModal');
+    const openEditZoneModal = document.getElementById('openEditZoneModal');
+    const closeZoneModal = document.getElementById('closeZoneModal');
+    const closeEditZoneModal = document.getElementById('closeEditZoneModal');
+    const submitZoneButton = document.getElementById('submitZoneButton');
+    const saveZoneEditButton = document.getElementById('saveZoneEditButton');
+    const zoneSelect = document.getElementById('zoneSelect');
+    const editZoneName = document.getElementById('editZoneName');
+    const viewMapButton = document.getElementById('viewMapButton');
+
+    openAddZoneModal.addEventListener('click', () => {
+        zoneModalOverlay.classList.add('open');
+        document.getElementById('newZoneName').focus();
+    });
+
+    openEditZoneModal.addEventListener('click', () => {
+        populateZoneOptions();
+        editZoneModalOverlay.classList.add('open');
+        editZoneName.value = zoneSelect.value;
+        editZoneName.focus();
+    });
+
+    closeZoneModal.addEventListener('click', () => {
+        zoneModalOverlay.classList.remove('open');
+    });
+
+    closeEditZoneModal.addEventListener('click', () => {
+        editZoneModalOverlay.classList.remove('open');
+    });
+
+    zoneModalOverlay.addEventListener('click', (event) => {
+        if (event.target === zoneModalOverlay) {
+            zoneModalOverlay.classList.remove('open');
+        }
+    });
+
+    editZoneModalOverlay.addEventListener('click', (event) => {
+        if (event.target === editZoneModalOverlay) {
+            editZoneModalOverlay.classList.remove('open');
+        }
+    });
+
+    function getZoneNames() {
+        return Array.from(document.querySelectorAll('#zoneList .zone-name')).map((item) => item.textContent.trim());
+    }
+
+    function populateZoneOptions() {
+        const zoneNames = getZoneNames();
+        zoneSelect.innerHTML = zoneNames.map((name) => `<option value="${name}">${name}</option>`).join('');
+    }
+
+    zoneSelect.addEventListener('change', () => {
+        editZoneName.value = zoneSelect.value;
+    });
+
+    viewMapButton.addEventListener('click', () => {
+        document.getElementById('zoneMapSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    function addZone() {
+        const nameInput = document.getElementById('newZoneName');
+        const name = nameInput.value.trim();
+
+        if (name === "") {
+            alert("Please enter a zone name");
+            return;
+        }
+
+        if (getZoneNames().some((zone) => zone.toLowerCase() === name.toLowerCase())) {
+            alert("This zone already exists");
+            return;
+        }
+
+        const zoneList = document.getElementById('zoneList');
+        const newRow = document.createElement('div');
+        newRow.className = 'zone-row';
+        newRow.setAttribute('data-zone', name);
+        newRow.innerHTML = `
+            <div>
+                <span class="zone-name">${name}</span>
+                <div class="zone-meta">
+                    <span class="zone-badge">New Zone</span>
+                    <span>Ward mapping pending</span>
+                </div>
+            </div>
+            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
+        `;
+        
+        zoneList.appendChild(newRow);
+        nameInput.value = "";
+        zoneModalOverlay.classList.remove('open');
+        lucide.createIcons(); // Refresh icons for new row
+        
+        // Update stats
+        const count = document.querySelectorAll('.zone-row').length;
+        document.getElementById('count-zones').innerText = count < 10 ? '0' + count : count;
+    }
+
+    function saveZoneEdit() {
+        const selectedZone = zoneSelect.value;
+        const updatedName = editZoneName.value.trim();
+
+        if (!selectedZone) {
+            alert("Please select a zone");
+            return;
+        }
+
+        if (updatedName === "") {
+            alert("Please enter a new zone name");
+            return;
+        }
+
+        if (getZoneNames().some((zone) => zone.toLowerCase() === updatedName.toLowerCase() && zone !== selectedZone)) {
+            alert("Another zone already uses this name");
+            return;
+        }
+
+        const zoneItems = document.querySelectorAll('#zoneList .zone-name');
+        zoneItems.forEach((item) => {
+            if (item.textContent.trim() === selectedZone) {
+                item.textContent = updatedName;
+            }
+        });
+
+        editZoneModalOverlay.classList.remove('open');
+        populateZoneOptions();
+    }
+
+    document.addEventListener('click', (event) => {
+        const editLink = event.target.closest('.edit-wards-link');
+        if (!editLink) return;
+
+        event.preventDefault();
+        const zoneRow = editLink.closest('.zone-row');
+        const zoneName = zoneRow.querySelector('.zone-name').textContent.trim();
+        populateZoneOptions();
+        zoneSelect.value = zoneName;
+        editZoneName.value = zoneName;
+        editZoneModalOverlay.classList.add('open');
+        editZoneName.focus();
+    });
+
+    submitZoneButton.addEventListener('click', addZone);
+    saveZoneEditButton.addEventListener('click', saveZoneEdit);
+    document.getElementById('newZoneName').addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            addZone();
+        }
+    });
+    editZoneName.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            saveZoneEdit();
+        }
+    });
+</script>
+
+</body>
+</html>

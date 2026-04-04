@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Digital Farm | Smart Biosecurity AI</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #22c55e;
+      --primary-dark: #16a34a;
+      --bg-dark: #0f172a;
+      --bg-card: rgba(30, 41, 59, 0.7);
+      --text-main: #e2e8f0;
+      --text-dim: #94a3b8;
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    body {
+      background: var(--bg-dark);
+      background-image: radial-gradient(circle at top right, rgba(34, 197, 94, 0.05), transparent),
+                        radial-gradient(circle at bottom left, rgba(34, 197, 94, 0.05), transparent);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      position: sticky; top: 0; width: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 18px 60px; z-index: 1000;
+    }
+    .logo { font-size: 24px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+    .nav-links { display: flex; gap: 12px; list-style: none; align-items: center; }
+    .nav-links li a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: var(--text-dim);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1;
+      transition: background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .nav-links li a:hover {
+      color: #dbeafe;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .nav-links li a.active {
+      color: #ffffff;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .hero {
+      padding: 90px 60px 70px;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 40px;
+      align-items: center;
+    }
+    .hero-copy { text-align: left; }
+    .hero-copy h1 {
+      font-size: 56px;
+      line-height: 1.05;
+      color: white;
+      margin-bottom: 18px;
+      font-weight: 800;
+      letter-spacing: -1.8px;
+    }
+    .hero-copy p {
+      color: var(--text-dim);
+      max-width: 620px;
+      margin-bottom: 28px;
+      font-size: 17px;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 34px;
+    }
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 22px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 800;
+      transition: 0.3s;
+    }
+    .hero-btn.primary-btn {
+      background: var(--primary);
+      color: white;
+    }
+    .hero-btn.primary-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+    .hero-btn.secondary-btn {
+      border: 1px solid var(--glass-border);
+      background: rgba(255,255,255,0.04);
+      color: white;
+    }
+    .hero-btn.secondary-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .hero-stat-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    .hero-stat {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 18px;
+      padding: 18px;
+    }
+    .hero-stat strong {
+      display: block;
+      font-size: 24px;
+      color: white;
+      margin-bottom: 4px;
+    }
+    .hero-stat span {
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+    .hero-panel {
+      background: linear-gradient(160deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+      border: 1px solid var(--glass-border);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.35);
+      text-align: left;
+    }
+    .hero-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .hero-panel h3 {
+      color: white;
+      font-size: 20px;
+      margin-bottom: 6px;
+    }
+    .hero-panel p {
+      color: var(--text-dim);
+      font-size: 14px;
+      margin-bottom: 22px;
+    }
+    .hero-badge {
+      background: rgba(34, 197, 94, 0.14);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #86efac;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+    }
+    .hero-list {
+      display: grid;
+      gap: 14px;
+    }
+    .hero-list-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .hero-list-item i {
+      color: var(--primary);
+      margin-top: 4px;
+    }
+    .hero-list-item strong {
+      display: block;
+      color: white;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .hero-list-item span {
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+
+    /* SECTIONS GENERAL */
+    .section { padding: 100px 60px; text-align: center; }
+    .section h2 { margin-bottom: 15px; color: white; font-size: 36px; font-weight: 800; }
+    .section p { color: var(--text-dim); max-width: 700px; margin: 0 auto 50px; }
+
+    /* PORTAL SECTION */
+    .hero-portal-section { padding: 80px 60px; text-align: center; }
+    .portal-header { max-width: 800px; margin: 0 auto 60px; }
+    .text-gradient { background: linear-gradient(90deg, #22c55e, #10b981); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .status-indicator { display: inline-flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.03); padding: 8px 20px; border-radius: 100px; font-size: 11px; font-weight: 800; color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.2); margin-bottom: 20px; }
+    .pulse-dot { width: 8px; height: 8px; background: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e; animation: pulse-ring 1.5s infinite; }
+    @keyframes pulse-ring { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.5); opacity: 0; } }
+
+    .portal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; max-width: 1100px; margin: 0 auto; perspective: 1000px; }
+    .portal-card { background: var(--bg-card); backdrop-filter: blur(15px); border: 1px solid var(--glass-border); border-radius: 30px; padding: 50px 40px; text-align: left; transition: all 0.5s ease; position: relative; overflow: hidden; }
+    .portal-card:hover { transform: translateY(-10px) rotateX(2deg); border-color: var(--primary); }
+    .portal-icon-wrapper { width: 60px; height: 60px; background: rgba(34, 197, 94, 0.1); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 28px; color: #22c55e; margin-bottom: 20px; }
+    .portal-btn { width: 100%; padding: 16px; border-radius: 12px; background: var(--primary); color: white; border: none; font-weight: 700; display: flex; justify-content: space-between; cursor: pointer; transition: 0.3s; }
+    .admin-btn { background: #334155; }
+
+    /* AUTH SECTION */
+    .auth-container { max-width: 450px; margin: 0 auto; background: var(--bg-card); padding: 50px 40px; border-radius: 24px; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); }
+    .auth-toggle { display: flex; background: rgba(15, 23, 42, 0.5); padding: 5px; border-radius: 12px; margin-bottom: 30px; border: 1px solid var(--glass-border); }
+    .toggle-btn { flex: 1; padding: 10px; border: none; background: transparent; color: #94a3b8; font-weight: 600; cursor: pointer; border-radius: 8px; transition: 0.3s; }
+    .toggle-btn.active { background: var(--primary); color: white; }
+    .input-group { text-align: left; margin-bottom: 20px; }
+    .input-group label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 8px; }
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-wrapper i { position: absolute; left: 15px; color: #64748b; }
+    .input-wrapper input { width: 100%; padding: 12px 15px 12px 45px; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--glass-border); border-radius: 10px; color: white; outline: none; }
+    .btn { padding: 12px 24px; border-radius: 10px; background: var(--primary); border: none; color: white; cursor: pointer; font-weight: 700; transition: 0.3s; }
+    .btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
+
+    /* WORKFLOW */
+    .workflow-container { max-width: 1100px; margin: 0 auto; }
+    .card { background: var(--bg-card); padding: 30px; border-radius: 20px; border: 1px solid var(--glass-border); transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .card:hover { border-color: var(--primary); transform: translateY(-5px); }
+    .connector-v { width: 2px; height: 40px; background: linear-gradient(to bottom, var(--primary), transparent); margin: 0 auto; }
+    .impact-box { background: linear-gradient(90deg, var(--primary-dark), var(--primary)); color: white; padding: 20px 50px; border-radius: 50px; display: inline-flex; align-items: center; box-shadow: 0 10px 30px rgba(34, 197, 94, 0.3); font-size: 18px; margin-top: 20px; }
+
+    /* GRID UTILS */
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+
+    .why-grid {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      text-align: left;
+    }
+    .why-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 22px;
+      padding: 28px;
+      transition: 0.3s;
+    }
+    .why-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--primary);
+    }
+    .why-card i {
+      color: var(--primary);
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+    .why-card h3 {
+      color: white;
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+    .why-card p {
+      text-align: left;
+      margin: 0;
+      color: var(--text-dim);
+      font-size: 14px;
+    }
+
+    .resource-grid {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .resource-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 22px;
+      padding: 28px;
+      text-align: left;
+      transition: 0.3s;
+    }
+    .resource-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--primary);
+    }
+    .resource-card span {
+      display: inline-block;
+      font-size: 11px;
+      color: var(--primary);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .resource-card h3 {
+      color: white;
+      font-size: 22px;
+      margin-bottom: 10px;
+    }
+    .resource-card p {
+      text-align: left;
+      margin: 0 0 18px;
+      font-size: 14px;
+    }
+    .resource-link {
+      color: #86efac;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .cta-panel {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(8, 145, 178, 0.14));
+      border: 1px solid rgba(34, 197, 94, 0.22);
+      border-radius: 30px;
+      padding: 42px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      text-align: left;
+    }
+    .cta-panel h2 {
+      margin-bottom: 10px;
+      font-size: 34px;
+    }
+    .cta-panel p {
+      margin: 0;
+      max-width: 620px;
+      color: var(--text-dim);
+    }
+
+    /* FOOTER */
+    .footer { background: #020617; padding: 80px 60px 40px; border-top: 1px solid var(--glass-border); color: var(--text-dim); }
+    .footer-container { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 40px; }
+    .footer-logo { color: var(--primary); font-size: 24px; font-weight: 800; margin-bottom: 20px; }
+    .footer-section h3 { color: white; margin-bottom: 20px; font-size: 16px; text-transform: uppercase; }
+    .footer-section ul { list-style: none; }
+    .footer-section li { margin-bottom: 12px; }
+    .footer-section a { text-decoration: none; color: var(--text-dim); transition: 0.3s; }
+    .footer-section a:hover { color: var(--primary); }
+
+    /* MOBILE MENU */
+    .menu-toggle { display: none; font-size: 24px; color: white; cursor: pointer; }
+    @media (max-width: 900px) {
+      .hero, .why-grid, .resource-grid, .grid-3, .grid-4, .portal-grid, .hero-stat-row { grid-template-columns: 1fr; }
+      .navbar { padding: 15px 30px; }
+      .section, .hero { padding-left: 30px; padding-right: 30px; }
+      .cta-panel { padding: 30px; flex-direction: column; align-items: flex-start; }
+      .menu-toggle { display: block; }
+      .nav-links { position: fixed; top: 70px; right: -100%; flex-direction: column; background: #0f172a; width: 100%; height: 100vh; padding: 40px; transition: 0.4s ease; }
+      .nav-links.active { right: 0; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <div class="logo"><i class="fa-solid fa-seedling"></i> Digital Farm</div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="information.html">Information</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <div class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars-staggered"></i></div>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="status-indicator">
+        <span class="pulse-dot"></span>
+        AI BIOSECURITY NETWORK ONLINE
+      </div>
+      <h1>Protect livestock faster with one connected digital farm system.</h1>
+      <p>Digital Farm brings farmers, AI diagnostics, complaint workflows, records, compliance tracking, and admin response into one practical platform built for day-to-day field use.</p>
+      <div class="hero-actions">
+        <a class="hero-btn primary-btn" href="farmer_login.html"><i class="fa-solid fa-arrow-right"></i> Enter Farmer Portal</a>
+        <a class="hero-btn secondary-btn" href="information.html"><i class="fa-solid fa-book-open"></i> Learn How It Works</a>
+      </div>
+      <div class="hero-stat-row">
+        <div class="hero-stat">
+          <strong>2,500+</strong>
+          <span>farmers supported</span>
+        </div>
+        <div class="hero-stat">
+          <strong>1.2M</strong>
+          <span>animals monitored</span>
+        </div>
+        <div class="hero-stat">
+          <strong>24/7</strong>
+          <span>alert and review readiness</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-panel">
+      <div class="hero-panel-header">
+        <div>
+          <h3>What the platform connects</h3>
+          <p>Built to link public pages, farmer actions, and admin operations in one flow.</p>
+        </div>
+        <span class="hero-badge">LIVE FLOW</span>
+      </div>
+      <div class="hero-list">
+        <div class="hero-list-item">
+          <i class="fa-solid fa-file-waveform"></i>
+          <div>
+            <strong>Farmer data entry and complaint reporting</strong>
+            <span>Log livestock updates, vaccinations, incidents, and evidence from the field.</span>
+          </div>
+        </div>
+        <div class="hero-list-item">
+          <i class="fa-solid fa-brain"></i>
+          <div>
+            <strong>AI health screening and records review</strong>
+            <span>Surface disease signals early and keep records organized for follow-up.</span>
+          </div>
+        </div>
+        <div class="hero-list-item">
+          <i class="fa-solid fa-shield-heart"></i>
+          <div>
+            <strong>Admin complaints, feedback, zone, and blog management</strong>
+            <span>Review escalations, respond to users, and keep community communication active.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section portal-selection-area">
+  <div class="portal-header">
+    <div class="status-indicator">
+      <span class="pulse-dot"></span>
+      SECURE GATEWAY ACTIVE
+    </div>
+    <h2 style="font-size: 32px; margin-bottom: 10px;">Select Your <span class="text-gradient">Portal</span></h2>
+    <p style="color: var(--text-dim);">Access your dedicated dashboard to manage and monitor farm biosecurity.</p>
+  </div>
+
+  <div class="portal-container">
+    <div class="portal-box farmer-box" onclick="location.href='farmer_login.html'">
+      <div class="portal-icon">
+        <i class="fa-solid fa-user-gear"></i>
+      </div>
+      <h3>Farmer Portal</h3>
+      <p>Report health issues & track livestock</p>
+    </div>
+
+    <div class="portal-box admin-box" onclick="location.href='admin_login.html'">
+      <div class="portal-icon">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h3>Admin Portal</h3>
+      <p>Manage regional biosecurity operations</p>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* PORTAL BOX STYLES (Matching your Image) */
+  .portal-selection-area {
+    background: radial-gradient(circle at center, rgba(34, 197, 94, 0.03) 0%, transparent 70%);
+  }
+
+  .portal-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+    margin-top: 40px;
+  }
+
+  .portal-box {
+    width: 320px;
+    padding: 50px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    text-align: center;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Farmer Box Color (Green) */
+  .farmer-box {
+    background: #22c55e;
+  }
+
+  /* Admin Box Color (Blue) */
+  .admin-box {
+    background: #0891b2;
+  }
+
+  .portal-box:hover {
+    transform: translateY(-12px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    filter: brightness(1.1);
+  }
+
+  .portal-icon {
+    font-size: 50px;
+    margin-bottom: 20px;
+    opacity: 0.9;
+  }
+
+  .portal-box h3 {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 10px;
+  }
+
+  .portal-box p {
+    font-size: 14px;
+    opacity: 0.8;
+    color: white !important; /* Overriding global dim text */
+    margin-bottom: 0;
+  }
+
+  /* Adding a subtle inner glow effect */
+  .portal-box::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: linear-gradient(45deg, rgba(255,255,255,0.1), transparent);
+    pointer-events: none;
+  }
+
+  @media (max-width: 768px) {
+    .portal-box { width: 100%; max-width: 350px; }
+  }
+</style>
+
+  <section class="section">
+    <h2>Platform Overview</h2>
+    <div class="grid-4">
+      <div class="card"><h2>2500</h2><p>Farmers</p></div>
+      <div class="card"><h2>1.2M</h2><p>Animals</p></div>
+      <div class="card"><h2>320</h2><p>Active Cases</p></div>
+      <div class="card"><h2>2100</h2><p>Resolved Cases</p></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-title">
+      <h2>How the Ecosystem Works</h2>
+      <p>Seamless integration of Farmer data, AI Intelligence, and Administrative action.</p>
+    </div>
+    <div class="workflow-container">
+      <div class="card" style="max-width: 300px; margin: 0 auto;">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+        <h3>Farmer Input</h3>
+        <p style="font-size: 12px;">Symptom Images & Animal Data via App.</p>
+      </div>
+      <div class="connector-v"></div>
+      <div class="grid-3">
+        <div class="card"><i class="fa-solid fa-database" style="color:#3b82f6;"></i><h3>Cloud Database</h3></div>
+        <div class="card"><i class="fa-solid fa-microchip" style="color:#a855f7;"></i><h3>AI Engine</h3></div>
+        <div class="card"><i class="fa-solid fa-gauge-high" style="color:#f59e0b;"></i><h3>Admin Dashboard</h3></div>
+      </div>
+      <div class="connector-v"></div>
+      <div class="impact-box">
+        <i class="fa-solid fa-shield-check" style="margin-right:15px;"></i>
+        <span>Result: <b>Improved Farm Biosecurity</b></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Platform Features</h2>
+    <div class="grid-3">
+      <div class="card"><i class="fa-solid fa-bell"></i> Real-Time Alerts</div>
+      <div class="card"><i class="fa-solid fa-brain"></i> AI Disease Detection</div>
+      <div class="card"><i class="fa-solid fa-chart-line"></i> Analytics Dashboard</div>
+      <div class="card"><i class="fa-solid fa-earth-americas"></i> Geo Tracking</div>
+      <div class="card"><i class="fa-solid fa-file-circle-check"></i> Compliance Monitoring</div>
+      <div class="card"><i class="fa-solid fa-user-doctor"></i> Expert Support</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Why Teams Use Digital Farm</h2>
+    <p>From public awareness to farmer reporting and admin action, the platform is designed to reduce delays and make the full biosecurity chain easier to manage.</p>
+    <div class="why-grid">
+      <div class="why-card">
+        <i class="fa-solid fa-bolt"></i>
+        <h3>Faster issue escalation</h3>
+        <p>Complaints, health concerns, and alerts move from farmer-side reporting into admin review without breaking the workflow.</p>
+      </div>
+      <div class="why-card">
+        <i class="fa-solid fa-layer-group"></i>
+        <h3>One place for multiple roles</h3>
+        <p>Public visitors, farmers, and admin teams each get a focused experience while staying connected to the same system goals.</p>
+      </div>
+      <div class="why-card">
+        <i class="fa-solid fa-chart-column"></i>
+        <h3>Clear operational visibility</h3>
+        <p>Dashboards, records, zone summaries, feedback review, and blog communication support better day-to-day decisions.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Explore More Resources</h2>
+    <p>If someone lands here first, they should be able to continue into learning, updates, and support without guessing where to go next.</p>
+    <div class="resource-grid">
+      <div class="resource-card">
+        <span>Community</span>
+        <h3>Latest blog and updates</h3>
+        <p>Read public stories, alerts, tips, and expert guidance published through the community blog.</p>
+        <a class="resource-link" href="blog.html">Open Blog</a>
+      </div>
+      <div class="resource-card">
+        <span>Guidance</span>
+        <h3>Platform information pages</h3>
+        <p>Learn how Digital Farm supports animal health reporting, biosecurity checks, and response coordination.</p>
+        <a class="resource-link" href="information.html">View Information</a>
+      </div>
+      <div class="resource-card">
+        <span>Support</span>
+        <h3>Contact and feedback</h3>
+        <p>Reach the team directly for questions, support, and public feedback that flows into admin review.</p>
+        <a class="resource-link" href="contact.html">Contact Us</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="cta-panel">
+      <div>
+        <h2>Ready to start using the platform?</h2>
+        <p>Choose the right access point to manage livestock records, review incidents, monitor zones, and keep your biosecurity communication active.</p>
+      </div>
+      <div class="hero-actions" style="margin-bottom:0;">
+        <a class="hero-btn primary-btn" href="farmer_login.html">Farmer Login</a>
+        <a class="hero-btn secondary-btn" href="admin_login.html">Admin Login</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer" style="background: #020617; padding: 60px 80px 20px; color: #94a3b8; border-top: 1px solid #1e293b;">
+  <div style="text-align:center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
+    <h2 style="color:var(--primary);">Digital Farm</h2>
+  </div>
+  <p style="text-align:center; padding-top:20px; font-size:12px;">&copy; 2026 Digital Farm | Built for Farmers</p>
+</footer>
+
+  <script>
+    const toggle = document.getElementById("menuToggle");
+    const nav = document.getElementById("navLinks");
+    toggle.addEventListener("click", () => nav.classList.toggle("active"));
+
+    function switchLogin(type) {
+      const farmerBtn = document.getElementById('farmerToggle');
+      const adminBtn = document.getElementById('adminToggle');
+      const label = document.getElementById('userLabel');
+      if (type === 'admin') {
+        adminBtn.classList.add('active');
+        farmerBtn.classList.remove('active');
+        label.innerText = 'Administrator ID';
+      } else {
+        farmerBtn.classList.add('active');
+        adminBtn.classList.remove('active');
+        label.innerText = 'Farmer ID / Email';
+      }
+    }
+  </script>
+
+</body>
+</html>

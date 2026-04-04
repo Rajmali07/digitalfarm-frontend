@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complaint Review | Digital Farm Admin</title>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --admin-primary: #0891b2;
+      --admin-hover: #0e7490;
+      --bg-dark: #020617;
+      --card-bg: rgba(15, 23, 42, 0.84);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-dim: #94a3b8;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --success: #22c55e;
+      --info: #38bdf8;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-dark);
+      background-image: radial-gradient(circle at 0% 0%, rgba(8, 145, 178, 0.05), transparent 40%);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 260px;
+      height: 100vh;
+      background: #010411;
+      position: fixed;
+      padding: 25px;
+      border-right: 1px solid var(--glass-border);
+      overflow-y: auto;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 40px;
+      color: var(--admin-primary);
+      text-decoration: none;
+    }
+
+    .logo-box {
+      width: 40px;
+      height: 40px;
+      background: rgba(8, 145, 178, 0.1);
+      border: 1px solid var(--admin-primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .menu a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--text-dim);
+      font-weight: 600;
+      font-size: 14px;
+      transition: 0.3s;
+      margin-bottom: 5px;
+    }
+
+    .nav-links a.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-radius: 50px;
+      font-weight: 600;
+    }
+    .menu a:hover {
+      background: rgba(8, 145, 178, 0.1);
+      color: var(--admin-primary);
+    }
+
+    .menu-footer {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .menu-footer a {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--danger);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .topbar {
+      margin-left: 260px;
+      width: calc(100% - 260px);
+      height: 75px;
+      background: rgba(2, 6, 23, 0.8);
+      backdrop-filter: blur(15px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 40px;
+      border-bottom: 1px solid var(--glass-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+    .user-profile {
+      background: rgba(255,255,255,0.05);
+      padding: 8px 16px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .page-shell {
+      margin-left: 260px;
+      padding: 34px 40px 40px;
+      display: grid;
+      grid-template-columns: 340px 1.2fr 0.9fr;
+      grid-template-areas: "inbox detail actions";
+      gap: 24px;
+      align-items: start;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(10px);
+      padding: 24px;
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      margin: 0 0 18px;
+      color: var(--admin-primary);
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 800;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .mini-stat {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 18px;
+    }
+    .mini-stat span {
+      display: block;
+      color: var(--text-dim);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+    .mini-stat strong { font-size: 26px; font-weight: 800; }
+
+    .inbox-card { height: fit-content; }
+    .inbox-card { grid-area: inbox; }
+    .inbox-list {
+      display: grid;
+      gap: 12px;
+      max-height: 720px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .complaint-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 16px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .complaint-item:hover,
+    .complaint-item.active {
+      border-color: rgba(8, 145, 178, 0.38);
+      background: rgba(8, 145, 178, 0.10);
+    }
+    .complaint-item strong { display: block; font-size: 15px; margin-bottom: 6px; }
+    .complaint-item p { margin: 0 0 8px; color: var(--text-dim); font-size: 13px; line-height: 1.5; }
+    .item-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+    .item-tags {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid transparent;
+    }
+    .status-high { background: rgba(248,113,113,0.12); color: #fca5a5; border-color: rgba(248,113,113,0.2); }
+    .status-medium { background: rgba(251,191,36,0.12); color: #fcd34d; border-color: rgba(251,191,36,0.2); }
+    .status-low { background: rgba(56,189,248,0.12); color: #7dd3fc; border-color: rgba(56,189,248,0.2); }
+    .status-synced { background: rgba(34,197,94,0.12); color: #86efac; border-color: rgba(34,197,94,0.2); }
+    .status-seen { background: rgba(34,197,94,0.12); color: #86efac; border-color: rgba(34,197,94,0.2); }
+    .status-unseen { background: rgba(244, 114, 182, 0.12); color: #f9a8d4; border-color: rgba(244, 114, 182, 0.2); }
+
+    .farmer-meta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .farmer-img {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid var(--admin-primary);
+    }
+
+    .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+    .data-item label { display: block; font-size: 11px; font-weight: 800; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .data-item p { font-size: 14px; font-weight: 600; color: var(--text-main); margin: 0; line-height: 1.6; }
+
+    .detail-box {
+      font-size: 14px;
+      line-height: 1.7;
+      color: var(--text-main);
+      background: rgba(255,255,255,0.03);
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .history-card {
+      margin: 0 40px 40px 300px;
+    }
+    .history-table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.02);
+    }
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+    }
+    .history-table th,
+    .history-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--glass-border);
+      text-align: left;
+      font-size: 13px;
+      vertical-align: middle;
+    }
+    .history-table th {
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(255,255,255,0.03);
+    }
+    .history-row {
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+    .history-row:hover,
+    .history-row.active {
+      border-color: rgba(8, 145, 178, 0.38);
+      background: rgba(8, 145, 178, 0.10);
+    }
+    .history-row:last-child td {
+      border-bottom: none;
+    }
+    .history-name strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 5px;
+    }
+    .history-name span,
+    .history-muted {
+      margin: 0;
+      color: var(--text-dim);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .evidence-box {
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid var(--glass-border);
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .evidence-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px dashed rgba(148,163,184,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+    }
+
+    .action-panel { position: sticky; top: 100px; height: fit-content; }
+    .action-panel { grid-area: actions; }
+    #detailPanel { grid-area: detail; }
+    .input-group { margin-bottom: 20px; }
+    .input-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-dim); margin-bottom: 8px; }
+
+    .form-control {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid var(--glass-border);
+      background: rgba(2, 6, 23, 0.8);
+      color: white;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .upload-zone {
+      border: 2px dashed rgba(148,163,184,0.4);
+      border-radius: 12px;
+      padding: 25px;
+      text-align: center;
+      color: var(--text-dim);
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.3s;
+      background: rgba(255,255,255,0.03);
+    }
+    .upload-zone:hover { border-color: var(--admin-primary); color: var(--admin-primary); }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--admin-primary);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    .btn-submit:hover { background: var(--admin-hover); }
+
+    .empty-card {
+      text-align: center;
+      padding: 38px 24px;
+      color: var(--text-dim);
+    }
+
+    @media(max-width:1280px){
+      .page-shell {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "inbox"
+          "detail"
+          "actions";
+      }
+      .action-panel { position: static; }
+      .history-card { margin: 0 40px 40px 300px; }
+    }
+    @media(max-width:768px){
+      .sidebar { display:none; }
+      .topbar,.page-shell { margin-left:0; width:100%; }
+      .page-shell { padding: 24px; }
+      .history-card { margin: 0 24px 24px; }
+      .data-grid, .stats-grid { grid-template-columns: 1fr; }
+      .farmer-meta { flex-direction: column; align-items: flex-start; }
+    }
+    .menu a.active,
+    .menu a:hover {
+      background: rgba(8, 145, 178, 0.1);
+      color: var(--admin-primary);
+    }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <a class="logo" href="admin_dashboard.html">
+    <div class="logo-box"><i data-lucide="sprout"></i></div>
+    Digital Farm
+  </a>
+
+  <div class="menu">
+    <a href="admin_dashboard.html"><i data-lucide="home"></i> Dashboard</a>
+    <a href="admin_farmer_directory.html"><i data-lucide="users"></i> Farmer Directory</a>
+    <a href="admin_zone.html"><i data-lucide="clipboard-list"></i> Zone</a>
+    <a href="admin_blog.html"><i data-lucide="book-open"></i> Blog</a>
+    <a href="admin_complaint_review.html" class="active"><i data-lucide="check-square"></i> Compliance</a>
+    <a href="admin_feedback_review.html"><i data-lucide="bell"></i> Feedback</a>
+  </div>
+
+  <div class="menu-footer">
+    <a href="index.html"><i data-lucide="log-out"></i> Logout</a>
+  </div>
+</div>
+
+<div class="topbar">
+  <h2>Complaint Review Board</h2>
+  <div class="user-profile">
+    <i data-lucide="user-cog" size="16"></i>
+    <span>Admin: Root_A1</span>
+  </div>
+</div>
+
+<div class="page-shell">
+  <aside class="card inbox-card">
+    <h3 class="section-title">Complaint Inbox</h3>
+    <div class="stats-grid">
+      <div class="mini-stat"><span>Total</span><strong id="totalComplaints">0</strong></div>
+      <div class="mini-stat"><span>High</span><strong id="highComplaints">0</strong></div>
+      <div class="mini-stat"><span>Synced</span><strong id="syncedComplaints">0</strong></div>
+    </div>
+    <div class="inbox-list" id="complaintList"></div>
+  </aside>
+
+  <main id="detailPanel">
+    <div class="card">
+      <div class="farmer-meta">
+        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200" class="farmer-img" alt="Farmer">
+        <div>
+          <label style="display:block; color:var(--text-dim); font-size:11px; text-transform:uppercase; margin-bottom:4px;">Case ID</label>
+          <div style="font-size: 24px; font-weight: 800;" id="caseId">#CMP-0000</div>
+          <p style="font-size: 14px; color: var(--text-dim); margin-top: 5px;" id="reportedBy">Reported by farmer</p>
+        </div>
+      </div>
+
+      <div class="data-grid">
+        <div class="data-item"><label>Animal Type</label><p id="farmType">Not available</p></div>
+        <div class="data-item"><label>Location</label><p id="caseLocation">Not available</p></div>
+        <div class="data-item"><label>Date Reported</label><p id="dateReported">Not available</p></div>
+        <div class="data-item"><label>Status</label><div id="statusWrap"></div></div>
+        <div class="data-item"><label>Incident Type</label><p id="incidentTypeValue">Not available</p></div>
+        <div class="data-item"><label>Affected Animals</label><p id="affectedAnimals">0</p></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Case Description</h3>
+      <div class="detail-box">
+        <b>Symptoms / Summary:</b>
+        <span id="symptomsSummary">No symptoms summary provided.</span>
+        <br><br>
+        <b>Detailed Complaint:</b>
+        <span id="caseDescription">No complaint description provided.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Evidence and Follow-up</h3>
+      <div class="evidence-box">
+        <div class="evidence-preview"><i data-lucide="paperclip"></i></div>
+        <div>
+          <div style="font-size:14px; font-weight:700;" id="evidenceName">No file uploaded</div>
+          <div style="font-size:12px; color:var(--text-dim); margin-top:6px;" id="followUpPref">Preferred follow-up: Not available</div>
+          <div style="font-size:12px; color:var(--text-dim); margin-top:6px;" id="incidentDateValue">Incident date: Not available</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <aside class="action-panel">
+    <div class="card">
+      <h3 class="section-title">Admin Prescription and Guidance</h3>
+      <form id="prescriptionForm">
+        <div class="input-group">
+          <label>Prescription and Dosage</label>
+          <textarea class="form-control" rows="6" id="prescriptionText" placeholder="Example: Isolate affected animals, begin supportive treatment, and monitor feed intake for 5 days."></textarea>
+        </div>
+
+        <div class="input-group">
+          <label>Internal Diagnosis / Notes</label>
+          <select class="form-control" id="internalDiagnosis">
+            <option>Suspected Newcastle Disease (ND)</option>
+            <option>Infectious Bronchitis (IB)</option>
+            <option>Foot and Mouth Disease (FMD)</option>
+            <option>PPR / Viral Fever</option>
+            <option>Environmental Stress</option>
+            <option>Pending Field Review</option>
+          </select>
+        </div>
+
+        <div class="input-group">
+          <label>Share Advisory Resource</label>
+          <div class="upload-zone" onclick="document.getElementById('resourceFile').click()">
+            <i data-lucide="cloud-upload" style="margin-bottom: 10px;"></i>
+            <p><b>Click to Upload</b><br>or drag and drop resources (max 50MB)</p>
+          </div>
+          <input type="file" id="resourceFile" hidden accept="video/*, image/*, .pdf">
+          <p id="fileName" style="font-size: 12px; color: var(--warning); margin-top: 8px; font-weight: 600; display: none;"></p>
+        </div>
+
+        <button type="submit" class="btn-submit">Sync Prescription To Farmer</button>
+      </form>
+    </div>
+  </aside>
+
+</div>
+
+<section class="card history-card">
+  <h3 class="section-title">Complaint History</h3>
+  <div class="history-table-wrap" id="complaintHistoryList"></div>
+</section>
+
+<script>
+  lucide.createIcons();
+
+  const complaintList = document.getElementById('complaintList');
+  const complaintHistoryList = document.getElementById('complaintHistoryList');
+  const prescriptionForm = document.getElementById('prescriptionForm');
+  const fileInput = document.getElementById('resourceFile');
+  const fileNameDisplay = document.getElementById('fileName');
+
+  let complaints = JSON.parse(localStorage.getItem('farmerComplaints')) || [];
+  let selectedComplaintId = localStorage.getItem('activeComplaintId') || (complaints[0] ? complaints[0].id : '');
+
+  function getStatusClass(statusText) {
+    if (!statusText) return 'status-low';
+    if (statusText.includes('HIGH')) return 'status-high';
+    if (statusText.includes('UNDER REVIEW')) return 'status-medium';
+    if (statusText.includes('SYNCED')) return 'status-synced';
+    return 'status-low';
+  }
+
+  function getSeenClass(isSeen) {
+    return isSeen ? 'status-seen' : 'status-unseen';
+  }
+
+  function getSeenLabel(isSeen) {
+    return isSeen ? 'Seen' : 'Unseen';
+  }
+
+  function saveComplaints() {
+    localStorage.setItem('farmerComplaints', JSON.stringify(complaints));
+  }
+
+  function renderStats() {
+    document.getElementById('totalComplaints').textContent = complaints.length;
+    document.getElementById('highComplaints').textContent = complaints.filter((item) => (item.urgencyShort || '').toLowerCase() === 'high').length;
+    document.getElementById('syncedComplaints').textContent = complaints.filter((item) => item.syncedToFarmer).length;
+  }
+
+  function renderComplaintList() {
+    if (!complaints.length) {
+      complaintList.innerHTML = `
+        <div class="empty-card">
+          <i data-lucide="inbox" style="width:40px; height:40px; margin-bottom:12px;"></i>
+          <div style="font-weight:700; margin-bottom:6px;">No complaints received yet</div>
+          <div style="font-size:13px;">Farmer complaints from the data entry page will appear here.</div>
+        </div>
+      `;
+      lucide.createIcons();
+      return;
+    }
+
+    complaintList.innerHTML = complaints.map((item) => `
+      <div class="complaint-item ${item.id === selectedComplaintId ? 'active' : ''}" data-id="${item.id}">
+        <strong>#${item.id} - ${item.incidentType}</strong>
+        <p>${item.animalType} - ${item.location}</p>
+        <div class="item-meta">
+          <span>${item.reportedAt}</span>
+          <div class="item-tags">
+            <span class="status-badge ${getSeenClass(item.seenByAdmin)}">${getSeenLabel(item.seenByAdmin)}</span>
+            <span class="status-badge ${getStatusClass(item.status)}">${item.urgencyShort || 'Low'}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderComplaintHistory() {
+    if (!complaints.length) {
+      complaintHistoryList.innerHTML = `
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Case</th>
+              <th>Incident</th>
+              <th>Location</th>
+              <th>Reported</th>
+              <th>Seen</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6" class="empty-card" style="padding: 22px 16px;">
+                <div style="font-weight:700; margin-bottom:6px;">No complaint history available</div>
+                <div style="font-size:13px;">Reviewed and incoming complaints will appear here.</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+      return;
+    }
+
+    const historyItems = [...complaints].sort((first, second) => {
+      const firstDate = new Date(first.reportedAt || first.incidentDate || 0).getTime();
+      const secondDate = new Date(second.reportedAt || second.incidentDate || 0).getTime();
+      return secondDate - firstDate;
+    });
+
+    complaintHistoryList.innerHTML = `
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Case</th>
+            <th>Incident</th>
+            <th>Location</th>
+            <th>Reported</th>
+            <th>Seen</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${historyItems.map((item) => `
+            <tr class="history-row ${item.id === selectedComplaintId ? 'active' : ''}" data-id="${item.id}">
+              <td>
+                <div class="history-name">
+                  <strong>#${item.id}</strong>
+                  <span>${item.farmerName || 'Farmer complaint'}</span>
+                </div>
+              </td>
+              <td>${item.incidentType || 'Unknown issue'}</td>
+              <td class="history-muted">${item.location || 'Unknown location'}</td>
+              <td class="history-muted">${item.reportedAt || 'Recent complaint'}</td>
+              <td><span class="status-badge ${getSeenClass(item.seenByAdmin)}">${getSeenLabel(item.seenByAdmin)}</span></td>
+              <td><span class="status-badge ${getStatusClass(item.status)}">${item.status || 'Pending'}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function renderComplaintDetails() {
+    if (!complaints.length) {
+      document.getElementById('caseId').textContent = '#CMP-0000';
+      document.getElementById('reportedBy').textContent = 'No farmer complaint selected';
+      document.getElementById('farmType').textContent = 'Not available';
+      document.getElementById('caseLocation').textContent = 'Not available';
+      document.getElementById('dateReported').textContent = 'Not available';
+      document.getElementById('statusWrap').innerHTML = '<span class="status-badge status-low">Awaiting complaint</span>';
+      document.getElementById('incidentTypeValue').textContent = 'Not available';
+      document.getElementById('affectedAnimals').textContent = '0';
+      document.getElementById('symptomsSummary').textContent = 'No symptoms summary provided.';
+      document.getElementById('caseDescription').textContent = 'No complaint description provided.';
+      document.getElementById('evidenceName').textContent = 'No file uploaded';
+      document.getElementById('followUpPref').textContent = 'Preferred follow-up: Not available';
+      document.getElementById('incidentDateValue').textContent = 'Incident date: Not available';
+      document.getElementById('prescriptionText').value = '';
+      return;
+    }
+
+    const activeComplaint = complaints.find((item) => item.id === selectedComplaintId) || complaints[0];
+    selectedComplaintId = activeComplaint.id;
+    activeComplaint.seenByAdmin = true;
+    complaints = complaints.map((item) => item.id === activeComplaint.id ? { ...item, seenByAdmin: true } : item);
+    saveComplaints();
+    localStorage.setItem('activeComplaintId', selectedComplaintId);
+
+    document.getElementById('caseId').textContent = '#' + activeComplaint.id;
+    document.getElementById('reportedBy').textContent = `Reported by ${activeComplaint.farmerName} (${activeComplaint.farmerId})`;
+    document.getElementById('farmType').textContent = activeComplaint.animalType;
+    document.getElementById('caseLocation').textContent = activeComplaint.location;
+    document.getElementById('dateReported').textContent = activeComplaint.reportedAt;
+    document.getElementById('statusWrap').innerHTML = `<span class="status-badge ${getStatusClass(activeComplaint.status)}">${activeComplaint.status}</span>`;
+    document.getElementById('incidentTypeValue').textContent = activeComplaint.incidentType;
+    document.getElementById('affectedAnimals').textContent = activeComplaint.affectedCount;
+    document.getElementById('symptomsSummary').textContent = activeComplaint.symptoms;
+    document.getElementById('caseDescription').textContent = activeComplaint.description;
+    document.getElementById('evidenceName').textContent = activeComplaint.evidenceName || 'No file uploaded';
+    document.getElementById('followUpPref').textContent = 'Preferred follow-up: ' + (activeComplaint.contactPreference || 'Not available');
+    document.getElementById('incidentDateValue').textContent = 'Incident date: ' + (activeComplaint.incidentDate || 'Not available');
+    document.getElementById('prescriptionText').value = activeComplaint.adminPrescription || '';
+    document.getElementById('internalDiagnosis').value = activeComplaint.internalDiagnosis || 'Pending Field Review';
+  }
+
+  function renderAll() {
+    complaints = JSON.parse(localStorage.getItem('farmerComplaints')) || [];
+    renderStats();
+    renderComplaintList();
+    renderComplaintDetails();
+    renderComplaintHistory();
+    lucide.createIcons();
+  }
+
+  function handleComplaintSelection(event) {
+    const item = event.target.closest('.complaint-item');
+    const historyItem = event.target.closest('.history-row');
+    const selectedItem = item || historyItem;
+    if (!selectedItem) return;
+    selectedComplaintId = selectedItem.dataset.id;
+    renderAll();
+  }
+
+  complaintList.addEventListener('click', handleComplaintSelection);
+  complaintHistoryList.addEventListener('click', handleComplaintSelection);
+
+  prescriptionForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const prescription = document.getElementById('prescriptionText').value.trim();
+    if (!prescription) {
+      alert('Please provide a prescription before syncing.');
+      return;
+    }
+
+    complaints = complaints.map((item) => {
+      if (item.id !== selectedComplaintId) return item;
+      return {
+        ...item,
+        seenByAdmin: true,
+        adminPrescription: prescription,
+        internalDiagnosis: document.getElementById('internalDiagnosis').value,
+        status: 'SYNCED TO FARMER',
+        syncedToFarmer: true,
+        advisoryResource: fileInput.files[0] ? fileInput.files[0].name : item.advisoryResource || ''
+      };
+    });
+
+    saveComplaints();
+    alert('Prescription for Case #' + selectedComplaintId + ' has been synced to the farmer.');
+    renderAll();
+  });
+
+  fileInput.addEventListener('change', function() {
+    if (this.files[0]) {
+      fileNameDisplay.innerText = 'Selected Resource: ' + this.files[0].name;
+      fileNameDisplay.style.display = 'block';
+    } else {
+      fileNameDisplay.style.display = 'none';
+    }
+  });
+
+  complaints = complaints.map((item) => ({
+    ...item,
+    seenByAdmin: Boolean(item.seenByAdmin)
+  }));
+  saveComplaints();
+
+  renderAll();
+</script>
+
+</body>
+</html>

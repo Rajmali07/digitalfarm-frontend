@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Command Console | Digital Farm</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --admin-primary: #0891b2;
+  --admin-hover: #0e7490;
+  --bg-dark: #020617;
+  --card-bg: rgba(15, 23, 42, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+  background: var(--bg-dark);
+  background-image: radial-gradient(circle at 0% 0%, rgba(8, 145, 178, 0.05), transparent 40%);
+  color: var(--text-main);
+}
+
+.sidebar {
+  width: 260px;
+  height: 100vh;
+  background: #010411;
+  position: fixed;
+  padding: 25px;
+  border-right: 1px solid var(--glass-border);
+  overflow-y: auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+  font-weight: 800;
+  margin-bottom: 40px;
+  color: var(--admin-primary);
+  text-decoration: none;
+}
+
+.logo-box {
+  width: 40px;
+  height: 40px;
+  background: rgba(8, 145, 178, 0.1);
+  border: 1px solid var(--admin-primary);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 14px;
+  transition: 0.3s;
+  margin-bottom: 5px;
+}
+
+.menu a.active,
+.menu a:hover {
+  background: rgba(8, 145, 178, 0.1);
+  color: var(--admin-primary);
+}
+
+.menu-footer {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--glass-border);
+}
+
+.menu-footer a {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: #f87171;
+  font-weight: 700;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.menu-footer a:hover {
+  background: rgba(248, 113, 113, 0.08);
+}
+
+.topbar {
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  height: 75px;
+  background: rgba(2, 6, 23, 0.8);
+  backdrop-filter: blur(15px);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  border-bottom: 1px solid var(--glass-border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar h2 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.user-profile {
+  background: rgba(255,255,255,0.05);
+  padding: 8px 16px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  border: 1px solid var(--glass-border);
+}
+
+.main {
+  margin-left: 260px;
+  padding: 40px;
+}
+
+.section-title {
+  margin: 35px 0 15px;
+  color: var(--admin-primary);
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  font-weight: 800;
+}
+
+.grid {
+  display: grid;
+  gap: 20px;
+}
+
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  padding: 24px;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border);
+  transition: 0.3s;
+}
+
+.card:hover {
+  border-color: var(--admin-primary);
+  transform: translateY(-5px);
+}
+
+.card h3 {
+  color: var(--text-dim);
+  font-size: 13px;
+  margin-top: 0;
+  font-weight: 600;
+}
+
+.value {
+  font-size: 28px;
+  font-weight: 800;
+  margin-top: 10px;
+}
+
+.cyan { color: var(--admin-primary); }
+.red { color: #f87171; }
+.orange { color: #fbbf24; }
+.green { color: #34d399; }
+
+.alert {
+  background: rgba(248, 113, 113, 0.1);
+  padding: 14px;
+  border-left: 4px solid #f87171;
+  margin-top: 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #fca5a5;
+}
+
+.alert.warning {
+  border-left-color: #fbbf24;
+  color: #fde68a;
+}
+
+.alert.info {
+  border-left-color: var(--admin-primary);
+  color: #7dd3fc;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+td, th {
+  padding: 15px 10px;
+  border-bottom: 1px solid var(--glass-border);
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.progress {
+  height: 8px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 15px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--admin-primary);
+  box-shadow: 0 0 15px var(--admin-primary);
+}
+
+.quick-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.quick-metric:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.metric-label {
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.metric-value {
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.activity-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.activity-copy strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.activity-copy span,
+.activity-time {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.input-group-admin label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.input-group-admin select {
+  width: 100%;
+  background: rgba(2, 6, 23, 0.8);
+  border: 1px solid var(--glass-border);
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+  outline: none;
+}
+
+.admin-action-btn {
+  background: var(--admin-primary);
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 10px;
+}
+
+.admin-action-btn:hover {
+  background: var(--admin-hover);
+  box-shadow: 0 0 15px rgba(8, 145, 178, 0.4);
+}
+
+.status-pill {
+  font-size: 10px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #34d399;
+  padding: 4px 10px;
+  border-radius: 100px;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.green-text { color: #34d399; font-weight: 700; }
+.red-text { color: #f87171; font-weight: 700; }
+.orange-text { color: #fbbf24; font-weight: 700; }
+
+#currentZoneText {
+  font-weight: 800;
+  font-size: 14px;
+}
+
+@media(max-width:1100px){
+  .grid-4, .grid-3, .grid-2 { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media(max-width:768px){
+  .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+  .sidebar { display:none; }
+  .topbar, .main { margin-left:0; width:100%; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+  <a class="logo" href="admin_dashboard.html">
+    <div class="logo-box"><i data-lucide="sprout"></i></div>
+    Digital Farm
+  </a>
+
+  <div class="menu">
+    <a href="admin_dashboard.html" class="active"><i data-lucide="home"></i> Dashboard</a>
+    <a href="admin_farmer_directory.html"><i data-lucide="users"></i> Farmer Directory</a>
+    <a href="admin_zone.html"><i data-lucide="clipboard-list"></i> Zone</a>
+    <a href="admin_blog.html"><i data-lucide="book-open"></i> Blog</a>
+    <a href="admin_complaint_review.html"><i data-lucide="check-square"></i> Compliance</a>
+    <a href="admin_feedback_review.html"><i data-lucide="bell"></i> Feedback</a>
+  </div>
+
+  <div class="menu-footer">
+    <a href="index.html"><i data-lucide="log-out"></i> Logout</a>
+  </div>
+</div>
+
+<div class="topbar">
+  <h2>Operational Overview</h2>
+  <div class="user-profile">
+    <i data-lucide="user-cog" size="16"></i>
+    <span>Admin: Root_A1</span>
+  </div>
+</div>
+
+<div class="main">
+  <h3 class="section-title">Global Statistics</h3>
+  <div class="grid grid-4">
+    <div class="card"><h3>Total Farmers</h3><div class="value" id="totalFarmers">2,500</div></div>
+    <div class="card"><h3>Registered Farms</h3><div class="value" id="registeredFarms">1,800</div></div>
+    <div class="card"><h3>Open Complaints</h3><div class="value red" id="openComplaints">0</div></div>
+    <div class="card"><h3>Pending Feedback</h3><div class="value cyan" id="pendingFeedback">0</div></div>
+  </div>
+
+  <h3 class="section-title">Biosecurity Risk Distribution</h3>
+  <div class="grid grid-3">
+    <div class="card"><h3>High Risk Zones</h3><div class="value red" id="highRiskZones">2 Units</div></div>
+    <div class="card"><h3>Under Review Cases</h3><div class="value orange" id="underReviewCases">0 Cases</div></div>
+    <div class="card"><h3>Resolved / Synced Cases</h3><div class="value green" id="resolvedCases">0 Cases</div></div>
+  </div>
+
+  <div class="grid grid-2" style="margin-top: 20px;">
+    <div class="card">
+      <h3>Live Outbreak Monitor</h3>
+      <div id="outbreakMonitor">
+        <div class="alert">Critical: Avian Flu detected in Sector 7G (MP)</div>
+        <div class="alert warning">Warning: Swine Fever quarantine active in UP</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Admin Queue Summary</h3>
+      <div class="quick-metric"><span class="metric-label">Fresh complaints from farmers</span><span class="metric-value red" id="freshComplaints">0</span></div>
+      <div class="quick-metric"><span class="metric-label">Feedback awaiting review</span><span class="metric-value cyan" id="awaitingFeedback">0</span></div>
+      <div class="quick-metric"><span class="metric-label">Guidance synced back</span><span class="metric-value green" id="syncedGuidance">0</span></div>
+      <div class="quick-metric"><span class="metric-label">Active incident types</span><span class="metric-value" id="incidentMix">0</span></div>
+    </div>
+  </div>
+
+  <h3 class="section-title">Regional Command & Zone Navigator</h3>
+  <div class="grid grid-3" style="margin-bottom: 20px;">
+    <div class="card" style="grid-column: span 1;">
+      <h3>Select Jurisdiction</h3>
+      <div class="filter-group">
+        <div class="input-group-admin">
+          <label>State / Province</label>
+          <select id="stateSelect">
+            <option>Chhattisgarh</option>
+            <option>Madhya Pradesh</option>
+            <option>Uttar Pradesh</option>
+          </select>
+        </div>
+        <div class="input-group-admin">
+          <label>District</label>
+          <select id="districtSelect">
+            <option>Raipur</option>
+            <option>Durg</option>
+            <option>Bilaspur</option>
+          </select>
+        </div>
+        <div class="input-group-admin">
+          <label>Village / Block</label>
+          <select id="villageSelect">
+            <option>Charoda</option>
+            <option>Bhilai</option>
+            <option>Kumhari</option>
+          </select>
+        </div>
+        <button class="admin-action-btn" type="button">Generate Zone Report</button>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column: span 2;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="margin:0;">Active Zone Data: <span id="currentZoneText" class="cyan">Chhattisgarh > Raipur > Charoda</span></h3>
+        <span class="status-pill">System Synced</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Current Value</th>
+            <th>Risk Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Total Registered Farms</td>
+            <td id="zoneFarms">142</td>
+            <td>--</td>
+          </tr>
+          <tr>
+            <td>Livestock Population</td>
+            <td id="zoneLivestock">12,400</td>
+            <td><span class="green-text">STABLE</span></td>
+          </tr>
+          <tr>
+            <td>Active Outbreaks</td>
+            <td id="zoneOutbreaks">01</td>
+            <td><span class="red-text" id="zoneOutbreakStatus">CRITICAL</span></td>
+          </tr>
+          <tr>
+            <td>Pending Local Complaints</td>
+            <td id="zoneComplaints">03</td>
+            <td><span class="orange-text" id="zoneComplaintStatus">WATCH</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3 class="section-title">Emergency Response</h3>
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Alert Protocol Status</h3>
+      <table>
+        <tr><th>Type</th><th>Status</th><th>Count</th></tr>
+        <tr><td>Complaint Alerts</td><td>Active</td><td class="cyan" id="complaintAlertCount">0</td></tr>
+        <tr><td>Feedback Follow-up</td><td>Pending</td><td class="orange" id="feedbackFollowupCount">0</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Feedback Resolution Progress</h3>
+      <div class="value" style="font-size: 20px;"><span id="reviewedFeedbackCount">0</span> Feedback Items Reviewed</div>
+      <p style="font-size: 13px; color: var(--text-dim); margin-top: 8px;">This tracks how quickly the contact and admin feedback loop is being closed.</p>
+      <div class="progress"><div class="progress-bar" id="feedbackProgressBar" style="width:0%"></div></div>
+    </div>
+  </div>
+
+  <h3 class="section-title">Recent Activity Log</h3>
+  <div class="card">
+    <div id="recentActivityLog">
+      <div class="activity-item">
+        <div class="activity-copy">
+          <strong>Admin console ready</strong>
+          <span>The dashboard will show complaint and feedback updates here.</span>
+        </div>
+        <div class="activity-time">Just now</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="risk_engine.js"></script>
+<script>
+lucide.createIcons();
+
+const zoneMetrics = {
+  'Chhattisgarh|Raipur|Charoda': { farms: 142, livestock: '12,400', outbreaks: 1, complaints: 3 },
+  'Chhattisgarh|Durg|Bhilai': { farms: 118, livestock: '10,850', outbreaks: 0, complaints: 1 },
+  'Chhattisgarh|Bilaspur|Kumhari': { farms: 96, livestock: '8,300', outbreaks: 1, complaints: 2 },
+  'Madhya Pradesh|Raipur|Charoda': { farms: 88, livestock: '9,900', outbreaks: 2, complaints: 4 },
+  'Uttar Pradesh|Durg|Bhilai': { farms: 104, livestock: '11,200', outbreaks: 1, complaints: 5 }
+};
+
+function readStore(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || '[]');
+  } catch (error) {
+    return [];
+  }
+}
+
+function formatCount(value) {
+  return new Intl.NumberFormat('en-IN').format(value);
+}
+
+function updateZoneTable() {
+  const state = document.getElementById('stateSelect').value;
+  const district = document.getElementById('districtSelect').value;
+  const village = document.getElementById('villageSelect').value;
+  const selectedKey = `${state}|${district}|${village}`;
+  const zoneData = zoneMetrics[selectedKey] || { farms: 72, livestock: '6,800', outbreaks: 0, complaints: 1 };
+
+  document.getElementById('currentZoneText').textContent = `${state} > ${district} > ${village}`;
+  document.getElementById('zoneFarms').textContent = formatCount(zoneData.farms);
+  document.getElementById('zoneLivestock').textContent = zoneData.livestock;
+  document.getElementById('zoneOutbreaks').textContent = String(zoneData.outbreaks).padStart(2, '0');
+  document.getElementById('zoneOutbreakStatus').textContent = zoneData.outbreaks > 0 ? 'CRITICAL' : 'STABLE';
+  document.getElementById('zoneOutbreakStatus').className = zoneData.outbreaks > 0 ? 'red-text' : 'green-text';
+  document.getElementById('zoneComplaints').textContent = String(zoneData.complaints).padStart(2, '0');
+  document.getElementById('zoneComplaintStatus').textContent = zoneData.complaints > 2 ? 'WATCH' : 'LOW';
+  document.getElementById('zoneComplaintStatus').className = zoneData.complaints > 2 ? 'orange-text' : 'green-text';
+}
+
+function renderOutbreakMonitor(complaints, feedback) {
+  const outbreakMonitor = document.getElementById('outbreakMonitor');
+  const urgentComplaints = complaints
+    .filter((item) => String(item.urgency || '').toLowerCase().includes('high'))
+    .slice(0, 2);
+  const pendingFeedback = feedback
+    .filter((item) => item.status === 'Unreviewed')
+    .slice(0, 1);
+
+  const markup = [];
+
+  urgentComplaints.forEach((item) => {
+    markup.push(`<div class="alert">Critical: ${item.incidentType || 'Field issue'} reported at ${item.location || 'farm unit'} by ${item.farmerName || item.sender || 'farmer'}</div>`);
+  });
+
+  pendingFeedback.forEach((item) => {
+    markup.push(`<div class="alert info">Feedback pending: ${item.subject || 'Public feedback'} from ${item.sender || 'site visitor'}</div>`);
+  });
+
+  if (!markup.length) {
+    markup.push('<div class="alert info">No urgent field escalations right now. Complaint and feedback queues are stable.</div>');
+  }
+
+  outbreakMonitor.innerHTML = markup.join('');
+}
+
+function renderRecentActivity(complaints, feedback) {
+  const recentActivityLog = document.getElementById('recentActivityLog');
+  const entries = [];
+
+  complaints.slice(0, 2).forEach((item) => {
+    entries.push({
+      title: `${item.id || 'Complaint'} received`,
+      copy: `${item.incidentType || 'Incident'} at ${item.location || 'farm unit'} for ${item.animalType || 'livestock'}`,
+      time: item.incidentDate || 'Recent'
+    });
+  });
+
+  feedback.slice(0, 2).forEach((item) => {
+    entries.push({
+      title: `${item.id || 'Feedback'} logged`,
+      copy: `${item.subject || 'Feedback message'} from ${item.sender || 'visitor'}`,
+      time: item.dateLabel || 'Recent'
+    });
+  });
+
+  if (!entries.length) {
+    entries.push({
+      title: 'Admin console ready',
+      copy: 'Complaint and feedback updates will appear here once records are submitted.',
+      time: 'Just now'
+    });
+  }
+
+  recentActivityLog.innerHTML = entries.slice(0, 4).map((item) => `
+    <div class="activity-item">
+      <div class="activity-copy">
+        <strong>${item.title}</strong>
+        <span>${item.copy}</span>
+      </div>
+      <div class="activity-time">${item.time}</div>
+    </div>
+  `).join('');
+}
+
+function renderDashboardMetrics() {
+  const complaints = readStore('farmerComplaints');
+  const feedback = readStore('siteFeedback');
+  const overallRisk = window.DigitalFarmRisk.syncOverallRisk();
+  const openComplaints = complaints.filter((item) => !String(item.status || '').includes('SYNCED')).length;
+  const syncedComplaints = complaints.filter((item) => String(item.status || '').includes('SYNCED')).length;
+  const underReviewComplaints = complaints.filter((item) => String(item.status || '').includes('UNDER REVIEW') || String(item.status || '').includes('HIGH')).length;
+  const pendingFeedback = feedback.filter((item) => item.status === 'Unreviewed').length;
+  const reviewedFeedback = feedback.filter((item) => item.status === 'Reviewed').length;
+  const highRiskZones = overallRisk.level === 'Critical' ? 3 : overallRisk.level === 'High' ? 2 : 1;
+  const incidentMix = new Set(complaints.map((item) => item.incidentType).filter(Boolean)).size;
+  const feedbackProgress = feedback.length ? Math.round((reviewedFeedback / feedback.length) * 100) : 0;
+
+  document.getElementById('totalFarmers').textContent = formatCount(2500);
+  document.getElementById('registeredFarms').textContent = formatCount(1800);
+  document.getElementById('openComplaints').textContent = openComplaints;
+  document.getElementById('pendingFeedback').textContent = pendingFeedback;
+  document.getElementById('highRiskZones').textContent = `${highRiskZones} Units`;
+  document.getElementById('underReviewCases').textContent = `${underReviewComplaints} Cases`;
+  document.getElementById('resolvedCases').textContent = `${syncedComplaints + reviewedFeedback} Cases`;
+  document.getElementById('freshComplaints').textContent = openComplaints;
+  document.getElementById('awaitingFeedback').textContent = pendingFeedback;
+  document.getElementById('syncedGuidance').textContent = syncedComplaints;
+  document.getElementById('incidentMix').textContent = incidentMix;
+  document.getElementById('complaintAlertCount').textContent = openComplaints;
+  document.getElementById('feedbackFollowupCount').textContent = pendingFeedback;
+  document.getElementById('reviewedFeedbackCount').textContent = reviewedFeedback;
+  document.getElementById('feedbackProgressBar').style.width = `${feedbackProgress}%`;
+
+  renderOutbreakMonitor(complaints, feedback);
+  renderRecentActivity(complaints, feedback);
+
+  const currentMonitor = document.getElementById('outbreakMonitor');
+  currentMonitor.insertAdjacentHTML('afterbegin', `<div class="alert info">Shared farm risk is currently <strong>${overallRisk.level}</strong> at score ${overallRisk.score}/100.</div>`);
+}
+
+document.querySelectorAll('.input-group-admin select').forEach((select) => {
+  select.addEventListener('change', updateZoneTable);
+});
+
+updateZoneTable();
+renderDashboardMetrics();
+</script>
+
+</body>
+</html>

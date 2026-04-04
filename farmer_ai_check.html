@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Disease Diagnostic | Digital Farm</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #22c55e;
+            --bg-navy: #0f172a;
+            --text-dark: #1e293b;
+            --text-gray: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --ai-purple: #8b5cf6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: #f8fafc; color: var(--text-dark); padding-bottom: 50px; }
+
+        .navbar { background: var(--bg-navy); padding: 15px 60px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; }
+        .nav-logo { font-size: 22px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .nav-links { display: flex; list-style: none; align-items: center; gap: 10px; }
+        .nav-links a { text-decoration: none; color: #94a3b8; font-size: 14px; padding: 8px 20px; transition: 0.3s; }
+        .nav-links a.active { background: rgba(255, 255, 255, 0.1); color: white; border-radius: 50px; font-weight: 600; }
+        
+        .profile-menu { position: relative; margin-left: 18px; }
+        .profile-trigger { display: flex; align-items: center; gap: 14px; background: transparent; border: none; color: white; cursor: pointer; padding: 0; }
+        .profile-name { font-size: 16px; font-weight: 600; color: #f8fafc; }
+        .profile-avatar { width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--primary); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; background: rgba(255, 255, 255, 0.04); }
+        
+        .profile-dropdown { position: absolute; top: calc(100% + 15px); right: 0; width: 220px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; overflow: hidden; display: none; z-index: 1200; }
+        .profile-dropdown.open { display: block; }
+        .dropdown-item { display: block; width: 100%; padding: 12px 20px; background: white; border: none; border-bottom: 1px solid #f1f5f9; text-align: left; font-size: 14px; color: #3f3f46; cursor: pointer; text-decoration: none; }
+        .dropdown-item.logout { color: #ff3b30; border-bottom: none; }
+
+        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .input-card, .output-card { background: white; border-radius: 20px; padding: 35px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+        .section-header { margin-bottom: 25px; }
+        .section-header h2 { font-size: 24px; font-weight: 800; display: flex; align-items: center; gap: 12px; }
+        .section-header i { color: var(--ai-purple); }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 700; color: var(--text-gray); margin-bottom: 8px; text-transform: uppercase; }
+        .form-control { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: #fcfcfd; font-size: 15px; outline: none; }
+        .form-control:focus { border-color: var(--ai-purple); }
+
+        .upload-box { border: 2px dashed #cbd5e1; border-radius: 15px; padding: 30px; text-align: center; cursor: pointer; background: #f8fafc; }
+        .btn-analyze { width: 100%; background: var(--ai-purple); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+
+        .output-card { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; min-height: 500px; position: relative; overflow: hidden; }
+        .scanning-line { position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--ai-purple); box-shadow: 0 0 15px var(--ai-purple); display: none; animation: scan 2s linear infinite; }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--ai-purple); border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; display: none; margin-bottom: 20px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .result-content { display: none; text-align: left; width: 100%; }
+        .result-badge { display: inline-block; padding: 6px 15px; border-radius: 50px; font-weight: 700; font-size: 12px; margin-bottom: 15px; text-transform: uppercase; }
+        .badge-critical { background: #fee2e2; color: #991b1b; }
+        .treatment-box { background: #f0fdf4; border-radius: 12px; padding: 20px; border-left: 5px solid var(--primary); margin-top: 20px; }
+
+        .history-container { margin: 50px auto; max-width: 1020px; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .history-title { margin-bottom: 20px; color: #0f172a; font-weight: 800; }
+        .table-header, .table-row { display: grid; grid-template-columns: 1.2fr 1fr 2fr 0.8fr 1fr; padding: 14px 10px; align-items: center; gap: 10px; }
+        .table-header { font-weight: bold; color: #64748b; border-bottom: 2px solid #e2e8f0; font-size: 13px; }
+        .table-row { border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+        .table-row:hover { background: #f8fafc; }
+
+        .tag { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; text-align: center; }
+        .low { background: #dcfce7; color: #166534; }
+        .medium { background: #fef9c3; color: #92400e; }
+        .high { background: #fee2e2; color: #991b1b; }
+
+        .footer { background: #020617; padding: 60px 20px 30px; color: #94a3b8; border-top: 1px solid #1e293b; margin-top: 80px; }
+
+        @media (max-width: 850px) {
+            .navbar { padding: 15px 20px; }
+            .container { grid-template-columns: 1fr; }
+            .table-header { display: none; }
+            .table-row { grid-template-columns: 1fr 1fr; gap: 15px; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <a href="farmer_dashboard.html" class="nav-logo"><i class="fa-solid fa-leaf"></i> Digital Farm</a>
+        <ul class="nav-links">
+            <li><a href="farmer_dashboard.html">Dashboard</a></li>
+            <li><a href="farmer_ai_check.html" class="active">AI Diagnostic</a></li>
+            <li><a href="farmer_add_data.html">Data Entry</a></li>
+            <li><a href="farmer_animal_records.html">Records</a></li>
+            <li><a href="farmer_biosecurity.html">Biosecurity</a></li>
+            <li class="profile-menu">
+                <button class="profile-trigger" id="profileMenuButton">
+                    <span class="profile-name">Hello, Raj!</span>
+                    <span class="profile-avatar">R</span>
+                </button>
+                <div class="profile-dropdown" id="profileDropdown">
+                    <a href="farmer_profile.html" class="dropdown-item">View Profile</a>
+                    <a href="farmer_setting.html" class="dropdown-item">Settings</a>
+                    <a href="farmer_login.html" class="dropdown-item logout">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="input-card">
+            <div class="section-header">
+                <h2><i class="fa-solid fa-robot"></i> AI Health Check</h2>
+                <p style="color: var(--text-gray); font-size: 14px;">Upload symptoms and images for real-time analysis.</p>
+            </div>
+
+            <form id="aiForm">
+                <div class="form-group">
+                    <label>Select Animal Type</label>
+                    <select class="form-control" id="animalType" required>
+                        <option value="">-- Choose Livestock --</option>
+                        <option value="cow">Cow (Cattle)</option>
+                        <option value="buffalo">Buffalo</option>
+                        <option value="poultry">Poultry (Chicken/Duck)</option>
+                        <option value="goat">Goat</option>
+                        <option value="sheep">Sheep</option>
+                        <option value="pig">Pig (Swine)</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Observed Symptoms</label>
+                    <textarea class="form-control" id="symptoms" rows="4" placeholder="Describe symptoms (e.g. fever, coughing, sores)..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Visual Evidence (Optional)</label>
+                    <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                        <i class="fa-solid fa-camera"></i>
+                        <p id="uploadText"><b>Upload Photo</b> for Visual Verification</p>
+                    </div>
+                    <input type="file" id="fileInput" hidden accept="image/*">
+                </div>
+
+                <button type="submit" class="btn-analyze">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> START AI ANALYSIS
+                </button>
+            </form>
+        </div>
+
+        <div class="output-card" id="outputCard">
+            <div class="scanning-line" id="scanLine"></div>
+            
+            <div id="defaultMsg">
+                <i class="fa-solid fa-microchip" style="font-size: 50px; color: #e2e8f0; margin-bottom: 20px;"></i>
+                <h3 style="color: #94a3b8;">Awaiting Analysis</h3>
+                <p style="color: #cbd5e1; font-size: 14px;">Submit the form to begin diagnosis.</p>
+            </div>
+
+            <div class="loader" id="loader"></div>
+            <p id="loadingText" style="display:none; color: var(--ai-purple); font-weight: 700;">Scanning Biological Data...</p>
+
+            <div class="result-content" id="resultContent">
+                <span class="result-badge badge-critical" id="resSeverity">Verification Result</span>
+                <h2 id="resDisease" style="font-size: 26px; margin-bottom: 10px;">Status</h2>
+                <p id="resConfidence" style="font-size: 14px; color: var(--text-gray); margin-bottom: 20px;">AI Precision Level: 0%</p>
+                
+                <div style="border-top: 1px solid #f1f5f9; padding-top: 15px;">
+                    <h4 style="font-size: 15px; margin-bottom: 8px;"><i class="fa-solid fa-list-check"></i> Symptoms Analysis:</h4>
+                    <p id="resAnalysis" style="font-size: 14px; color: #475569;">Analysis report here.</p>
+                </div>
+
+                <div class="treatment-box">
+                    <h4 style="color: #166534; margin-bottom: 5px;"><i class="fa-solid fa-shield-halved"></i> Biosecurity Action Required:</h4>
+                    <p id="resAction" style="font-size: 13px; color: #166534;">Recommended safety protocols.</p>
+                </div>
+                
+                <button onclick="window.print()" style="margin-top:20px; background:none; border:none; color:var(--ai-purple); font-weight:700; cursor:pointer; font-size:13px;">
+                    <i class="fa-solid fa-download"></i> Save Verified Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-container">
+        <h2 class="history-title">AI Scan History</h2>
+        <div class="history-table">
+            <div class="table-header">
+                <span>DATE</span>
+                <span>SCAN ID</span>
+                <span>SYMPTOMS</span>
+                <span>RISK SCORE</span>
+                <span>RESULT</span>
+            </div>
+            <div id="historyData"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div style="text-align:center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
+            <h2 style="color:var(--primary);">Digital Farm</h2>
+        </div>
+        <p style="text-align:center; padding-top:20px; font-size:12px;">&copy; 2026 Digital Farm | Built for Farmers</p>
+    </footer>
+
+    <script src="risk_engine.js"></script>
+    <script>
+        const profileBtn = document.getElementById('profileMenuButton');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const aiForm = document.getElementById('aiForm');
+        const resultContent = document.getElementById('resultContent');
+        const loader = document.getElementById('loader');
+        const scanLine = document.getElementById('scanLine');
+        const loadingText = document.getElementById('loadingText');
+        const defaultMsg = document.getElementById('defaultMsg');
+
+        profileBtn.onclick = (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('open');
+        };
+
+        window.onclick = () => profileDropdown.classList.remove('open');
+
+        document.getElementById('fileInput').onchange = (e) => {
+            if (e.target.files[0]) {
+                document.getElementById('uploadText').innerHTML = `<b style="color:var(--primary)">Photo Linked:</b> ${e.target.files[0].name}`;
+            }
+        };
+
+        aiForm.onsubmit = (e) => {
+            e.preventDefault();
+            const animal = document.getElementById('animalType').value;
+            const symptoms = document.getElementById('symptoms').value;
+
+            defaultMsg.style.display = 'none';
+            resultContent.style.display = 'none';
+            loader.style.display = 'block';
+            scanLine.style.display = 'block';
+            loadingText.style.display = 'block';
+
+            setTimeout(() => {
+                loader.style.display = 'none';
+                scanLine.style.display = 'none';
+                loadingText.style.display = 'none';
+                resultContent.style.display = 'block';
+
+                let disease = '';
+                let risk = 0;
+                let action = '';
+
+                if (animal === 'poultry') {
+                    disease = 'Ranikhet (Newcastle)';
+                    risk = 88;
+                    action = 'Isolate batch immediately. Ensure high ventilation.';
+                } else if (animal === 'cow' || animal === 'buffalo') {
+                    disease = 'Foot and Mouth Disease';
+                    risk = 92;
+                    action = 'Use footbaths. Restrict movement and contact vet.';
+                } else if (animal === 'goat' || animal === 'sheep') {
+                    disease = 'PPR / Viral Fever';
+                    risk = 61;
+                    action = 'Separate the affected group and review feed, hydration, and vaccination records.';
+                } else if (animal === 'pig') {
+                    disease = 'Swine Viral Infection';
+                    risk = 67;
+                    action = 'Isolate the unit, improve hygiene, and contact the veterinary team.';
+                } else {
+                    disease = 'General Viral Infection';
+                    risk = 45;
+                    action = 'Monitor intake and keep surroundings clean.';
+                }
+
+                document.getElementById('resDisease').innerText = 'Detected: ' + disease;
+                document.getElementById('resConfidence').innerText = `AI Confidence Score: ${risk + 2}%`;
+                document.getElementById('resAnalysis').innerText = `Symptoms correlate with ${disease} markers commonly found in local breeds.`;
+                document.getElementById('resAction').innerHTML = `<b>Immediate Step:</b> ${action}`;
+
+                saveToHistory(animal, symptoms, disease, risk);
+                loadHistory();
+                window.DigitalFarmRisk.syncOverallRisk();
+            }, 2500);
+        };
+
+        function saveToHistory(animal, symptoms, disease, risk) {
+            const history = JSON.parse(localStorage.getItem('aiHistory')) || [];
+            history.push({
+                id: Math.floor(1000 + Math.random() * 9000),
+                animalType: animal,
+                date: new Date().toLocaleDateString('en-IN'),
+                dateISO: new Date().toISOString(),
+                symptoms: symptoms.substring(0, 30) + '...',
+                disease: disease,
+                risk: risk
+            });
+            localStorage.setItem('aiHistory', JSON.stringify(history));
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('aiHistory')) || [];
+            const container = document.getElementById('historyData');
+            container.innerHTML = '';
+            
+            history.slice().reverse().forEach(item => {
+                let statusClass = item.risk > 70 ? 'high' : item.risk > 40 ? 'medium' : 'low';
+                let statusLabel = item.risk > 70 ? 'High Risk' : item.risk > 40 ? 'Observe' : 'Low Risk';
+                
+                container.innerHTML += `
+                    <div class="table-row">
+                        <span>${item.date}</span>
+                        <span style="font-weight:700;">#SCAN-${item.id}</span>
+                        <span style="color:#64748b;">${item.symptoms}</span>
+                        <span>${item.risk}%</span>
+                        <span><span class="tag ${statusClass}">${statusLabel}</span></span>
+                    </div>
+                `;
+            });
+        }
+
+        window.onload = loadHistory;
+    </script>
+</body>
+</html>

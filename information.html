@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Awareness Hub | Digital Farm</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #22c55e;
+      --bg-navy: #0f172a;
+      --text-dark: #1e293b;
+      --text-gray: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --text-dim: #94a3b8;
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; scroll-behavior: smooth; }
+    body { background-color: #ffffff; color: var(--text-dark); line-height: 1.6; }
+
+    .navbar {
+      position: sticky; top: 0; width: 100%;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 18px 60px; z-index: 1000;
+    }
+    .logo { font-size: 24px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; }
+    .nav-links { display: flex; gap: 12px; list-style: none; align-items: center; }
+    .nav-links li a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 40px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: var(--text-dim);
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1;
+      transition: background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .nav-links li a:hover { color: #dbeafe; background: rgba(255, 255, 255, 0.06); }
+    .nav-links li a.active {
+      color: #ffffff;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.1);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    }
+    .menu-toggle { display: none; font-size: 24px; color: white; cursor: pointer; }
+
+    .hero {
+      background: linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.85)),
+                  url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1350&q=80');
+      background-size: cover; background-position: center;
+      height: 70vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; color: white; padding: 0 20px;
+    }
+    .hero-content h1 { font-size: clamp(32px, 5vw, 56px); font-weight: 800; margin-bottom: 20px; }
+    .hero-content p { font-size: clamp(16px, 2vw, 20px); color: #cbd5e1; max-width: 800px; margin: 0 auto 35px; }
+    .btn-cta { background: var(--primary); color: white; padding: 16px 45px; border-radius: 50px; text-decoration: none; font-weight: 700; transition: 0.3s; display: inline-block; }
+    .btn-cta:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3); }
+
+    section { padding: 90px 20px; max-width: 1200px; margin: 0 auto; }
+    .section-title { font-size: 32px; font-weight: 800; margin-bottom: 50px; text-align: center; position: relative; }
+    .section-title::after { content: ''; width: 50px; height: 5px; background: var(--primary); position: absolute; bottom: -15px; left: 50%; transform: translateX(-50%); border-radius: 10px; }
+
+    .bio-definition { display: grid; grid-template-columns: 1.2fr 1fr; gap: 60px; align-items: center; }
+    .bio-box { background: #f8fafc; padding: 40px; border-radius: 24px; border: 1px solid var(--border); }
+    .bio-box h3 { font-size: 24px; margin-bottom: 15px; color: var(--bg-navy); }
+    .why-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 25px; }
+    .why-list li { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; }
+    .why-list li i { color: var(--primary); }
+
+    .disease-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 25px; }
+    .disease-card { background: white; border: 1px solid var(--border); padding: 30px; border-radius: 20px; transition: 0.3s; }
+    .disease-card:hover { border-color: var(--primary); transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0,0,0,0.05); }
+    .disease-card h4 { font-size: 19px; color: var(--danger); margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+    .disease-card p { font-size: 13px; margin-bottom: 8px; }
+    .disease-card b { color: var(--bg-navy); display: block; margin-top: 5px; }
+
+    .practice-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; }
+    .practice-card { text-align: center; padding: 30px; border-radius: 20px; background: #fcfcfd; border: 1px solid #f1f5f9; }
+    .practice-card i { font-size: 35px; color: var(--primary); margin-bottom: 20px; }
+    .practice-card h5 { font-size: 16px; font-weight: 700; }
+
+    .comparison-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+    .comp-box { padding: 40px; border-radius: 24px; }
+    .box-yes { background: #f0fdf4; border: 1px solid #dcfce7; }
+    .box-no { background: #fef2f2; border: 1px solid #fee2e2; }
+    .list-item { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px; font-weight: 600; }
+
+    .vax-container { background: var(--bg-navy); color: white; border-radius: 30px; padding: 60px; display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+    .vax-card { background: rgba(255,255,255,0.05); padding: 30px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+    .vax-card h4 { color: var(--primary); margin-bottom: 15px; }
+
+    .video-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+    .video-item { text-align: left; }
+    .video-wrap {
+      position: relative;
+      border-radius: 24px;
+      overflow: hidden;
+      aspect-ratio: 16/9;
+      cursor: pointer;
+      display: block;
+      border: 1px solid var(--border);
+      text-decoration: none;
+    }
+    .video-wrap img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: 0.5s; }
+    .video-wrap:hover img { transform: scale(1.1); opacity: 0.9; }
+    .play-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 50px; text-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+    .resource-tag {
+      display: inline-flex;
+      margin-top: 14px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #166534;
+      background: #dcfce7;
+    }
+    .resource-summary {
+      margin-top: 10px;
+      color: var(--text-gray);
+      font-size: 14px;
+    }
+    .resource-link-text {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      color: var(--primary);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .resource-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 1200;
+    }
+    .resource-modal.open {
+      display: flex;
+    }
+    .resource-modal-card {
+      width: min(760px, 100%);
+      background: white;
+      border-radius: 28px;
+      padding: 34px;
+      box-shadow: 0 30px 70px rgba(15, 23, 42, 0.2);
+      position: relative;
+    }
+    .resource-close {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      border: none;
+      background: transparent;
+      font-size: 30px;
+      color: var(--text-gray);
+      cursor: pointer;
+    }
+    .resource-modal-card h3 {
+      font-size: 28px;
+      color: var(--bg-navy);
+      margin-bottom: 10px;
+    }
+    .resource-modal-card p {
+      color: var(--text-gray);
+      margin-bottom: 20px;
+      font-size: 15px;
+    }
+    .resource-steps {
+      display: grid;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .resource-step {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+    }
+    .resource-step strong {
+      display: block;
+      color: var(--bg-navy);
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    .resource-tip {
+      background: #f0fdf4;
+      border: 1px solid #dcfce7;
+      color: #166534;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .response-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+    .response-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 28px 24px;
+      text-align: left;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
+    }
+    .response-step {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #dcfce7;
+      color: #166534;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+    .response-card h4 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: var(--bg-navy);
+    }
+    .response-card p {
+      font-size: 14px;
+      color: var(--text-gray);
+    }
+
+    .support-panel {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.95));
+      border-radius: 30px;
+      padding: 50px;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 30px;
+    }
+    .support-panel h2 {
+      font-size: 34px;
+      margin-bottom: 12px;
+    }
+    .support-panel p {
+      color: #cbd5e1;
+      max-width: 650px;
+      margin: 0;
+    }
+    .support-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .support-link {
+      text-decoration: none;
+      padding: 14px 22px;
+      border-radius: 12px;
+      font-weight: 700;
+      transition: 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .support-link.primary {
+      background: var(--primary);
+      color: white;
+    }
+    .support-link.secondary {
+      border: 1px solid rgba(255,255,255,0.18);
+      color: white;
+      background: rgba(255,255,255,0.04);
+    }
+    .support-link:hover {
+      transform: translateY(-2px);
+    }
+
+    .footer { background: #020617; padding: 80px 60px 40px; border-top: 1px solid var(--glass-border); color: var(--text-dim); }
+    .footer-container { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; }
+    .footer-logo { color: var(--primary); font-size: 24px; font-weight: 800; margin-bottom: 20px; }
+    .footer-section h3 { color: white; margin-bottom: 20px; font-size: 16px; text-transform: uppercase; }
+    .footer-section ul { list-style: none; }
+    .footer-section li { margin-bottom: 12px; }
+    .footer-section a { text-decoration: none; color: var(--text-dim); transition: 0.3s; }
+    .footer-section a:hover { color: var(--primary); }
+
+    @media (max-width: 900px) {
+      .bio-definition, .comparison-container, .vax-container, .video-grid, .response-grid { grid-template-columns: 1fr; }
+      .hero-content h1 { font-size: 36px; }
+      .support-panel { padding: 32px; flex-direction: column; align-items: flex-start; }
+      .navbar { padding: 15px 30px; }
+      .menu-toggle { display: block; }
+      .nav-links { position: fixed; top: 70px; right: -100%; flex-direction: column; background: #0f172a; width: 100%; height: 100vh; padding: 40px; transition: 0.4s ease; }
+      .nav-links.active { right: 0; }
+      .footer { padding: 50px 30px 30px; }
+      .footer-container { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="logo"><i class="fa-solid fa-seedling"></i> Digital Farm</div>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="information.html" class="active">Information</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+    <div class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars-staggered"></i></div>
+  </nav>
+
+  <header class="hero">
+    <div class="hero-content">
+      <h1>Protect Your Farm,<br>Protect Your Animals</h1>
+      <p>Biosecurity awareness helps prevent diseases, ensures safer livestock practices, and increases farm productivity.</p>
+      <a href="#what-is" class="btn-cta">Learn More</a>
+    </div>
+  </header>
+
+  <section id="what-is">
+    <div class="bio-definition">
+      <div>
+        <h2 class="section-title" style="text-align: left; margin-bottom: 30px;">What is Biosecurity?</h2>
+        <p style="font-size: 18px; color: var(--text-gray); margin-bottom: 20px;">
+          Biosecurity means protecting animals from diseases by controlling <b>hygiene, movement, and environment</b>. It is the most important set of management practices to keep your farm safe.
+        </p>
+        <h3 style="margin-top: 30px;">Why it Matters:</h3>
+        <ul class="why-list">
+          <li><i class="fa-solid fa-shield-virus"></i> Prevents Disease Outbreaks</li>
+          <li><i class="fa-solid fa-hand-holding-dollar"></i> Saves Medical Costs</li>
+          <li><i class="fa-solid fa-heart-pulse"></i> Improves Animal Health</li>
+          <li><i class="fa-solid fa-chart-line"></i> Increases Productivity</li>
+        </ul>
+      </div>
+      <div class="bio-box">
+        <img src="https://images.unsplash.com/photo-1500595046743-cd271d694d30?auto=format&fit=crop&w=600&q=80" style="width:100%; border-radius:15px;" alt="Healthy cow on farm">
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #fcfcfd;">
+    <h2 class="section-title">Common Animal Diseases</h2>
+    <div class="disease-grid">
+      <div class="disease-card">
+        <h4><i class="fa-solid fa-virus-covid"></i> Foot and Mouth (FMD)</h4>
+        <p><b>Symptoms:</b> Blisters on feet and mouth, high fever, shivering.</p>
+        <p><b>Spread:</b> Contact with infected animals or contaminated tools.</p>
+        <p><b>Prevention:</b> Strict entry control and biannual vaccination.</p>
+      </div>
+      <div class="disease-card">
+        <h4><i class="fa-solid fa-virus-covid"></i> Brucellosis</h4>
+        <p><b>Symptoms:</b> Late-term abortion, infertility, reduced milk yield.</p>
+        <p><b>Spread:</b> Ingesting contaminated feed or birth fluids.</p>
+        <p><b>Prevention:</b> Clean birthing areas and testing new arrivals.</p>
+      </div>
+      <div class="disease-card">
+        <h4><i class="fa-solid fa-virus-covid"></i> Mastitis</h4>
+        <p><b>Symptoms:</b> Swollen, hard udders, clots or blood in milk.</p>
+        <p><b>Spread:</b> Poor milking hygiene and bacteria in sheds.</p>
+        <p><b>Prevention:</b> Daily cleaning of sheds and proper teat dipping.</p>
+      </div>
+      <div class="disease-card">
+        <h4><i class="fa-solid fa-virus-covid"></i> Goat Pox</h4>
+        <p><b>Symptoms:</b> Skin lesions, high fever, difficulty breathing.</p>
+        <p><b>Spread:</b> Airborne transmission or shared equipment.</p>
+        <p><b>Prevention:</b> Instant isolation of sick goats and vaccinations.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Daily Biosecurity Habits</h2>
+    <div class="practice-grid">
+      <div class="practice-card">
+        <i class="fa-solid fa-hands-bubbles"></i>
+        <h5>Wash Hands Before/After Handling</h5>
+      </div>
+      <div class="practice-card">
+        <i class="fa-solid fa-broom"></i>
+        <h5>Clean Animal Sheds Daily</h5>
+      </div>
+      <div class="practice-card">
+        <i class="fa-solid fa-spray-can-sparkles"></i>
+        <h5>Use Disinfectants Regularly</h5>
+      </div>
+      <div class="practice-card">
+        <i class="fa-solid fa-share-nodes"></i>
+        <h5>Avoid Sharing Equipment</h5>
+      </div>
+      <div class="practice-card">
+        <i class="fa-solid fa-faucet-drip"></i>
+        <h5>Provide Clean Food & Water</h5>
+      </div>
+    </div>
+  </section>
+
+  <section style="background: #fcfcfd;">
+    <h2 class="section-title">Critical Do's and Don'ts</h2>
+    <div class="comparison-container">
+      <div class="comp-box box-yes">
+        <h3 style="color: #166534; margin-bottom: 25px;"><i class="fa-solid fa-circle-check"></i> The Do's</h3>
+        <div class="list-item"><i class="fa-solid fa-check" style="color:var(--primary)"></i> Vaccinate animals on schedule.</div>
+        <div class="list-item"><i class="fa-solid fa-check" style="color:var(--primary)"></i> Isolate sick animals immediately.</div>
+        <div class="list-item"><i class="fa-solid fa-check" style="color:var(--primary)"></i> Maintain high farm hygiene.</div>
+        <div class="list-item"><i class="fa-solid fa-check" style="color:var(--primary)"></i> Use footbaths at all entrances.</div>
+      </div>
+      <div class="comp-box box-no">
+        <h3 style="color: #991b1b; margin-bottom: 25px;"><i class="fa-solid fa-circle-xmark"></i> The Don'ts</h3>
+        <div class="list-item"><i class="fa-solid fa-xmark" style="color:var(--danger)"></i> Don't allow unknown visitors inside.</div>
+        <div class="list-item"><i class="fa-solid fa-xmark" style="color:var(--danger)"></i> Don't mix new animals without quarantine.</div>
+        <div class="list-item"><i class="fa-solid fa-xmark" style="color:var(--danger)"></i> Don't ignore early symptoms.</div>
+        <div class="list-item"><i class="fa-solid fa-xmark" style="color:var(--danger)"></i> Don't share tools with other farms.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="vax-container">
+      <div>
+        <h2 style="font-size: 32px; margin-bottom: 25px;">Vaccination Awareness</h2>
+        <p style="opacity: 0.8; margin-bottom: 30px;">Vaccination is the most effective layer of biosecurity. It builds immunity and prevents mass mortality in herds.</p>
+        <div class="list-item"><i class="fa-solid fa-syringe" style="color:var(--primary)"></i> FMD (Foot & Mouth) - Every 6 months</div>
+        <div class="list-item"><i class="fa-solid fa-syringe" style="color:var(--primary)"></i> Brucellosis - Lifelong (Calves)</div>
+        <div class="list-item"><i class="fa-solid fa-syringe" style="color:var(--primary)"></i> PPR - Every 3 years</div>
+      </div>
+      <div class="vax-card">
+        <h4>Schedule Basics</h4>
+        <p style="font-size: 14px; opacity: 0.9;">1. Register animal birth with the Vet.<br>2. Follow the local District Vaccination Calendar.<br>3. Log every dose in the Record Center.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="section-title">Educational Resources</h2>
+    <div class="video-grid">
+      <div class="video-item">
+        <a class="video-wrap" href="#" onclick="openResourceGuide('cleaning'); return false;">
+          <i class="fa-solid fa-play play-btn"></i>
+          <img src="https://images.unsplash.com/photo-1551009175-8a68da93d5f9?auto=format&fit=crop&w=600&q=80" alt="Farm cleaning video">
+        </a>
+        <h5 style="margin-top: 15px; font-weight: 700;">How to Clean Farm Sheds Properly</h5>
+        <span class="resource-tag">Practical guide</span>
+        <p class="resource-summary">Open a short step-by-step guide for shed cleaning, disinfecting, drying, and tool hygiene.</p>
+        <a class="resource-link-text" href="#" onclick="openResourceGuide('cleaning'); return false;">Open Cleaning Guide <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+      <div class="video-item">
+        <a class="video-wrap" href="#" onclick="openResourceGuide('symptoms'); return false;">
+          <i class="fa-solid fa-play play-btn"></i>
+          <img src="https://images.unsplash.com/photo-1516467508483-a7212febe31a?auto=format&fit=crop&w=600&q=80" alt="Symptom identification video">
+        </a>
+        <h5 style="margin-top: 15px; font-weight: 700;">Identifying Early Sickness Signs</h5>
+        <span class="resource-tag">Field checklist</span>
+        <p class="resource-summary">Open a quick checklist to spot appetite loss, breathing issues, fever, lameness, and isolation behavior early.</p>
+        <a class="resource-link-text" href="#" onclick="openResourceGuide('symptoms'); return false;">Open Symptom Guide <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </div>
+  </section>
+
+  <div id="resourceModal" class="resource-modal" onclick="closeResourceGuide(event)">
+    <div class="resource-modal-card" onclick="event.stopPropagation()">
+      <button class="resource-close" type="button" onclick="closeResourceGuide()">&times;</button>
+      <h3 id="resourceTitle">Guide</h3>
+      <p id="resourceIntro"></p>
+      <div id="resourceSteps" class="resource-steps"></div>
+      <div id="resourceTip" class="resource-tip"></div>
+    </div>
+  </div>
+
+  <section style="background: #fcfcfd;">
+    <h2 class="section-title">If You Notice Symptoms, Act Fast</h2>
+    <div class="response-grid">
+      <div class="response-card">
+        <div class="response-step">1</div>
+        <h4>Isolate the animal</h4>
+        <p>Separate any sick or unusual animal immediately to reduce spread inside the shed, pen, or grazing group.</p>
+      </div>
+      <div class="response-card">
+        <div class="response-step">2</div>
+        <h4>Stop shared contact</h4>
+        <p>Do not share feeders, tools, water points, transport equipment, or handling gear until cleaning is complete.</p>
+      </div>
+      <div class="response-card">
+        <div class="response-step">3</div>
+        <h4>Record the signs</h4>
+        <p>Note the symptoms, affected count, location, and timing so the issue can be reported correctly and reviewed faster.</p>
+      </div>
+      <div class="response-card">
+        <div class="response-step">4</div>
+        <h4>Contact support early</h4>
+        <p>Use the farmer reporting flow or contact page quickly instead of waiting for symptoms to get worse across the farm.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="support-panel">
+      <div>
+        <h2>Need help after reading this guidance?</h2>
+        <p>Digital Farm is not only an awareness page. You can continue into the farmer portal to report incidents, use the contact page for support, or explore more updates in the blog.</p>
+      </div>
+      <div class="support-actions">
+        <a class="support-link primary" href="farmer_login.html"><i class="fa-solid fa-right-to-bracket"></i> Farmer Portal</a>
+        <a class="support-link secondary" href="contact.html"><i class="fa-solid fa-envelope"></i> Contact Support</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer" style="background: #020617; padding: 60px 80px 20px; color: #94a3b8; border-top: 1px solid #1e293b;">
+  <div style="text-align:center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
+    <h2 style="color:var(--primary);">Digital Farm</h2>
+  </div>
+  <p style="text-align:center; padding-top:20px; font-size:12px;">&copy; 2026 Digital Farm | Built for Farmers</p>
+</footer>
+
+  <script>
+    const toggle = document.getElementById("menuToggle");
+    const nav = document.getElementById("navLinks");
+    toggle.addEventListener("click", () => nav.classList.toggle("active"));
+
+    const resourceGuides = {
+      cleaning: {
+        title: "How to Clean Farm Sheds Properly",
+        intro: "Use this simple routine every day and after any suspected illness to reduce disease spread inside the farm.",
+        steps: [
+          { title: "Remove waste first", text: "Clear manure, bedding, leftover feed, and wet patches before using water or disinfectant." },
+          { title: "Wash all contact surfaces", text: "Scrub floors, walls, feeders, drinkers, gates, and tools with clean water and detergent." },
+          { title: "Disinfect and allow drying time", text: "Apply the approved disinfectant correctly and let the area dry before animals return." },
+          { title: "Keep tools separated", text: "Do not move the same brushes, buckets, or boots between sick and healthy sections without cleaning them." }
+        ],
+        tip: "Best practice: clean from low-risk areas to high-risk areas, and always finish with the isolation or sick-animal zone last."
+      },
+      symptoms: {
+        title: "Identifying Early Sickness Signs",
+        intro: "Check for these signs during feeding, watering, and routine inspection so problems are reported before they spread.",
+        steps: [
+          { title: "Watch appetite and movement", text: "Animals that stop eating, lag behind, limp, or stay apart from the group may be unwell." },
+          { title: "Look for fever and breathing changes", text: "Rapid breathing, coughing, nasal discharge, or heat stress signs need immediate attention." },
+          { title: "Inspect skin, mouth, and udder areas", text: "Blisters, swelling, wounds, skin lesions, teat changes, or unusual milk are early warning signs." },
+          { title: "Record and report quickly", text: "Note the animal type, location, affected count, and visible symptoms before using the reporting flow." }
+        ],
+        tip: "If you are unsure, isolate first and report early. Delayed reporting is often more risky than a false alarm."
+      }
+    };
+
+    function openResourceGuide(type) {
+      const guide = resourceGuides[type];
+      if (!guide) return;
+
+      document.getElementById('resourceTitle').textContent = guide.title;
+      document.getElementById('resourceIntro').textContent = guide.intro;
+      document.getElementById('resourceSteps').innerHTML = guide.steps.map((step) => `
+        <div class="resource-step">
+          <strong>${step.title}</strong>
+          <span>${step.text}</span>
+        </div>
+      `).join('');
+      document.getElementById('resourceTip').textContent = guide.tip;
+      document.getElementById('resourceModal').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeResourceGuide(event) {
+      if (event && event.target !== document.getElementById('resourceModal')) return;
+      document.getElementById('resourceModal').classList.remove('open');
+      document.body.style.overflow = 'auto';
+    }
+  </script>
+
+</body>
+</html>

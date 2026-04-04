@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farmer Directory | Admin Intelligence</title>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --admin-primary: #0891b2;
+            --admin-hover: #0e7490;
+            --bg-dark: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --danger: #ef4444;
+            --primary-green: #22c55e;
+        }
+
+        body {
+            margin: 0; font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
+            background: var(--bg-dark); color: var(--text-main); min-height: 100vh;
+            background-image: radial-gradient(circle at 0% 0%, rgba(8, 145, 178, 0.05), transparent 40%);
+        }
+
+        * { box-sizing: border-box; }
+
+        /* SIDEBAR */
+        .sidebar { width: 260px; height: 100vh; background: #010411; position: fixed; padding: 25px; border-right: 1px solid var(--glass-border); z-index: 100; overflow-y: auto; }
+        .logo { display: flex; align-items: center; gap: 12px; font-size: 20px; font-weight: 800; margin-bottom: 40px; color: var(--admin-primary); text-decoration: none; }
+        .logo-box { width: 40px; height: 40px; background: rgba(8, 145, 178, 0.1); border: 1px solid var(--admin-primary); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .menu a { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; text-decoration: none; color: var(--text-dim); font-weight: 600; font-size: 14px; transition: 0.3s; margin-bottom: 5px; }
+        .menu a.active, .menu a:hover { background: rgba(8, 145, 178, 0.1); color: var(--admin-primary); }
+        .menu-footer { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--glass-border); }
+        .menu-footer a { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: 12px; text-decoration: none; color: #f87171; font-weight: 700; font-size: 14px; transition: 0.3s; }
+        .menu-footer a:hover { background: rgba(248, 113, 113, 0.08); }
+
+        .topbar { margin-left: 260px; width: calc(100% - 260px); height: 75px; background: rgba(2, 6, 23, 0.8); backdrop-filter: blur(15px); display: flex; justify-content: space-between; align-items: center; padding: 0 40px; border-bottom: 1px solid var(--glass-border); position: sticky; top: 0; z-index: 100; }
+        .topbar h2 { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+        .user-profile { background: rgba(255,255,255,0.05); padding: 8px 16px; border-radius: 12px; display: flex; align-items: center; gap: 10px; font-size: 13px; border: 1px solid var(--glass-border); }
+        .main { margin-left: 260px; padding: 40px; }
+        .section-title { margin: 0 0 20px; color: var(--admin-primary); font-size: 14px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 800; }
+
+        /* INTEL SECTION (Ref: image_3f2a61) */
+        .intel-grid { display: grid; grid-template-columns: 350px 1fr; gap: 25px; margin-bottom: 40px; }
+        .filter-card { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; }
+        .data-display-card { background: var(--card-bg); backdrop-filter: blur(10px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 30px; }
+
+        .juris-select { width: 100%; background: #010411; border: 1px solid #334155; color: white; padding: 12px; border-radius: 10px; margin-bottom: 15px; outline: none; font-size: 14px; }
+        .juris-select:focus { border-color: var(--admin-primary); }
+        .btn-generate { width: 100%; background: var(--admin-primary); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+
+        /* METRIC TABLE */
+        .metric-row { display: flex; justify-content: space-between; padding: 18px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .status-badge { font-weight: 800; font-size: 12px; }
+
+        /* DIRECTORY TABLE */
+        .directory-card { background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 25px; color: #0f172a; }
+        .directory-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .directory-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .search-input { width: 240px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 12px 14px; font-size: 14px; outline: none; }
+        .search-input:focus { border-color: var(--admin-primary); box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.12); }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; border-bottom: 2px solid #f1f5f9; color: #64748b; font-size: 12px; text-transform: uppercase; }
+        td { padding: 18px 15px; border-bottom: 1px solid #f8fafc; font-size: 14px; }
+
+        .farmer-avatar { width: 35px; height: 35px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--admin-primary); }
+        .btn-alert { padding: 8px 16px; border-radius: 8px; background: #fef2f2; color: var(--danger); font-weight: 700; font-size: 12px; border: 1px solid #fee2e2; }
+        .btn-alert:hover { background: var(--danger); color: white; }
+        .location-pill { display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border-radius: 999px; background: #ecfeff; color: #0f766e; font-size: 12px; font-weight: 700; }
+        .directory-empty { text-align: center; padding: 36px 16px; color: #64748b; font-weight: 600; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 2000; align-items: center; justify-content: center; }
+
+        @media (max-width: 1100px) {
+            .intel-grid { grid-template-columns: 1fr; }
+            .directory-toolbar { flex-direction: column; align-items: flex-start; }
+            .search-input { width: 100%; }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .topbar, .main { margin-left: 0; width: 100%; }
+            .main { padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+  <a class="logo" href="admin_dashboard.html">
+    <div class="logo-box"><i data-lucide="sprout"></i></div>
+    Digital Farm
+  </a>
+
+  <div class="menu">
+    <a href="admin_dashboard.html"><i data-lucide="home"></i> Dashboard</a>
+    <a href="#" class="active"><i data-lucide="users"></i> Farmer Directory</a>
+    <a href="admin_zone.html"><i data-lucide="clipboard-list"></i> Zone</a>
+    <a href="admin_blog.html"><i data-lucide="book-open"></i> Blog</a>
+    <a href="admin_complaint_review.html"><i data-lucide="check-square"></i> Compliance</a>
+    <a href="admin_feedback_review.html"><i data-lucide="bell"></i> Feedback</a>
+  </div>
+
+  <div class="menu-footer">
+    <a href="index.html"><i data-lucide="log-out"></i> Logout</a>
+  </div>
+</div>
+
+    <div class="topbar">
+        <h2>Farmer Directory</h2>
+        <div class="user-profile">
+            <i data-lucide="user-cog" size="16"></i>
+            <span>Admin: Root_A1</span>
+        </div>
+    </div>
+
+    <div class="main">
+        <header class="mb-8">
+            <h3 class="section-title">Regional Farmer Management</h3>
+            <h1 class="text-3xl font-extrabold">Regional Farmer Management</h1>
+            <p class="text-slate-400">Filter by location to view registered farmers, review account details, and send alerts only to the right farmers.</p>
+        </header>
+
+        <div class="intel-grid">
+            <div class="filter-card">
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">Filter Farmers By Location</h3>
+                
+                <label class="text-[10px] font-bold text-slate-500 block mb-2">STATE / PROVINCE</label>
+                <select class="juris-select" id="stateFilter">
+                    <option value="all">All States</option>
+                </select>
+
+                <label class="text-[10px] font-bold text-slate-500 block mb-2">DISTRICT</label>
+                <select class="juris-select" id="districtFilter">
+                    <option value="all">All Districts</option>
+                </select>
+
+                <label class="text-[10px] font-bold text-slate-500 block mb-2">VILLAGE / BLOCK</label>
+                <select class="juris-select" id="villageFilter">
+                    <option value="all">All Villages</option>
+                </select>
+
+                <button class="btn-generate" onclick="filterData()">Apply Location Filter</button>
+            </div>
+
+            <div class="data-display-card">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold">Selected Location: <span id="zoneLabel" class="text-cyan-500">All States > All Districts > All Villages</span></h2>
+                    <span class="text-[10px] bg-green-500/10 text-green-500 border border-green-500/20 px-3 py-1 rounded-full font-bold">System Synced</span>
+                </div>
+
+                <div class="metric-row">
+                    <span class="text-slate-400">Total Registered Farmers</span>
+                    <span class="font-bold" id="registeredCount">0 Accounts</span>
+                </div>
+                <div class="metric-row">
+                    <span class="text-slate-400">Poultry Farmers</span>
+                    <span class="font-bold" id="poultryCount">0</span>
+                    <span class="status-badge text-green-500">TRACKED</span>
+                </div>
+                <div class="metric-row">
+                    <span class="text-slate-400">High Risk Farmers</span>
+                    <span class="font-bold" id="riskCount">0</span>
+                    <span class="status-badge text-red-500">ALERT READY</span>
+                </div>
+                <div class="metric-row">
+                    <span class="text-slate-400">Villages Covered</span>
+                    <span class="font-bold" id="villageCount">0</span>
+                    <span class="status-badge text-yellow-500">LOCALIZED</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="directory-card">
+            <div class="directory-toolbar">
+                <h3 class="font-bold text-xl">Farmer Directory <span id="localCount" class="text-sm font-normal text-slate-500">(0 farmers shown)</span></h3>
+                <div class="directory-actions">
+                    <span id="selectedLocationPill" class="location-pill">All locations</span>
+                    <input type="text" id="searchInput" placeholder="Search by name, ID, mobile..." class="search-input">
+                </div>
+            </div>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Farmer</th>
+                            <th>Farmer ID</th>
+                            <th>Farm Type</th>
+                            <th>Location</th>
+                            <th>Mobile</th>
+                            <th>Health Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="farmerTable"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="alertModal">
+        <div class="bg-slate-900 p-8 rounded-2xl w-full max-width-md max-w-md border border-white/10">
+            <h3 class="text-xl font-bold mb-4">Emergency Alert: <span id="modalFarmer" class="text-cyan-500"></span></h3>
+            <textarea id="alertMsg" rows="4" class="w-full bg-slate-950 border border-white/10 rounded-xl p-4 text-sm mb-4 outline-none focus:border-cyan-500" placeholder="Type instructions..."></textarea>
+            <div class="flex gap-3">
+                <button class="flex-1 py-3 text-sm font-bold border border-white/10 rounded-xl" onclick="closeModal()">Cancel</button>
+                <button class="flex-1 py-3 text-sm font-bold bg-cyan-600 rounded-xl" onclick="confirmSend()">Dispatch Alert</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const farmers = [
+            { name: 'Rajesh Kumar', farmerId: 'FMR-9901', type: 'Poultry', mobile: '+91 70671 88932', health: 'Excellent', healthClass: 'text-green-600 bg-green-50', state: 'Chhattisgarh', district: 'Raipur', village: 'Charoda' },
+            { name: 'Amit Mahto', farmerId: 'FMR-8842', type: 'Cattle', mobile: '+91 98221 11456', health: 'Risk Detected', healthClass: 'text-red-600 bg-red-50', state: 'Chhattisgarh', district: 'Raipur', village: 'Kumhari' },
+            { name: 'Sunita Verma', farmerId: 'FMR-7720', type: 'Poultry', mobile: '+91 88717 34012', health: 'Stable', healthClass: 'text-amber-600 bg-amber-50', state: 'Chhattisgarh', district: 'Durg', village: 'Bhilai-3' },
+            { name: 'Poonam Sahu', farmerId: 'FMR-6654', type: 'Goat Farm', mobile: '+91 79991 54760', health: 'Excellent', healthClass: 'text-green-600 bg-green-50', state: 'Chhattisgarh', district: 'Durg', village: 'Patan' },
+            { name: 'Ramesh Patel', farmerId: 'FMR-5518', type: 'Poultry', mobile: '+91 90395 11823', health: 'Risk Detected', healthClass: 'text-red-600 bg-red-50', state: 'Madhya Pradesh', district: 'Bhopal', village: 'Berasia' },
+            { name: 'Meena Tiwari', farmerId: 'FMR-4412', type: 'Layers', mobile: '+91 97530 42188', health: 'Stable', healthClass: 'text-amber-600 bg-amber-50', state: 'Madhya Pradesh', district: 'Bhopal', village: 'Phanda' },
+            { name: 'Kailash Yadav', farmerId: 'FMR-3387', type: 'Dairy', mobile: '+91 94258 18744', health: 'Excellent', healthClass: 'text-green-600 bg-green-50', state: 'Madhya Pradesh', district: 'Sehore', village: 'Ashta' },
+            { name: 'Geeta Chauhan', farmerId: 'FMR-2276', type: 'Poultry', mobile: '+91 88396 50124', health: 'Stable', healthClass: 'text-amber-600 bg-amber-50', state: 'Madhya Pradesh', district: 'Sehore', village: 'Ichhawar' }
+        ];
+
+        const stateFilter = document.getElementById('stateFilter');
+        const districtFilter = document.getElementById('districtFilter');
+        const villageFilter = document.getElementById('villageFilter');
+        const searchInput = document.getElementById('searchInput');
+        const farmerTable = document.getElementById('farmerTable');
+        const zoneLabel = document.getElementById('zoneLabel');
+        const localCount = document.getElementById('localCount');
+        const selectedLocationPill = document.getElementById('selectedLocationPill');
+
+        function getInitials(name) {
+            return name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+        }
+
+        function uniqueValues(records, key, filters = {}) {
+            return [...new Set(records
+                .filter((record) => Object.entries(filters).every(([filterKey, filterValue]) => !filterValue || record[filterKey] === filterValue))
+                .map((record) => record[key]))];
+        }
+
+        function fillSelect(select, values, placeholder) {
+            const previousValue = select.value;
+            select.innerHTML = `<option value="all">${placeholder}</option>` +
+                values.map((value) => `<option value="${value}">${value}</option>`).join('');
+            if ([...select.options].some((option) => option.value === previousValue)) {
+                select.value = previousValue;
+            }
+        }
+
+        function syncLocationFilters() {
+            fillSelect(stateFilter, uniqueValues(farmers, 'state'), 'All States');
+
+            const selectedState = stateFilter.value !== 'all' ? stateFilter.value : '';
+            fillSelect(districtFilter, uniqueValues(farmers, 'district', { state: selectedState }), 'All Districts');
+
+            const selectedDistrict = districtFilter.value !== 'all' ? districtFilter.value : '';
+            fillSelect(villageFilter, uniqueValues(farmers, 'village', { state: selectedState, district: selectedDistrict }), 'All Villages');
+        }
+
+        function getFilteredFarmers() {
+            const state = stateFilter.value;
+            const district = districtFilter.value;
+            const village = villageFilter.value;
+            const query = searchInput.value.trim().toLowerCase();
+
+            return farmers.filter((farmer) => {
+                const matchesLocation =
+                    (state === 'all' || farmer.state === state) &&
+                    (district === 'all' || farmer.district === district) &&
+                    (village === 'all' || farmer.village === village);
+
+                const searchableText = `${farmer.name} ${farmer.farmerId} ${farmer.mobile} ${farmer.type} ${farmer.state} ${farmer.district} ${farmer.village}`.toLowerCase();
+                const matchesSearch = !query || searchableText.includes(query);
+
+                return matchesLocation && matchesSearch;
+            });
+        }
+
+        function renderDirectory() {
+            const filteredFarmers = getFilteredFarmers();
+            const state = stateFilter.value === 'all' ? 'All States' : stateFilter.value;
+            const district = districtFilter.value === 'all' ? 'All Districts' : districtFilter.value;
+            const village = villageFilter.value === 'all' ? 'All Villages' : villageFilter.value;
+            const locationLabel = `${state} > ${district} > ${village}`;
+
+            zoneLabel.innerText = locationLabel;
+            selectedLocationPill.innerText = district === 'All Districts' && village === 'All Villages'
+                ? state
+                : `${district} / ${village}`;
+            localCount.innerText = `(${filteredFarmers.length} farmers shown)`;
+
+            document.getElementById('registeredCount').innerText = `${filteredFarmers.length} Accounts`;
+            document.getElementById('poultryCount').innerText = filteredFarmers.filter((farmer) => farmer.type.toLowerCase().includes('poultry') || farmer.type.toLowerCase().includes('layers')).length;
+            document.getElementById('riskCount').innerText = filteredFarmers.filter((farmer) => farmer.health === 'Risk Detected').length;
+            document.getElementById('villageCount').innerText = new Set(filteredFarmers.map((farmer) => farmer.village)).size;
+
+            if (!filteredFarmers.length) {
+                farmerTable.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="directory-empty">No farmer accounts match this location or search filter.</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            farmerTable.innerHTML = filteredFarmers.map((farmer) => `
+                <tr>
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <div class="farmer-avatar">${getInitials(farmer.name)}</div>
+                            <div>
+                                <div class="font-bold">${farmer.name}</div>
+                                <div class="text-xs text-slate-500">${farmer.state}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="font-mono text-cyan-600 text-xs">${farmer.farmerId}</td>
+                    <td>${farmer.type}</td>
+                    <td>${farmer.district}, ${farmer.village}</td>
+                    <td>${farmer.mobile}</td>
+                    <td><span class="text-xs font-bold px-2 py-1 rounded ${farmer.healthClass}">${farmer.health}</span></td>
+                    <td><button class="btn-alert" onclick="openModal('${farmer.name}')">Send Alert</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function filterData() {
+            farmerTable.style.opacity = '0.3';
+            setTimeout(() => {
+                renderDirectory();
+                farmerTable.style.opacity = '1';
+            }, 500);
+        }
+
+        const modal = document.getElementById('alertModal');
+        function openModal(name) {
+            document.getElementById('modalFarmer').innerText = name;
+            modal.style.display = 'flex';
+        }
+        function closeModal() { modal.style.display = 'none'; }
+        function confirmSend() {
+            alert("Digital Farm Secure: Alert sent successfully.");
+            closeModal();
+        }
+
+        stateFilter.addEventListener('change', () => {
+            syncLocationFilters();
+            renderDirectory();
+        });
+
+        districtFilter.addEventListener('change', () => {
+            syncLocationFilters();
+            renderDirectory();
+        });
+
+        villageFilter.addEventListener('change', renderDirectory);
+        searchInput.addEventListener('input', renderDirectory);
+
+        syncLocationFilters();
+        renderDirectory();
+    </script>
+</body>
+</html>

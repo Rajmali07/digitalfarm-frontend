@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact | Digital Farm</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+:root {
+  --primary: #22c55e;
+  --text-dim: #94a3b8;
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+  background: linear-gradient(135deg, #020617, #0f172a);
+  color: #fff;
+}
+
+.navbar {
+  position: sticky; top: 0; width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 60px; z-index: 1000;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-links { display: flex; gap: 12px; list-style: none; align-items: center; }
+.nav-links li a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  transition: background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+.nav-links li a:hover { color: #dbeafe; background: rgba(255, 255, 255, 0.06); }
+.nav-links li a.active {
+  color: #ffffff;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.menu-toggle { display: none; font-size: 24px; color: white; cursor: pointer; }
+
+.contact-section {
+  padding: 80px 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.contact-wrapper {
+  display: flex;
+  gap: 50px;
+  max-width: 1100px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.contact-info {
+  flex: 1;
+}
+
+.contact-info h1 {
+  font-size: 40px;
+  margin-bottom: 15px;
+  color: var(--primary);
+}
+
+.contact-info p {
+  color: #94a3b8;
+  margin-bottom: 30px;
+}
+
+.info-box {
+  margin-bottom: 20px;
+  padding: 15px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+}
+
+.contact-form {
+  flex: 1;
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(12px);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+.contact-form h2 {
+  margin-bottom: 20px;
+  color: var(--primary);
+}
+
+.contact-form form label {
+  display: block;
+  margin-bottom: 8px;
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 18px;
+  border: none;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #fff;
+}
+
+.contact-form textarea {
+  height: 120px;
+  resize: none;
+}
+
+.contact-form button {
+  width: 100%;
+  padding: 14px;
+  background: var(--primary);
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.contact-form button:hover {
+  background: #16a34a;
+}
+
+.form-status {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  display: none;
+}
+
+.form-status.success {
+  display: block;
+  background: rgba(34, 197, 94, 0.14);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.form-status.error {
+  display: block;
+  background: rgba(248, 113, 113, 0.14);
+  color: #fca5a5;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+}
+
+.footer {
+  background: #020617;
+  padding: 80px 60px 40px;
+  margin-top: 80px;
+  border-top: 1px solid var(--glass-border);
+  color: var(--text-dim);
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 40px;
+}
+
+.footer-section h3 {
+  color: white;
+  margin-bottom: 20px;
+  font-size: 16px;
+  text-transform: uppercase;
+}
+
+.footer-logo {
+  color: var(--primary);
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.footer-section p,
+.footer-section a {
+  color: var(--text-dim);
+  font-size: 14px;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.footer-section a:hover {
+  color: var(--primary);
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 40px;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 20px;
+  font-size: 12px;
+}
+
+@media(max-width: 900px) {
+  .contact-wrapper {
+    flex-direction: column;
+  }
+
+  .navbar {
+    padding: 15px 30px;
+  }
+
+  .menu-toggle { display: block; }
+  .nav-links { position: fixed; top: 70px; right: -100%; flex-direction: column; background: #0f172a; width: 100%; height: 100vh; padding: 40px; transition: 0.4s ease; }
+  .nav-links.active { right: 0; }
+  .footer {
+    padding: 50px 30px 30px;
+  }
+  .footer-container { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <div class="logo"><i class="fa-solid fa-seedling"></i> Digital Farm</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="information.html">Information</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="contact.html" class="active">Contact</a></li>
+  </ul>
+  <div class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars-staggered"></i></div>
+</nav>
+
+<section class="contact-section">
+  <div class="contact-wrapper">
+    <div class="contact-info">
+      <h1>Get in Touch</h1>
+      <p>
+        Have questions about biosecurity or need help?
+        We're here to support farmers and ensure safer livestock practices.
+      </p>
+
+      <div class="info-box">support@biosecure.com</div>
+      <div class="info-box">+91 9876543210</div>
+      <div class="info-box">India</div>
+    </div>
+
+    <div class="contact-form">
+      <h2>Send Message</h2>
+      <form id="contactForm">
+        <label for="contact-name">Full Name</label>
+        <input id="contact-name" type="text" placeholder="Full Name" required>
+        <label for="contact-email">Email Address</label>
+        <input id="contact-email" type="email" placeholder="Email Address" required>
+        <label for="contact-subject">Subject</label>
+        <input id="contact-subject" type="text" placeholder="Enter subject title" required>
+        <label for="contact-message">Message</label>
+        <textarea id="contact-message" placeholder="Write your message..." required></textarea>
+        <button type="submit">Send Message</button>
+        <div id="contactStatus" class="form-status" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<footer class="footer" style="background: #020617; padding: 60px 80px 20px; color: #94a3b8; border-top: 1px solid #1e293b;">
+  <div style="text-align:center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
+    <h2 style="color:var(--primary);">Digital Farm</h2>
+  </div>
+  <p style="text-align:center; padding-top:20px; font-size:12px;">&copy; 2026 Digital Farm | Built for Farmers</p>
+</footer>
+
+<script>
+  const toggle = document.getElementById("menuToggle");
+  const nav = document.getElementById("navLinks");
+  const contactForm = document.getElementById("contactForm");
+  const contactStatus = document.getElementById("contactStatus");
+
+  toggle.addEventListener("click", () => nav.classList.toggle("active"));
+
+  function readFeedbackStore() {
+    try {
+      return JSON.parse(localStorage.getItem("siteFeedback") || "[]");
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function showStatus(message, type) {
+    contactStatus.className = `form-status ${type}`;
+    contactStatus.textContent = message;
+  }
+
+  contactForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const fullName = document.getElementById("contact-name").value.trim();
+    const email = document.getElementById("contact-email").value.trim();
+    const subject = document.getElementById("contact-subject").value.trim();
+    const message = document.getElementById("contact-message").value.trim();
+
+    if (!fullName || !email || !subject || !message) {
+      showStatus("Please fill in all fields before sending your feedback.", "error");
+      return;
+    }
+
+    const feedbackStore = readFeedbackStore();
+    const feedbackId = `FDB-${Date.now().toString().slice(-6)}`;
+    const submittedAt = new Date().toISOString();
+
+    const feedbackRecord = {
+      id: feedbackId,
+      sender: fullName,
+      email,
+      subject,
+      message,
+      status: "Unreviewed",
+      impactScore: 5,
+      adminNotes: "",
+      submittedAt,
+      dateLabel: new Date(submittedAt).toLocaleDateString("en-GB")
+    };
+
+    feedbackStore.unshift(feedbackRecord);
+    localStorage.setItem("siteFeedback", JSON.stringify(feedbackStore));
+    localStorage.setItem("activeFeedbackId", feedbackId);
+
+    contactForm.reset();
+    showStatus("Your message has been sent successfully. The admin review console can see it now.", "success");
+  });
+</script>
+
+</body>
+</html>

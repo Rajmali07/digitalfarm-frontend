@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biosecurity Audit | Digital Farm</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #22c55e;
+      --primary-hover: #16a34a;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --bg-navy: #0f172a;
+      --bg-slate: #f8fafc;
+      --text-main: #1e293b;
+      --text-gray: #64748b;
+      --border: #e2e8f0;
+      --card-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: var(--bg-slate); color: var(--text-main); padding-bottom: 120px; }
+
+    .navbar {
+      background: var(--bg-navy);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      padding: 15px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .nav-logo { font-size: 22px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-links { display: flex; list-style: none; align-items: center; gap: 10px; }
+    .nav-links a { text-decoration: none; color: #94a3b8; font-size: 14px; padding: 8px 20px; transition: 0.3s; }
+    .nav-links a.active { background: rgba(255, 255, 255, 0.1); color: white; border-radius: 50px; font-weight: 600; }
+
+    .profile-menu { position: relative; margin-left: 18px; }
+    .profile-trigger { display: flex; align-items: center; gap: 14px; background: transparent; border: none; color: white; cursor: pointer; padding: 0; }
+    .profile-name { font-size: 16px; font-weight: 600; color: #f8fafc; }
+    .profile-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 18px);
+      right: 0;
+      width: 270px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+      z-index: 1200;
+    }
+    .profile-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item {
+      display: block;
+      width: 100%;
+      padding: 18px 22px;
+      background: white;
+      border: none;
+      border-bottom: 1px solid #f1f5f9;
+      text-align: left;
+      font-size: 16px;
+      color: #3f3f46;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .dropdown-item:hover { background: #f8fafc; }
+    .dropdown-item.logout { color: #ff3b30; border-bottom: none; }
+
+    .container { max-width: 1160px; margin: 36px auto; padding: 0 20px; }
+    .page-header { margin-bottom: 28px; }
+    .page-header h1 { font-size: 32px; font-weight: 800; color: #0f172a; }
+    .page-header p { color: var(--text-gray); margin-top: 8px; }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1.35fr 0.95fr;
+      gap: 22px;
+      margin-bottom: 28px;
+    }
+    .status-header,
+    .summary-card,
+    .section-card {
+      background: white;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      box-shadow: var(--card-shadow);
+    }
+    .status-header {
+      padding: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      transition: 0.25s ease;
+    }
+    .status-title { font-size: 28px; font-weight: 800; margin-top: 6px; }
+    .status-caption { font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-gray); }
+    .status-subtext { color: var(--text-gray); margin-top: 8px; line-height: 1.6; font-size: 14px; }
+    .status-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      background: #f8fafc;
+      color: var(--text-gray);
+    }
+
+    .summary-card { padding: 24px; }
+    .summary-card h2 { font-size: 18px; font-weight: 800; margin-bottom: 18px; }
+    .summary-list { display: grid; gap: 12px; }
+    .summary-item {
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+    }
+    .summary-item strong { display: block; font-size: 15px; margin-bottom: 4px; }
+    .summary-item p { color: var(--text-gray); font-size: 13px; line-height: 1.5; }
+    .summary-item.warning { background: #fffbeb; border-left: 4px solid var(--warning); }
+    .summary-item.danger { background: #fef2f2; border-left: 4px solid var(--danger); }
+    .summary-item.safe { background: #f0fdf4; border-left: 4px solid var(--primary); }
+
+    .section-card { padding: 28px; margin-bottom: 22px; }
+    .section-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--bg-navy);
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 12px;
+      margin-bottom: 10px;
+    }
+    .section-help { color: var(--text-gray); font-size: 14px; margin-bottom: 6px; }
+
+    .q-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 16px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .q-row:last-child { border-bottom: none; }
+    .q-label { font-size: 15px; font-weight: 600; color: #334155; flex: 1; line-height: 1.5; }
+
+    .toggle-pill {
+      display: flex;
+      background: #f1f5f9;
+      padding: 4px;
+      border-radius: 12px;
+      width: 118px;
+      flex-shrink: 0;
+    }
+    .t-btn {
+      flex: 1;
+      border: none;
+      padding: 10px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 800;
+      transition: 0.2s ease;
+      color: #94a3b8;
+      background: none;
+      outline: none;
+    }
+    .t-btn.active-yes { background: var(--primary); color: white; }
+    .t-btn.active-no { background: var(--danger); color: white; }
+
+    .remarks-wrap { margin-top: 14px; }
+    .remarks-wrap label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-gray);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .remarks-wrap textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #fcfcfd;
+      font-size: 14px;
+      color: var(--text-main);
+      resize: vertical;
+      min-height: 110px;
+      outline: none;
+    }
+    .remarks-wrap textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1); }
+
+    .footer-sync {
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+      padding: 20px 28px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
+      z-index: 1000;
+    }
+    .sync-copy strong { display: block; font-size: 14px; margin-bottom: 4px; }
+    .sync-copy span { color: var(--text-gray); font-size: 13px; }
+    .footer-actions { display: flex; align-items: center; gap: 12px; }
+    .btn-secondary,
+    .btn-sync {
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-size: 14px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .btn-secondary {
+      background: #eef2ff;
+      color: #3730a3;
+      padding: 14px 18px;
+    }
+    .btn-sync {
+      background: var(--bg-navy);
+      color: white;
+      padding: 14px 22px;
+    }
+    .btn-secondary:hover,
+    .btn-sync:hover { transform: translateY(-2px); }
+
+    .bg-safe { border-color: #bbf7d0; background: #f0fdf4; }
+    .bg-risk { border-color: #fde68a; background: #fffbeb; }
+    .bg-critical { border-color: #fecaca; background: #fef2f2; }
+    .bg-safe .status-title,
+    .bg-safe .status-icon { color: #15803d; }
+    .bg-risk .status-title,
+    .bg-risk .status-icon { color: #b45309; }
+    .bg-critical .status-title,
+    .bg-critical .status-icon { color: #b91c1c; }
+
+    @media (max-width: 980px) {
+      .navbar { padding: 15px 24px; flex-wrap: wrap; gap: 15px; }
+      .nav-links { flex-wrap: wrap; justify-content: flex-end; }
+      .overview-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      body { padding-bottom: 170px; }
+      .profile-name { display: none; }
+      .q-row { flex-direction: column; align-items: flex-start; }
+      .toggle-pill { width: 100%; max-width: 180px; }
+      .footer-sync { flex-direction: column; align-items: stretch; }
+      .footer-actions { width: 100%; flex-direction: column; }
+      .btn-secondary, .btn-sync { width: 100%; }
+    }
+
+    @media (max-width: 560px) {
+      .container { margin: 28px auto; }
+      .page-header h1 { font-size: 28px; }
+      .status-header, .summary-card, .section-card { padding: 20px; }
+      .status-title { font-size: 22px; }
+      .nav-links { justify-content: center; }
+      .profile-menu { margin-left: 0; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <a href="farmer_dashboard.html" class="nav-logo"><i class="fa-solid fa-leaf"></i> Digital Farm</a>
+    <ul class="nav-links">
+      <li><a href="farmer_dashboard.html">Dashboard</a></li>
+      <li><a href="farmer_ai_check.html">AI Diagnostic</a></li>
+      <li><a href="farmer_add_data.html">Data Entry</a></li>
+      <li><a href="farmer_animal_records.html">Records</a></li>
+      <li><a href="farmer_biosecurity.html" class="active">Biosecurity</a></li>
+      <li class="profile-menu">
+        <button class="profile-trigger" id="profileMenuButton" type="button">
+          <span class="profile-name">Hello, Raj!</span>
+          <span class="profile-avatar">R</span>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <a href="farmer_profile.html" class="dropdown-item">View Profile</a>
+          <a href="farmer_setting.html" class="dropdown-item">Settings</a>
+          <a href="farmer_login.html" class="dropdown-item logout">Logout</a>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Comprehensive Biosecurity Audit</h1>
+      <p>April 03, 2026 | Auditor: Rajesh (FMR-9901)</p>
+    </div>
+
+    <div class="overview-grid">
+      <div class="status-header bg-safe" id="statusBox">
+        <div>
+          <p class="status-caption">Live Biosecurity Status</p>
+          <div class="status-title" id="statusText">SAFE</div>
+          <p class="status-subtext" id="statusNote">All critical controls look compliant so far. Complete the checklist to confirm today's audit.</p>
+        </div>
+        <div class="status-icon">
+          <i id="statusIcon" class="fa-solid fa-circle-check"></i>
+        </div>
+      </div>
+
+      <div class="summary-card">
+        <h2>Priority Watch</h2>
+        <div class="summary-list">
+          <div class="summary-item safe">
+            <strong>Recommended baseline</strong>
+            <p>Keep entry restricted, maintain quarantine, disinfect shared equipment, and confirm clean feed and water.</p>
+          </div>
+          <div class="summary-item warning">
+            <strong>Escalates risk quickly</strong>
+            <p>Symptoms with poor isolation, missed cleaning, or vaccination gaps can move the farm into high-risk status.</p>
+          </div>
+          <div class="summary-item danger">
+            <strong>Critical condition</strong>
+            <p>If sick animals are not isolated or symptoms appear while vaccines are overdue, review the farm immediately.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <form id="auditForm">
+      <div class="section-card">
+        <div class="section-title"><i class="fa-solid fa-door-closed"></i> 1. Farm Entry Control</div>
+        <p class="section-help">Protect the farm perimeter and maintain clean access procedures for people and vehicles.</p>
+        <div class="q-row">
+          <span class="q-label">Is farm entry restricted to essential personnel?</span>
+          <div class="toggle-pill" data-key="entry_restricted"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+        <div class="q-row">
+          <span class="q-label">Is a visitor log maintained for all entries?</span>
+          <div class="toggle-pill" data-key="visitor_log"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+        <div class="q-row">
+          <span class="q-label">Is a functional footbath used at entry?</span>
+          <div class="toggle-pill" data-key="footbath_used"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+        <div class="q-row">
+          <span class="q-label">Are vehicles disinfected before entry?</span>
+          <div class="toggle-pill" data-key="vehicles_disinfected"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title"><i class="fa-solid fa-hand-sparkles"></i> 2. Hygiene and Sanitation</div>
+        <p class="section-help">Daily cleaning and tool disinfection reduce transmission risk between units.</p>
+        <div class="q-row">
+          <span class="q-label">Are animal sheds cleaned and waste disposed daily?</span>
+          <div class="toggle-pill" data-key="daily_clean"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+        <div class="q-row">
+          <span class="q-label">Is equipment disinfected after each use?</span>
+          <div class="toggle-pill" data-key="tools_disinfected"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title"><i class="fa-solid fa-heart-pulse"></i> 3. Animal Health Monitoring</div>
+        <p class="section-help">Track symptoms early and confirm routine health checks are completed on schedule.</p>
+        <div class="q-row">
+          <span class="q-label">Are any animals currently showing disease symptoms?</span>
+          <div class="toggle-pill" data-key="has_symptoms"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+        <div class="q-row">
+          <span class="q-label">Was a regular health check completed?</span>
+          <div class="toggle-pill" data-key="health_check_done"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title"><i class="fa-solid fa-syringe"></i> 4. Vaccination and Medical Safety</div>
+        <p class="section-help">Keep current batches protected and confirm veterinary support is active when needed.</p>
+        <div class="q-row">
+          <span class="q-label">Are all vaccinations up to date for current batches?</span>
+          <div class="toggle-pill" data-key="vax_status"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+        <div class="q-row">
+          <span class="q-label">Has a vet consultation been done recently?</span>
+          <div class="toggle-pill" data-key="vet_consult"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title"><i class="fa-solid fa-building-circle-exclamation"></i> 5. Isolation and Quarantine</div>
+        <p class="section-help">Separate risky units quickly and quarantine new arrivals before mixing them with healthy stock.</p>
+        <div class="q-row">
+          <span class="q-label">Are sick animals separated from healthy ones?</span>
+          <div class="toggle-pill" data-key="is_isolated"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+        <div class="q-row">
+          <span class="q-label">Are new arrivals quarantined before herd introduction?</span>
+          <div class="toggle-pill" data-key="is_quarantined"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title"><i class="fa-solid fa-shield-virus"></i> 6. Pest and Wildlife Control</div>
+        <p class="section-help">Minimise outside contamination from rodents, insects, and wild-animal exposure.</p>
+        <div class="q-row">
+          <span class="q-label">Are active rodent or insect control measures done?</span>
+          <div class="toggle-pill" data-key="pest_control"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+        <div class="q-row">
+          <span class="q-label">Is wild animal access restricted?</span>
+          <div class="toggle-pill" data-key="wildlife_restricted"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title"><i class="fa-solid fa-truck-ramp-box"></i> 7. Equipment Control</div>
+        <p class="section-help">Shared tools and vehicles should be cleaned before they reach active farm areas.</p>
+        <div class="q-row">
+          <span class="q-label">Are shared tools or vehicles cleaned before entry?</span>
+          <div class="toggle-pill" data-key="equipment_shared"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title"><i class="fa-solid fa-faucet-drip"></i> 8. Feed and Water Safety</div>
+        <p class="section-help">Clean water and proper feed storage are essential to daily flock protection.</p>
+        <div class="q-row">
+          <span class="q-label">Is drinking water clean and tested regularly?</span>
+          <div class="toggle-pill" data-key="water_test_done"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+        <div class="q-row">
+          <span class="q-label">Is feed storage hygienic and free from mold?</span>
+          <div class="toggle-pill" data-key="feed_mold_free"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title"><i class="fa-solid fa-phone-volume"></i> 9. Emergency Readiness</div>
+        <p class="section-help">Confirm the farm can isolate, respond, and escalate quickly if a risk event occurs.</p>
+        <div class="q-row">
+          <span class="q-label">Is the isolation area ready and active?</span>
+          <div class="toggle-pill" data-key="isolation_ready"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+        </div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-title"><i class="fa-solid fa-pen-to-square"></i> 10. Checklist Status and Reporting</div>
+        <p class="section-help">Add notes for the current audit before you submit it to the dashboard.</p>
+        <div class="remarks-wrap">
+          <label for="remarks">Remarks / Observations</label>
+          <textarea id="remarks" placeholder="Enter notes about today's hygiene, symptoms, visitor activity, quarantine, or urgent follow-up..."></textarea>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="footer-sync">
+    <div class="sync-copy">
+      <strong>Audit Sync Ready</strong>
+      <span id="progressText">Complete every section, then submit the audit to return to the dashboard.</span>
+    </div>
+    <div class="footer-actions">
+      <a href="farmer_dashboard.html" class="btn-secondary">Back to Dashboard</a>
+      <button class="btn-sync" type="button" onclick="syncData()">Submit Audit</button>
+    </div>
+  </div>
+
+  <script src="risk_engine.js"></script>
+  <script>
+    const data = {
+      entry_restricted: null,
+      visitor_log: null,
+      footbath_used: null,
+      vehicles_disinfected: null,
+      daily_clean: null,
+      tools_disinfected: null,
+      has_symptoms: null,
+      health_check_done: null,
+      vax_status: null,
+      vet_consult: null,
+      is_isolated: null,
+      is_quarantined: null,
+      pest_control: null,
+      wildlife_restricted: null,
+      equipment_shared: null,
+      water_test_done: null,
+      feed_mold_free: null,
+      isolation_ready: null
+    };
+
+    const profileMenuButton = document.getElementById('profileMenuButton');
+    const profileDropdown = document.getElementById('profileDropdown');
+    const statusBox = document.getElementById('statusBox');
+    const statusText = document.getElementById('statusText');
+    const statusNote = document.getElementById('statusNote');
+    const statusIcon = document.getElementById('statusIcon');
+    const progressText = document.getElementById('progressText');
+    const biosecurityKey = window.DigitalFarmRisk.STORAGE_KEYS.biosecurity;
+
+    function restoreAudit() {
+      const storedAudit = window.DigitalFarmRisk.readStore(biosecurityKey, null);
+      if (!storedAudit || !storedAudit.responses) return;
+
+      Object.entries(storedAudit.responses).forEach(([key, value]) => {
+        if (!(key in data) || value === null) return;
+        data[key] = value;
+        const pill = document.querySelector(`.toggle-pill[data-key="${key}"]`);
+        if (!pill) return;
+        Array.from(pill.children).forEach((button) => button.classList.remove('active-yes', 'active-no'));
+        const activeButton = value ? pill.children[0] : pill.children[1];
+        activeButton.classList.add(value ? 'active-yes' : 'active-no');
+      });
+
+      document.getElementById('remarks').value = storedAudit.remarks || '';
+    }
+
+    function toggle(btn, val) {
+      const parent = btn.parentElement;
+      const key = parent.dataset.key;
+
+      Array.from(parent.children).forEach((button) => button.classList.remove('active-yes', 'active-no'));
+
+      if (val === 'yes') {
+        btn.classList.add('active-yes');
+        data[key] = true;
+      } else {
+        btn.classList.add('active-no');
+        data[key] = false;
+      }
+
+      runAI();
+    }
+
+    function getAnsweredCount() {
+      return Object.values(data).filter((value) => value !== null).length;
+    }
+
+    function runAI() {
+      const answeredCount = getAnsweredCount();
+      const totalCount = Object.keys(data).length;
+
+      let status = 'SAFE';
+      let note = 'All critical controls look compliant so far. Complete the checklist to confirm today\'s audit.';
+      let style = 'bg-safe';
+      let iconClass = 'fa-circle-check';
+
+      if (data.has_symptoms === true && data.is_isolated === false) {
+        status = 'CRITICAL: Isolation Missing';
+        note = 'Animals show symptoms but isolation is not active. Separate affected units immediately and restrict movement.';
+        style = 'bg-critical';
+        iconClass = 'fa-biohazard';
+      } else if (data.has_symptoms === true && data.vax_status === false) {
+        status = 'CRITICAL: Outbreak Risk';
+        note = 'Symptoms and overdue vaccination together create an urgent outbreak condition that needs same-day review.';
+        style = 'bg-critical';
+        iconClass = 'fa-triangle-exclamation';
+      } else if (
+        data.daily_clean === false ||
+        data.entry_restricted === false ||
+        data.has_symptoms === true ||
+        data.tools_disinfected === false ||
+        data.visitor_log === false
+      ) {
+        status = 'HIGH RISK: Biosecurity Threat';
+        note = 'One or more frontline controls are weak. Tighten access, sanitation, and animal monitoring before the next cycle.';
+        style = 'bg-risk';
+        iconClass = 'fa-triangle-exclamation';
+      } else if (answeredCount === 0) {
+        status = 'SAFE';
+        note = 'All critical controls look compliant so far. Complete the checklist to confirm today\'s audit.';
+        style = 'bg-safe';
+        iconClass = 'fa-circle-check';
+      }
+
+      statusBox.className = 'status-header ' + style;
+      statusText.innerText = status;
+      statusNote.innerText = note;
+      statusIcon.className = 'fa-solid ' + iconClass;
+      progressText.innerText = answeredCount + ' of ' + totalCount + ' checkpoints completed.';
+    }
+
+    function syncData() {
+      if (Object.values(data).includes(null)) {
+        alert('Digital Farm Sync: Please complete all audit checkpoints before submitting.');
+        return;
+      }
+
+      window.DigitalFarmRisk.writeStore(biosecurityKey, {
+        responses: { ...data },
+        remarks: document.getElementById('remarks').value.trim(),
+        statusText: statusText.innerText,
+        statusNote: statusNote.innerText,
+        updatedAt: new Date().toISOString(),
+        updatedLabel: window.DigitalFarmRisk.formatDateLabel(new Date())
+      });
+      window.DigitalFarmRisk.syncOverallRisk();
+      alert('Digital Farm Sync: Checklist submitted successfully. Final Status: ' + statusText.innerText);
+      window.location.href = 'farmer_dashboard.html';
+    }
+
+    profileMenuButton.addEventListener('click', function (event) {
+      event.stopPropagation();
+      profileDropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!profileDropdown.contains(event.target) && !profileMenuButton.contains(event.target)) {
+        profileDropdown.classList.remove('open');
+      }
+    });
+
+    restoreAudit();
+    runAI();
+  </script>
+
+</body>
+</html>

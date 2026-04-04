@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog Management | Digital Farm Admin</title>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --admin-primary: #0891b2; /* Deep Cyan */
+            --admin-hover: #0e7490;
+            --bg-dark: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-dark);
+            background-image: radial-gradient(circle at 0% 0%, rgba(8, 145, 178, 0.05), transparent 40%);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR (Mirrored from Admin Dashboard) */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: #010411;
+            position: fixed;
+            padding: 25px;
+            color: white;
+            border-right: 1px solid var(--glass-border);
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 40px;
+            color: var(--admin-primary);
+            text-decoration: none;
+        }
+
+        .logo-box {
+            width: 40px;
+            height: 40px;
+            background: rgba(8, 145, 178, 0.1);
+            border: 1px solid var(--admin-primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: var(--text-dim);
+            font-weight: 600;
+            font-size: 14px;
+            transition: 0.3s;
+            margin-bottom: 5px;
+        }
+
+        .menu a.active, .menu a:hover {
+            background: rgba(8, 145, 178, 0.1);
+            color: var(--admin-primary);
+        }
+
+        .menu-footer {
+            margin-top: 28px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .menu-footer a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 12px;
+            text-decoration: none;
+            color: #f87171;
+            font-weight: 700;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .menu-footer a:hover {
+            background: rgba(248, 113, 113, 0.08);
+        }
+
+        /* TOPBAR (Mirrored from Admin Dashboard) */
+        .topbar {
+            margin-left: 260px;
+            width: calc(100% - 260px);
+            height: 75px;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 40px;
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+
+        .topbar h2 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .user-profile {
+            background: rgba(255,255,255,0.05);
+            padding: 8px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            border: 1px solid var(--glass-border);
+        }
+
+        /* MAIN CONTENT AREA */
+        .main {
+            margin-left: 260px;
+            padding: 40px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            padding: 24px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            transition: 0.3s ease;
+        }
+
+        .section-title {
+            margin: 0 0 25px;
+            color: var(--admin-primary);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 800;
+        }
+
+        /* FORM ELEMENTS */
+        input, select, textarea {
+            background: rgba(2, 6, 23, 0.6) !important;
+            border: 1px solid var(--glass-border) !important;
+            color: white !important;
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            outline: none;
+            font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus { border-color: var(--admin-primary) !important; }
+
+        .btn-cyan {
+            background: var(--admin-primary);
+            color: white;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 800;
+            width: 100%;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-cyan:hover { background: var(--admin-hover); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(8, 145, 178, 0.2); }
+
+        /* TABLE STYLES */
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px 10px; border-bottom: 1px solid var(--glass-border); font-size: 14px; text-align: left; }
+        th { color: var(--text-dim); font-weight: 600; }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-dim);
+            padding: 28px 16px;
+            font-size: 14px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 84px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .status-pill.published {
+            background: rgba(34, 197, 94, 0.12);
+            color: #4ade80;
+        }
+
+        .status-pill.draft {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fbbf24;
+        }
+
+        .status-pill.link {
+            background: rgba(8, 145, 178, 0.12);
+            color: #38bdf8;
+        }
+
+        .table-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        .action-btn {
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        .action-btn:hover {
+            border-color: var(--admin-primary);
+            color: var(--admin-primary);
+        }
+
+        .action-btn.delete:hover {
+            border-color: #f87171;
+            color: #f87171;
+        }
+
+        .message-banner {
+            margin-bottom: 18px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            background: rgba(34, 197, 94, 0.12);
+            color: #86efac;
+            font-size: 13px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .message-banner.show {
+            display: block;
+        }
+
+        /* RESPONSIVE */
+        @media(max-width:1024px){
+            .sidebar { display: none; }
+            .topbar, .main { margin-left: 0; width: 100%; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <div class="logo">
+        <div class="logo-box">
+            <i data-lucide="sprout" size="20"></i>
+        </div>
+        Digital Farm
+    </div>
+
+    <div class="menu">
+        <a href="admin_dashboard.html"><i data-lucide="home"></i> Dashboard</a>
+        <a href="admin_farmer_directory.html"><i data-lucide="users"></i> Farmer Directory</a>
+        <a href="admin_zone.html"><i data-lucide="clipboard-list"></i> Zone</a>
+        <a href="admin_blog.html" class="active"><i data-lucide="book-open"></i> Blog</a>
+        <a href="admin_complaint_review.html"><i data-lucide="check-square"></i> Compliance</a>
+        <a href="admin_feedback_review.html"><i data-lucide="bell"></i> Feedback</a>
+    </div>
+
+    <div class="menu-footer">
+        <a href="index.html">
+            <i data-lucide="log-out" size="16"></i> Logout
+        </a>
+    </div>
+</div>
+
+<div class="topbar">
+    <h2>Community Content Hub</h2>
+    <div class="user-profile">
+        <i data-lucide="user-cog" size="14"></i>
+        <span>Admin: Root_A1</span>
+    </div>
+</div>
+
+<div class="main">
+    <h3 class="section-title">Global Feed Management</h3>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-2">
+            <div class="card">
+                <div id="blog-message" class="message-banner"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="color: var(--text-dim); font-size: 16px; margin: 0;">Existing Posts</h3>
+                    <span id="post-count" style="background: var(--admin-primary); color: white; padding: 2px 10px; border-radius: 20px; font-size: 12px; font-weight: 800;">0</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Post Title</th>
+                                <th>Category</th>
+                                <th>Status</th>
+                                <th style="text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blog-table-body">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-1">
+            <div class="card sticky top-28">
+                <h3 id="form-title" style="color: var(--admin-primary); font-size: 16px; font-weight: 800; margin-bottom: 20px;">CREATE NEW POST</h3>
+                
+                <form id="blog-form" class="space-y-4">
+                    <input type="text" id="post-title" placeholder="Enter post title" required>
+                    
+                    <select id="post-category" required>
+                        <option value="Disease Alerts">Disease Alerts</option>
+                        <option value="Farmer Tips">Farmer Tips</option>
+                        <option value="Expert Advice">Expert Advice</option>
+                        <option value="Community Story">Community Story</option>
+                    </select>
+
+                    <div class="space-y-2">
+                        <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase;">Upload Image / Video</label>
+                        <div class="relative border-2 border-dashed border-glass-border rounded-xl p-6 hover:border-admin-cyan transition-all group text-center cursor-pointer">
+                            <input type="file" id="post-media" accept="image/*,video/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                            <div id="upload-placeholder">
+                                <i data-lucide="clapperboard" class="mx-auto mb-2 text-slate-500 group-hover:text-admin-cyan"></i>
+                                <p class="text-[11px] text-slate-400" id="file-name-display">Click or drag media</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <textarea id="post-content" rows="5" placeholder="Write caption or detailed content..."></textarea>
+
+                    <div id="link-container" class="hidden">
+                        <input type="url" id="post-link" placeholder="External URL (https://...)">
+                    </div>
+
+                    <div class="flex justify-between items-center gap-2 text-[11px] font-bold text-slate-500 uppercase pt-2">
+                        <label class="flex items-center gap-1 cursor-pointer">
+                            <input type="radio" name="status" value="published" checked class="accent-cyan-600"> Publish
+                        </label>
+                        <label class="flex items-center gap-1 cursor-pointer">
+                            <input type="radio" name="status" value="draft" class="accent-cyan-600"> Draft
+                        </label>
+                        <label class="flex items-center gap-1 cursor-pointer">
+                            <input type="radio" name="status" value="link" class="accent-cyan-600"> Link
+                        </label>
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="btn-cyan mt-4">PUBLISH POST</button>
+                    <button type="button" onclick="resetForm()" class="text-[10px] text-slate-500 w-full text-center hover:text-white transition uppercase font-bold mt-2">Clear Form</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    lucide.createIcons();
+    const BLOG_STORAGE_KEY = 'digitalFarmAdminPosts';
+    const blogForm = document.getElementById('blog-form');
+    const tableBody = document.getElementById('blog-table-body');
+    const postCount = document.getElementById('post-count');
+    const messageBanner = document.getElementById('blog-message');
+    const mediaInput = document.getElementById('post-media');
+    const titleInput = document.getElementById('post-title');
+    const categoryInput = document.getElementById('post-category');
+    const contentInput = document.getElementById('post-content');
+    const linkInput = document.getElementById('post-link');
+
+    // Toggle External Link field based on radio selection
+    document.querySelectorAll('input[name="status"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            document.getElementById('link-container').classList.toggle('hidden', e.target.value !== 'link');
+        });
+    });
+
+    // File Name Display Logic
+    mediaInput.addEventListener('change', function(e) {
+        const fileName = e.target.files[0]?.name || "Click or drag media";
+        const display = document.getElementById('file-name-display');
+        display.innerText = fileName;
+        if(e.target.files[0]) display.style.color = "#0891b2";
+    });
+
+    function getStoredPosts() {
+        try {
+            const stored = JSON.parse(localStorage.getItem(BLOG_STORAGE_KEY)) || [];
+            if (stored.length) {
+                return stored;
+            }
+        } catch (error) {
+            console.error('Unable to read saved posts:', error);
+        }
+
+        const seededPosts = [
+            {
+                id: 'post-seed-1',
+                title: 'Poultry Infection',
+                category: 'Disease Alerts',
+                status: 'published',
+                summary: 'Keep aware of infection symptoms and isolate affected birds early.',
+                link: '',
+                mediaName: '',
+                createdAt: new Date().toISOString()
+            }
+        ];
+
+        localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(seededPosts));
+        return seededPosts;
+    }
+
+    function saveStoredPosts(posts) {
+        localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(posts));
+    }
+
+    function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char]));
+    }
+
+    function showMessage(text) {
+        messageBanner.textContent = text;
+        messageBanner.classList.add('show');
+        window.clearTimeout(showMessage.timeoutId);
+        showMessage.timeoutId = window.setTimeout(() => {
+            messageBanner.classList.remove('show');
+        }, 3000);
+    }
+
+    function renderPosts() {
+        const posts = getStoredPosts();
+        postCount.textContent = posts.length;
+
+        if (!posts.length) {
+            tableBody.innerHTML = '<tr><td colspan="4" class="empty-state">No posts yet. Publish your first update to see it here.</td></tr>';
+            return;
+        }
+
+        tableBody.innerHTML = posts.map((post) => `
+            <tr>
+                <td>
+                    <div style="font-weight: 700; color: var(--text-main);">${escapeHtml(post.title)}</div>
+                    <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">${escapeHtml(post.summary)}</div>
+                </td>
+                <td>${escapeHtml(post.category)}</td>
+                <td><span class="status-pill ${escapeHtml(post.status)}">${escapeHtml(post.status)}</span></td>
+                <td>
+                    <div class="table-actions">
+                        ${post.link ? `<a class="action-btn" href="${escapeHtml(post.link)}" target="_blank" rel="noopener noreferrer">Open</a>` : ''}
+                        <button type="button" class="action-btn delete" onclick="deletePost('${post.id}')">Delete</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function buildPostPayload() {
+        const status = document.querySelector('input[name="status"]:checked').value;
+        const summary = contentInput.value.trim() || (mediaInput.files[0]?.name ? `Media attached: ${mediaInput.files[0].name}` : 'No description provided');
+
+        return {
+            id: `post-${Date.now()}`,
+            title: titleInput.value.trim(),
+            category: categoryInput.value,
+            status,
+            summary,
+            link: status === 'link' ? linkInput.value.trim() : '',
+            mediaName: mediaInput.files[0]?.name || '',
+            createdAt: new Date().toISOString()
+        };
+    }
+
+    function resetForm() {
+        blogForm.reset();
+        document.getElementById('form-title').innerText = "CREATE NEW POST";
+        document.getElementById('submit-btn').innerText = "PUBLISH POST";
+        document.getElementById('file-name-display').innerText = "Click or drag media";
+        document.getElementById('file-name-display').style.color = "";
+        document.getElementById('link-container').classList.add('hidden');
+    }
+
+    function deletePost(postId) {
+        const nextPosts = getStoredPosts().filter((post) => post.id !== postId);
+        saveStoredPosts(nextPosts);
+        renderPosts();
+        showMessage('Post removed successfully.');
+    }
+
+    window.deletePost = deletePost;
+
+    blogForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+
+        const post = buildPostPayload();
+        if (!post.title) return;
+
+        if (post.status === 'link' && !post.link) {
+            showMessage('Please add an external URL for link posts.');
+            return;
+        }
+
+        const posts = getStoredPosts();
+        posts.unshift(post);
+        saveStoredPosts(posts);
+        renderPosts();
+        resetForm();
+        showMessage(`Post "${post.title}" published successfully.`);
+    });
+
+    window.onload = () => {
+        renderPosts();
+    };
+</script>
+
+</body>
+</html>

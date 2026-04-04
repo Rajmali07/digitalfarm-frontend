@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal Login | Digital Farm</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #0891b2; /* Admin Cyan */
+      --bg-dark: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.8);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-dim: #94a3b8;
+      --footer-bg: #020617;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-dark);
+      background-image: radial-gradient(circle at top right, rgba(8, 145, 178, 0.1), transparent),
+                        radial-gradient(circle at bottom left, rgba(8, 145, 178, 0.05), transparent);
+      color: #f8fafc;
+    }
+
+    .navbar {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 60px;
+      position: fixed;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .nav-logo { font-size: 24px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-links { display: flex; gap: 30px; list-style: none; }
+    .nav-links li a { text-decoration: none; color: var(--text-dim); font-size: 14px; font-weight: 600; transition: 0.3s; }
+    .nav-links li a:hover { color: var(--primary); }
+
+    .page-content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 120px 20px 80px; }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card-bg);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      border-top: 4px solid var(--primary);
+    }
+
+    .login-card h2 { font-size: 28px; margin-bottom: 10px; font-weight: 700; }
+    .login-card p { color: var(--text-dim); font-size: 14px; margin-bottom: 30px; }
+
+    .input-group { text-align: left; margin-bottom: 20px; }
+    .input-group label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 8px; font-weight: 600; }
+
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-wrapper i.main-icon { position: absolute; left: 15px; color: var(--primary); font-size: 16px; }
+
+    .input-wrapper input, .input-wrapper select {
+      width: 100%;
+      padding: 12px 15px 12px 45px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      color: white;
+      outline: none;
+      font-size: 14px;
+      transition: 0.3s;
+      appearance: none;
+    }
+    .input-wrapper input:focus { border-color: var(--primary); }
+
+    .fa-chevron-down { position: absolute; right: 15px; font-size: 12px; color: var(--text-dim); pointer-events: none; }
+
+    .form-utils { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 25px; }
+    .form-utils label { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-dim); }
+    .form-utils button.forgot-link { background: none; border: none; color: var(--primary); font-weight: 700; cursor: pointer; font-family: inherit; font-size: 13px; }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex; justify-content: center; align-items: center; gap: 10px;
+    }
+    .login-btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+    /* MODAL STYLES */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.9);
+      backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-card {
+      background: #111827; border: 1px solid var(--glass-border); border-radius: 24px;
+      padding: 40px; max-width: 420px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .footer { background: var(--footer-bg); padding: 60px 80px 20px; border-top: 1px solid var(--glass-border); }
+    .footer-container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; }
+    .footer-section h3 { font-size: 14px; font-weight: 800; color: white; margin-bottom: 20px; text-transform: uppercase; }
+    .footer-logo { font-size: 24px; font-weight: 800; color: var(--primary); margin-bottom: 20px; display: block; }
+
+    @media (max-width: 768px) {
+      .navbar { padding: 15px 25px; }
+      .footer-container { grid-template-columns: 1fr; }
+      .footer { padding: 40px 20px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">
+      <i class="fa-solid fa-shield-halved"></i> Digital Farm
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-content">
+    <div class="login-card">
+      <i class="fa-solid fa-user-shield" style="font-size: 40px; color: var(--primary); margin-bottom: 15px;"></i>
+      <h2>Admin Portal Login</h2>
+      <p>Enter administrative credentials to manage regional biosecurity.</p>
+
+      <form action="admin_dashboard.html">
+        <div class="input-group">
+          <label>Administrator Email / ID</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-id-badge main-icon"></i>
+            <input type="text" placeholder="admin@digitalfarm.ai" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Access Key (Password)</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-key main-icon"></i>
+            <input type="password" id="accessKey" placeholder="••••••••••" required>
+            <i class="fa-solid fa-eye-slash" id="toggleKey" style="position: absolute; right: 15px; cursor: pointer; color: #64748b;"></i>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Operational Level</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-earth-americas main-icon"></i>
+            <select required>
+              <option value="" disabled selected>Select Access Level</option>
+              <option value="regional">Regional Supervisor</option>
+              <option value="district">District Monitor</option>
+              <option value="super">System Administrator</option>
+            </select>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+        </div>
+
+        <div class="form-utils">
+          <label><input type="checkbox"> Secure session</label>
+          <button type="button" class="forgot-link" onclick="openModal()">Forgot access key?</button>
+        </div>
+
+        <button type="submit" class="login-btn">
+          Initialize Console <i class="fa-solid fa-terminal"></i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="forgotModal">
+    <div class="modal-card">
+      <i class="fa-solid fa-user-lock" style="font-size: 35px; color: var(--primary); margin-bottom: 20px;"></i>
+      <h3 style="margin-bottom: 10px; font-size: 22px;">Request Access Reset</h3>
+      <p style="font-size: 14px; color: var(--text-dim); margin-bottom: 30px;">For security, access resets require identity verification. Please enter your Admin ID.</p>
+      
+      <div class="input-group">
+        <div class="input-wrapper">
+          <i class="fa-solid fa-fingerprint main-icon"></i>
+          <input type="text" placeholder="Admin ID / Employee Code" id="adminIdInput">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 15px; margin-top: 10px;">
+        <button class="login-btn" style="background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); flex: 1;" onclick="closeModal()">Cancel</button>
+        <button class="login-btn" style="flex: 2;" onclick="handleAdminReset()">Request Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-section">
+        <span class="footer-logo">Digital Farm</span>
+        <p>Restricted access area. All activities are monitored and logged for security compliance.</p>
+      </div>
+      <div class="footer-section">
+        <h3>Contact</h3>
+        <div style="color:var(--text-dim); font-size:15px; line-height:1.8;">
+          Email: ops@digitalfarm.ai<br>
+          Emergency: +91 98765 00000
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center; margin-top:50px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); font-size:12px; color: #475569;">
+      © 2026 Digital Farm Administration | Secure Environment
+    </div>
+  </footer>
+
+  <script>
+    // --- Toggle Password Logic ---
+    const toggleKey = document.querySelector('#toggleKey');
+    const accessKeyField = document.querySelector('#accessKey');
+
+    toggleKey.addEventListener('click', function() {
+      const type = accessKeyField.getAttribute('type') === 'password' ? 'text' : 'password';
+      accessKeyField.setAttribute('type', type);
+      this.classList.toggle('fa-eye');
+      this.classList.toggle('fa-eye-slash');
+    });
+
+    // --- Modal Logic ---
+    const modal = document.getElementById('forgotModal');
+
+    function openModal() {
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    function handleAdminReset() {
+      const adminId = document.getElementById('adminIdInput').value;
+      if (adminId) {
+        alert("Authorization: Reset request for " + adminId + " has been logged. Check your secure internal email.");
+        closeModal();
+      } else {
+        alert("Critical: Admin ID is required for verification.");
+      }
+    }
+
+    // Close on backdrop click
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        closeModal();
+      }
+    }
+  </script>
+
+</body>
+</html>

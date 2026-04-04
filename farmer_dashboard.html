@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Dashboard | Digital Farm</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --purple: #7c3aed;
+      --bg-slate: #f8fafc;
+      --text-dark: #0f172a;
+      --text-gray: #64748b;
+      --border-color: #e2e8f0;
+      --card-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background-color: var(--bg-slate); color: var(--text-dark); padding-bottom: 40px; }
+
+    .navbar {
+      background: #0f172a;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      padding: 15px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .nav-logo { font-size: 22px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-links { display: flex; list-style: none; align-items: center; gap: 10px; }
+    .nav-links a { text-decoration: none; color: #94a3b8; font-size: 14px; padding: 8px 20px; transition: 0.3s; }
+    .nav-links a.active { background: rgba(255, 255, 255, 0.1); color: white; border-radius: 50px; font-weight: 600; }
+
+    .profile-menu { position: relative; margin-left: 18px; }
+    .profile-trigger { display: flex; align-items: center; gap: 14px; background: transparent; border: none; color: white; cursor: pointer; padding: 0; }
+    .profile-name { font-size: 16px; font-weight: 600; color: #f8fafc; }
+    .profile-avatar { width: 52px; height: 52px; border-radius: 50%; border: 2px solid var(--primary); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 600; background: rgba(255, 255, 255, 0.04); }
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 18px);
+      right: 0;
+      width: 270px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: 0.2s ease;
+      z-index: 1200;
+    }
+    .profile-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item { display: block; width: 100%; padding: 18px 22px; background: white; border: none; border-bottom: 1px solid #f1f5f9; text-align: left; font-size: 16px; color: #3f3f46; cursor: pointer; text-decoration: none; }
+    .dropdown-item:hover { background: #f8fafc; }
+    .dropdown-item.logout { color: #ff3b30; border-bottom: none; }
+
+    .container { max-width: 1380px; margin: 30px auto; padding: 0 40px; }
+    .section-title { font-size: 18px; font-weight: 800; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+    .card { background: white; border-radius: 18px; padding: 24px; box-shadow: var(--card-shadow); border: 1px solid var(--border-color); }
+
+    .hero-grid { display: grid; grid-template-columns: 1.45fr 1fr; gap: 22px; margin-bottom: 24px; }
+    .risk-card { background: linear-gradient(135deg, #fffdf0 0%, #ffffff 100%); border-color: #fde68a; }
+    .hero-title { font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 10px; }
+    .hero-subtext { color: var(--text-gray); font-size: 13px; margin-top: 6px; line-height: 1.5; }
+    .risk-main { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-top: 22px; }
+    .risk-score { font-size: 72px; font-weight: 800; line-height: 1; }
+    .risk-meta { flex: 1; }
+    .risk-badge { display: inline-flex; align-items: center; gap: 8px; background: #fef3c7; color: #b45309; padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 800; margin-bottom: 12px; }
+    .risk-points { display: grid; gap: 10px; }
+    .risk-points p { font-size: 13px; color: var(--text-gray); }
+    .progress-track { height: 12px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-top: 18px; }
+    .progress-bar { height: 100%; width: 68%; background: linear-gradient(90deg, #f59e0b, #f97316); }
+
+    .farm-card { background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 55%, #8b5cf6 100%); color: white; border: none; }
+    .farm-card .hero-subtext { color: rgba(255, 255, 255, 0.78); }
+    .farm-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 26px; }
+    .farm-stat { padding: 16px; border-radius: 14px; background: rgba(255, 255, 255, 0.12); }
+    .farm-stat span { display: block; font-size: 12px; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .farm-stat strong { font-size: 26px; font-weight: 800; }
+
+    .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; margin-bottom: 24px; }
+    .summary-card { padding: 22px; border-radius: 18px; border: 1px solid var(--border-color); background: white; box-shadow: var(--card-shadow); }
+    .summary-card span { display: inline-flex; width: 42px; height: 42px; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 16px; font-size: 18px; }
+    .summary-card h3 { font-size: 30px; font-weight: 800; margin-bottom: 6px; }
+    .summary-card p { color: var(--text-gray); font-size: 14px; line-height: 1.5; }
+
+    .issue-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 24px;
+      padding: 22px 24px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+      border: 1px solid #bbf7d0;
+      box-shadow: var(--card-shadow);
+    }
+    .issue-banner h3 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .issue-banner p { color: var(--text-gray); font-size: 14px; line-height: 1.6; max-width: 760px; }
+    .issue-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 13px 20px;
+      border-radius: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+
+    .ops-section { margin-bottom: 30px; }
+    .ops-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 18px; }
+    .ops-header p { color: var(--text-gray); max-width: 820px; line-height: 1.6; }
+    .ops-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
+    .ops-card { background: white; border-radius: 18px; padding: 24px; box-shadow: var(--card-shadow); border: 1px solid var(--border-color); }
+    .ops-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
+    .ops-kicker { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-gray); margin-bottom: 8px; }
+    .ops-title { font-size: 24px; font-weight: 800; margin-bottom: 6px; }
+    .ops-text { color: var(--text-gray); line-height: 1.6; font-size: 14px; }
+    .ops-badge { padding: 8px 14px; border-radius: 999px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+    .ops-badge.danger { background: #fee2e2; color: #b91c1c; }
+    .ops-badge.warning { background: #fef3c7; color: #b45309; }
+    .ops-badge.safe { background: #dcfce7; color: #15803d; }
+    .ops-badge.info { background: #dbeafe; color: #1d4ed8; }
+    .ops-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+    .ops-stat { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 14px; padding: 14px; }
+    .ops-stat span { display: block; color: var(--text-gray); font-size: 12px; margin-bottom: 6px; }
+    .ops-stat strong { font-size: 24px; font-weight: 800; }
+    .ops-list { display: grid; gap: 12px; margin-bottom: 18px; }
+    .ops-item { border: 1px solid var(--border-color); border-radius: 14px; padding: 14px 16px; background: #fff; }
+    .ops-item strong { display: block; font-size: 15px; margin-bottom: 4px; }
+    .ops-item p { color: var(--text-gray); font-size: 13px; line-height: 1.5; }
+    .ops-item.danger { border-left: 4px solid var(--danger); background: #fef2f2; }
+    .ops-item.warning { border-left: 4px solid var(--warning); background: #fffbeb; }
+    .ops-item.safe { border-left: 4px solid var(--primary); background: #f0fdf4; }
+    .ops-item.info { border-left: 4px solid var(--info); background: #eff6ff; }
+    .ops-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .ops-footer span { color: var(--text-gray); font-size: 13px; }
+    .ops-link { display: inline-flex; align-items: center; gap: 8px; color: var(--text-dark); text-decoration: none; font-weight: 800; }
+
+    .chart-card { margin-top: 10px; }
+    .external-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; margin-top: 28px; margin-bottom: 28px; }
+    .external-form { display: grid; gap: 14px; }
+    .external-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .external-field label { display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-gray); margin-bottom: 7px; }
+    .external-field input,
+    .external-field select,
+    .external-field textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      font-size: 14px;
+      outline: none;
+      background: #fcfcfd;
+      color: var(--text-dark);
+    }
+    .external-field textarea { min-height: 110px; resize: vertical; }
+    .external-save {
+      width: fit-content;
+      border: none;
+      border-radius: 12px;
+      background: var(--info);
+      color: white;
+      padding: 12px 18px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .external-save:hover { filter: brightness(1.04); }
+    .factor-list { display: grid; gap: 12px; margin-top: 14px; }
+    .factor-item { border: 1px solid var(--border-color); border-radius: 14px; padding: 14px 16px; background: #f8fafc; }
+    .factor-item strong { display: block; font-size: 15px; margin-bottom: 4px; }
+    .factor-item p { color: var(--text-gray); font-size: 13px; line-height: 1.5; }
+
+    .footer { background: #020617; padding: 60px 80px 20px; color: #94a3b8; border-top: 1px solid #1e293b; margin-top: 60px; }
+
+    @media (max-width: 1180px) {
+      .hero-grid, .ops-grid { grid-template-columns: 1fr; }
+      .external-grid { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 900px) {
+      .navbar { padding: 15px 24px; flex-wrap: wrap; gap: 14px; }
+      .nav-links { flex-wrap: wrap; justify-content: flex-end; }
+      .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .issue-banner { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 0 20px; }
+      .summary-grid, .ops-stats, .farm-stats { grid-template-columns: 1fr; }
+      .external-form-grid { grid-template-columns: 1fr; }
+      .ops-header { flex-direction: column; align-items: flex-start; }
+      .ops-top, .risk-main { flex-direction: column; align-items: flex-start; }
+      .navbar { justify-content: center; }
+      .nav-links { justify-content: center; }
+      .profile-menu { margin-left: 0; }
+      .profile-name { display: none; }
+      .footer { padding: 40px 20px 20px; }
+    }
+  </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <a href="farmer_dashboard.html" class="nav-logo"><i class="fa-solid fa-leaf"></i> Digital Farm</a>
+  <ul class="nav-links">
+    <li><a href="farmer_dashboard.html" class="active">Dashboard</a></li>
+    <li><a href="farmer_ai_check.html">AI Diagnostic</a></li>
+    <li><a href="farmer_add_data.html">Data Entry</a></li>
+    <li><a href="farmer_animal_records.html">Records</a></li>
+    <li><a href="farmer_biosecurity.html">Biosecurity</a></li>
+    <li class="profile-menu">
+      <button class="profile-trigger" id="profileMenuButton" type="button">
+        <span class="profile-name">Hello, Raj!</span>
+        <span class="profile-avatar">R</span>
+      </button>
+      <div class="profile-dropdown" id="profileDropdown">
+        <a href="farmer_profile.html" class="dropdown-item">View Profile</a>
+        <a href="farmer_setting.html" class="dropdown-item">Settings</a>
+        <a href="farmer_login.html" class="dropdown-item logout">Logout</a>
+      </div>
+    </li>
+  </ul>
+</nav>
+
+<div class="container">
+  <div class="hero-grid">
+    <div class="card risk-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
+        <div>
+          <h3 class="hero-title"><i class="fa-solid fa-triangle-exclamation"></i> Multi-Factor Risk Intelligence</h3>
+          <p class="hero-subtext">Combined from biosecurity, animal records, AI scans, and external outbreak conditions.</p>
+        </div>
+        <i id="riskHeroIcon" class="fa-solid fa-shield-halved" style="color: var(--warning); font-size: 28px;"></i>
+      </div>
+
+      <div class="risk-main">
+        <div>
+          <div class="risk-score" id="overallRiskScore">68</div>
+          <p class="hero-subtext" style="margin-top: 8px;">Last assessed: <span id="overallRiskUpdated">April 03, 2026</span></p>
+        </div>
+
+        <div class="risk-meta">
+          <span class="risk-badge" id="overallRiskBadge"><i class="fa-solid fa-circle-exclamation"></i> High Risk: Biosecurity Threat</span>
+          <div class="risk-points" id="overallRiskReasons">
+            <p>Visitor control and sanitation need review before the next operating cycle.</p>
+            <p>Symptoms and complaint activity from poultry and cattle units are increasing attention priority.</p>
+            <p>Vaccination follow-up is still pending in one buffalo block and one poultry unit.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-bar" id="overallRiskBar"></div>
+      </div>
+    </div>
+
+    <div class="card farm-card">
+      <h3 class="hero-title"><i class="fa-solid fa-house-chimney"></i> Farm Information</h3>
+      <p class="hero-subtext">Current profile summary for the mixed farm setup reflected in records and data entry.</p>
+
+      <div style="margin-top: 22px;">
+        <p style="font-size: 13px; opacity: 0.78;">Farm Name</p>
+        <h2 style="font-size: 34px; margin-top: 6px;">Green Valley Mixed Farm</h2>
+      </div>
+
+      <div class="farm-stats">
+        <div class="farm-stat">
+          <span>Farm Type</span>
+          <strong>Multi-Livestock</strong>
+        </div>
+        <div class="farm-stat">
+          <span>Location</span>
+          <strong>Pune, MH</strong>
+        </div>
+        <div class="farm-stat">
+          <span>Active Units</span>
+          <strong id="activeUnitsCount">7</strong>
+        </div>
+        <div class="farm-stat">
+          <span>Animal Types</span>
+          <strong id="animalTypeCount">5</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-card">
+      <span style="background:#eff6ff; color:#2563eb;"><i class="fa-solid fa-paw"></i></span>
+      <h3 id="totalAnimalsCount">1368</h3>
+      <p>Total animals across cow, buffalo, poultry, goat, and pig records</p>
+    </div>
+    <div class="summary-card">
+      <span style="background:#fef3c7; color:#b45309;"><i class="fa-solid fa-stethoscope"></i></span>
+      <h3 id="monitoringCount">31</h3>
+      <p>Animals or units under monitoring based on records and AI review</p>
+    </div>
+    <div class="summary-card">
+      <span style="background:#fee2e2; color:#b91c1c;"><i class="fa-solid fa-skull-crossbones"></i></span>
+      <h3 id="mortalityCountSummary">13</h3>
+      <p>Mortality cases or severe losses recorded in recent reports</p>
+    </div>
+    <div class="summary-card">
+      <span style="background:#dcfce7; color:#15803d;"><i class="fa-solid fa-syringe"></i></span>
+      <h3 id="vaccinationDueCount">4</h3>
+      <p>Vaccination schedules due soon across poultry, buffalo, goat, and pig units</p>
+    </div>
+    <div class="summary-card">
+      <span style="background:#ede9fe; color:#7c3aed;"><i class="fa-solid fa-file-circle-exclamation"></i></span>
+      <h3 id="openComplaintCount">5</h3>
+      <p>Open complaints and incidents still waiting for review or closure</p>
+    </div>
+  </div>
+
+  <div class="issue-banner">
+    <div>
+      <h3>Need to raise a complaint or record a new issue?</h3>
+      <p>Use the data entry page to log livestock updates, vaccination activity, mortality, and complaints. Those records now match the records center and this dashboard summary.</p>
+    </div>
+    <a href="farmer_add_data.html" class="issue-btn"><i class="fa-solid fa-plus"></i> Report New Issue</a>
+  </div>
+
+  <section class="ops-section">
+    <div class="ops-header">
+      <div>
+        <h3 class="section-title" style="margin-bottom: 8px;"><i class="fa-solid fa-layer-group"></i> Farm Operations Snapshot</h3>
+        <p>This dashboard now follows the updated farmer pages, including mixed animal records, complaints, AI scans, vaccination follow-up, and biosecurity review.</p>
+      </div>
+    </div>
+
+    <div class="ops-grid">
+      <div class="ops-card">
+        <div class="ops-top">
+          <div>
+            <div class="ops-kicker">Farmer Alerts</div>
+            <h4 class="ops-title">Alert and Complaint Snapshot</h4>
+            <p class="ops-text">Summary of active risks, complaint submissions, and incident follow-up across different units.</p>
+          </div>
+          <span class="ops-badge danger" id="complaintBadge">5 open issues</span>
+        </div>
+
+        <div class="ops-stats">
+          <div class="ops-stat"><span>Open Complaints</span><strong id="opsOpenComplaints">5</strong></div>
+          <div class="ops-stat"><span>High Priority</span><strong id="opsHighPriority">2</strong></div>
+          <div class="ops-stat"><span>Warnings</span><strong id="opsWarnings">3</strong></div>
+        </div>
+
+        <div class="ops-list" id="complaintOpsList">
+          <div class="ops-item danger">
+            <strong>Poultry mortality spike reported</strong>
+            <p>Broiler Shed 1 has a high-priority complaint tied to suspected infection and mortality increase.</p>
+          </div>
+        </div>
+
+        <div class="ops-footer">
+          <span>Priority actions: review complaints, isolate high-risk units, and close pending incident reports.</span>
+          <a href="farmer_animal_records.html" class="ops-link">Open Records <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="ops-card">
+        <div class="ops-top">
+          <div>
+            <div class="ops-kicker">AI Diagnostic</div>
+            <h4 class="ops-title">Latest AI Health Watch</h4>
+            <p class="ops-text">AI scans now reflect different species and areas instead of a poultry-only view.</p>
+          </div>
+          <span class="ops-badge warning" id="aiBadge">82/100 top score</span>
+        </div>
+
+        <div class="ops-list" id="aiOpsList">
+          <div class="ops-item warning">
+            <strong>No AI scan yet</strong>
+            <p>Run the AI health check to generate real-time disease likelihood for the shared risk engine.</p>
+          </div>
+        </div>
+
+        <div class="ops-footer">
+          <span>Next step: run a fresh AI check for affected cattle and poultry units after field review.</span>
+          <a href="farmer_ai_check.html" class="ops-link">Run AI Check <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="ops-card">
+        <div class="ops-top">
+          <div>
+            <div class="ops-kicker">Biosecurity Audit</div>
+            <h4 class="ops-title">Checklist and Risk Status</h4>
+            <p class="ops-text">This status now matches the biosecurity page logic and no longer conflicts with the dashboard summary.</p>
+          </div>
+          <span class="ops-badge warning" id="biosecurityBadge">High risk</span>
+        </div>
+
+        <div class="ops-list" id="biosecurityOpsList">
+          <div class="ops-item info">
+            <strong>No biosecurity audit submitted</strong>
+            <p>Complete the audit checklist so preventive risk becomes part of the shared intelligence score.</p>
+          </div>
+        </div>
+
+        <div class="ops-footer">
+          <span>Live audit categories: entry, hygiene, health, vaccination, quarantine, pest control, water, and emergency readiness.</span>
+          <a href="farmer_biosecurity.html" class="ops-link">Review Audit <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <div class="ops-card">
+        <div class="ops-top">
+          <div>
+            <div class="ops-kicker">Records and Vaccination</div>
+            <h4 class="ops-title">Multi-Animal Record Activity</h4>
+            <p class="ops-text">Updated from the records center with mixed-animal livestock, vaccine, mortality, and complaint logs.</p>
+          </div>
+          <span class="ops-badge safe" id="recordsBadge">28 livestock logs</span>
+        </div>
+
+        <div class="ops-list" id="recordsOpsList">
+          <div class="ops-item safe">
+            <strong>Records center is ready</strong>
+            <p>Population, vaccination, complaint, and AI entries will start driving the multi-factor risk score here.</p>
+          </div>
+        </div>
+
+        <div class="ops-footer">
+          <span>Use the records page to review cross-animal history and complaint tracking in one place.</span>
+          <a href="farmer_animal_records.html" class="ops-link">Open Records <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="external-grid">
+    <div class="card">
+      <h3 class="section-title"><i class="fa-solid fa-cloud-sun-rain"></i> Weather and External Factors</h3>
+      <p class="hero-subtext">Update the live environmental conditions that affect the final risk score: weather, government alerts, and nearby infections.</p>
+
+      <form id="externalFactorsForm" class="external-form" style="margin-top:18px;">
+        <div class="external-form-grid">
+          <div class="external-field">
+            <label for="temperatureInput">Temperature (°C)</label>
+            <input id="temperatureInput" type="number" min="-10" max="60">
+          </div>
+          <div class="external-field">
+            <label for="humidityInput">Humidity (%)</label>
+            <input id="humidityInput" type="number" min="0" max="100">
+          </div>
+        </div>
+
+        <div class="external-form-grid">
+          <div class="external-field">
+            <label for="weatherConditionInput">Weather Condition</label>
+            <select id="weatherConditionInput">
+              <option>Clear</option>
+              <option>Humid</option>
+              <option>Rainy</option>
+              <option>Heat Stress</option>
+              <option>Cold Stress</option>
+            </select>
+          </div>
+          <div class="external-field">
+            <label for="governmentAlertInput">Government Alert</label>
+            <select id="governmentAlertInput">
+              <option>Low</option>
+              <option>Medium</option>
+              <option>High</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="external-form-grid">
+          <div class="external-field">
+            <label for="nearbyInfectionsInput">Nearby Infections</label>
+            <input id="nearbyInfectionsInput" type="number" min="0" max="20">
+          </div>
+          <div class="external-field">
+            <label for="externalUpdatedAt">Risk Weight</label>
+            <input id="externalUpdatedAt" type="text" value="Feeds External Factors in final score" disabled>
+          </div>
+        </div>
+
+        <div class="external-field">
+          <label for="externalNotesInput">Notes</label>
+          <textarea id="externalNotesInput" placeholder="Example: district advisory issued for FMD, prolonged humidity, nearby poultry outbreak..."></textarea>
+        </div>
+
+        <button type="submit" class="external-save">Save External Factors</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title"><i class="fa-solid fa-scale-balanced"></i> Factor Breakdown</h3>
+      <p class="hero-subtext">This is the exact multi-factor intelligence behind the alert score.</p>
+      <div class="factor-list" id="factorBreakdownList"></div>
+    </div>
+  </section>
+
+  <h3 class="section-title"><i class="fa-solid fa-chart-line"></i> Analytics and Trends</h3>
+  <div class="card chart-card">
+    <canvas id="riskTrendChart" height="90"></canvas>
+  </div>
+</div>
+
+<footer class="footer" style="background: #020617; padding: 60px 80px 20px; color: #94a3b8; border-top: 1px solid #1e293b;">
+  <div style="text-align:center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
+    <h2 style="color:var(--primary);">Digital Farm</h2>
+  </div>
+  <p style="text-align:center; padding-top:20px; font-size:12px;">&copy; 2026 Digital Farm | Built for Farmers</p>
+</footer>
+
+<script src="risk_engine.js"></script>
+<script>
+  const btn = document.getElementById('profileMenuButton');
+  const dropdown = document.getElementById('profileDropdown');
+  const externalFactorsForm = document.getElementById('externalFactorsForm');
+
+  btn.addEventListener('click', function (event) {
+    event.stopPropagation();
+    dropdown.classList.toggle('open');
+  });
+
+  document.addEventListener('click', function (event) {
+    if (!dropdown.contains(event.target) && !btn.contains(event.target)) {
+      dropdown.classList.remove('open');
+    }
+  });
+
+  function renderRiskDashboard() {
+    const summary = window.DigitalFarmRisk.syncOverallRisk();
+    const population = window.DigitalFarmRisk.readStore(window.DigitalFarmRisk.STORAGE_KEYS.population, []);
+    const complaints = window.DigitalFarmRisk.readStore(window.DigitalFarmRisk.STORAGE_KEYS.complaints, []);
+    const aiHistory = window.DigitalFarmRisk.readStore(window.DigitalFarmRisk.STORAGE_KEYS.aiHistory, []);
+    const external = window.DigitalFarmRisk.ensureExternalFactors();
+    const recordsSummary = summary.factors.records.summary;
+    const latestAi = summary.factors.ai.latest;
+    const bioAudit = summary.factors.biosecurity.raw;
+
+    document.getElementById('overallRiskScore').textContent = summary.score;
+    document.getElementById('overallRiskUpdated').textContent = summary.updatedLabel;
+    document.getElementById('overallRiskBadge').innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${summary.level} Risk: ${summary.badge.uiLabel}`;
+    document.getElementById('overallRiskBadge').style.background = summary.badge.bg;
+    document.getElementById('overallRiskBadge').style.color = summary.badge.color;
+    document.getElementById('overallRiskBar').style.width = `${summary.score}%`;
+    document.getElementById('riskHeroIcon').style.color = summary.badge.color;
+    document.getElementById('overallRiskReasons').innerHTML = summary.reasons.map((reason) => `<p>${reason}</p>`).join('');
+
+    document.getElementById('totalAnimalsCount').textContent = recordsSummary.totalAnimals || 0;
+    document.getElementById('monitoringCount').textContent = (recordsSummary.monitoringPopulation || 0) + (latestAi && latestAi.risk >= 50 ? 1 : 0);
+    document.getElementById('mortalityCountSummary').textContent = recordsSummary.totalMortality || 0;
+    document.getElementById('vaccinationDueCount').textContent = recordsSummary.overdueVaccinations || 0;
+    document.getElementById('openComplaintCount').textContent = complaints.filter((item) => !item.syncedToFarmer).length;
+    document.getElementById('activeUnitsCount').textContent = new Set(population.map((item) => item.farmUnit).filter(Boolean)).size || 0;
+    document.getElementById('animalTypeCount').textContent = new Set(population.map((item) => item.animalType).filter(Boolean)).size || 0;
+
+    const openComplaints = complaints.filter((item) => !item.syncedToFarmer);
+    const highComplaints = complaints.filter((item) => String(item.urgencyShort || '').toLowerCase() === 'high');
+    document.getElementById('complaintBadge').textContent = `${openComplaints.length} open issues`;
+    document.getElementById('opsOpenComplaints').textContent = openComplaints.length;
+    document.getElementById('opsHighPriority').textContent = highComplaints.length;
+    document.getElementById('opsWarnings').textContent = complaints.filter((item) => String(item.urgencyShort || '').toLowerCase() === 'medium').length;
+    document.getElementById('complaintOpsList').innerHTML = (openComplaints.slice(0, 3).map((item) => `
+      <div class="ops-item ${String(item.urgencyShort || '').toLowerCase() === 'high' ? 'danger' : 'warning'}">
+        <strong>${item.incidentType}</strong>
+        <p>${item.location} is flagged for ${String(item.urgencyShort || 'Low').toLowerCase()} priority follow-up with ${item.affectedCount} affected animals.</p>
+      </div>
+    `).join('')) || `
+      <div class="ops-item safe">
+        <strong>No open complaints</strong>
+        <p>There are currently no unresolved complaint records waiting for review.</p>
+      </div>
+    `;
+
+    document.getElementById('aiBadge').textContent = latestAi ? `${latestAi.risk}/100 top score` : 'No scan yet';
+    document.getElementById('aiOpsList').innerHTML = (aiHistory.slice().reverse().slice(0, 3).map((item) => `
+      <div class="ops-item ${item.risk >= 80 ? 'danger' : item.risk >= 50 ? 'warning' : 'safe'}">
+        <strong>${item.disease} scan recorded</strong>
+        <p>${(item.animalType || 'Animal').toString().toUpperCase()} check reported ${item.risk}/100 risk with symptoms: ${item.symptoms}</p>
+      </div>
+    `).join('')) || `
+      <div class="ops-item warning">
+        <strong>No AI scan yet</strong>
+        <p>Run the AI health check to generate real-time disease likelihood for the shared risk engine.</p>
+      </div>
+    `;
+
+    document.getElementById('biosecurityBadge').textContent = summary.factors.biosecurity.label || 'No audit';
+    document.getElementById('biosecurityOpsList').innerHTML = (summary.factors.biosecurity.reasons.slice(0, 3).map((reason) => `
+      <div class="ops-item ${summary.level === 'Critical' ? 'danger' : summary.level === 'High' ? 'warning' : 'safe'}">
+        <strong>${bioAudit ? 'Audit finding' : 'Biosecurity status'}</strong>
+        <p>${reason}</p>
+      </div>
+    `).join('')) || `
+      <div class="ops-item info">
+        <strong>No biosecurity audit submitted</strong>
+        <p>Complete the audit checklist so preventive risk becomes part of the shared intelligence score.</p>
+      </div>
+    `;
+
+    document.getElementById('recordsBadge').textContent = `${population.length} livestock logs`;
+    document.getElementById('recordsOpsList').innerHTML = `
+      <div class="ops-item safe">
+        <strong>${population.length} population records synced</strong>
+        <p>${recordsSummary.totalAnimals || 0} animals are currently tracked through the records center.</p>
+      </div>
+      <div class="ops-item ${recordsSummary.overdueVaccinations ? 'warning' : 'info'}">
+        <strong>${recordsSummary.overdueVaccinations || 0} overdue vaccinations</strong>
+        <p>${recordsSummary.upcomingVaccinations || 0} additional vaccination schedules are due within the next 7 days.</p>
+      </div>
+      <div class="ops-item ${recordsSummary.totalMortality ? 'danger' : 'safe'}">
+        <strong>${recordsSummary.totalMortality || 0} mortality records linked</strong>
+        <p>Historical losses and complaint activity now feed directly into the final farm risk score.</p>
+      </div>
+    `;
+
+    document.getElementById('temperatureInput').value = external.temperature;
+    document.getElementById('humidityInput').value = external.humidity;
+    document.getElementById('weatherConditionInput').value = external.weatherCondition;
+    document.getElementById('governmentAlertInput').value = external.governmentAlertLevel;
+    document.getElementById('nearbyInfectionsInput').value = external.nearbyInfections;
+    document.getElementById('externalNotesInput').value = external.notes || '';
+
+    document.getElementById('factorBreakdownList').innerHTML = `
+      <div class="factor-item">
+        <strong>Biosecurity Score: ${summary.factors.biosecurity.score}</strong>
+        <p>${summary.factors.biosecurity.reasons[0] || 'No biosecurity issue logged.'}</p>
+      </div>
+      <div class="factor-item">
+        <strong>Animal Health Records: ${summary.factors.records.score}</strong>
+        <p>${summary.factors.records.reasons[0] || 'No historical warning pattern found.'}</p>
+      </div>
+      <div class="factor-item">
+        <strong>AI Disease Prediction: ${summary.factors.ai.score}</strong>
+        <p>${summary.factors.ai.reasons[0] || 'No AI prediction yet.'}</p>
+      </div>
+      <div class="factor-item">
+        <strong>External Factors: ${summary.factors.external.score}</strong>
+        <p>${summary.factors.external.reasons[0] || 'External conditions are stable.'}</p>
+      </div>
+      <div class="factor-item">
+        <strong>Final Combined Risk: ${summary.score} (${summary.level})</strong>
+        <p>Risk Score = Biosecurity + Animal Records + AI Disease Prediction + External Factors</p>
+      </div>
+    `;
+
+    return summary;
+  }
+
+  const dashboardSummary = renderRiskDashboard();
+
+  externalFactorsForm.addEventListener('submit', function(event) {
+    event.preventDefault();
+    window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.external, {
+      temperature: Number(document.getElementById('temperatureInput').value || 0),
+      humidity: Number(document.getElementById('humidityInput').value || 0),
+      weatherCondition: document.getElementById('weatherConditionInput').value,
+      governmentAlertLevel: document.getElementById('governmentAlertInput').value,
+      nearbyInfections: Number(document.getElementById('nearbyInfectionsInput').value || 0),
+      notes: document.getElementById('externalNotesInput').value.trim()
+    });
+
+    renderRiskDashboard();
+    alert('External factors updated successfully. Final risk score recalculated.');
+  });
+
+  new Chart(document.getElementById('riskTrendChart'), {
+    type: 'line',
+    data: {
+      labels: ['Mar 8', 'Mar 15', 'Mar 22', 'Mar 29', 'Apr 1', dashboardSummary.updatedLabel],
+      datasets: [{
+        label: 'Farm Risk',
+        data: [32, 41, 48, 54, 59, dashboardSummary.score],
+        borderColor: '#ef4444',
+        backgroundColor: 'rgba(239, 68, 68, 0.10)',
+        fill: true,
+        tension: 0.35
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          grid: { color: '#e2e8f0' }
+        },
+        x: {
+          grid: { display: false }
+        }
+      }
+    }
+  });
+</script>
+
+</body>
+</html>

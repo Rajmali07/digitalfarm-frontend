@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Record Center | Digital Farm</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #22c55e;
+      --bg-slate: #f8fafc;
+      --text-dark: #0f172a;
+      --text-gray: #64748b;
+      --border-color: #e2e8f0;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --warning: #f59e0b;
+      --card-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background-color: var(--bg-slate); color: var(--text-dark); }
+
+    .navbar {
+      background: #0f172a;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      padding: 15px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .nav-logo { font-size: 22px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-links { display: flex; list-style: none; align-items: center; gap: 10px; }
+    .nav-links a { text-decoration: none; color: #94a3b8; font-size: 14px; padding: 8px 20px; transition: 0.3s; }
+    .nav-links a.active { background: rgba(255, 255, 255, 0.1); color: white; border-radius: 50px; font-weight: 600; }
+
+    .profile-menu { position: relative; margin-left: 18px; }
+    .profile-trigger { display: flex; align-items: center; gap: 14px; background: transparent; border: none; color: white; cursor: pointer; padding: 0; }
+    .profile-name { font-size: 16px; font-weight: 600; color: #f8fafc; }
+    .profile-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 18px);
+      right: 0;
+      width: 270px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+      z-index: 1200;
+    }
+    .profile-dropdown.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .dropdown-item {
+      display: block;
+      width: 100%;
+      padding: 18px 22px;
+      background: white;
+      border: none;
+      border-bottom: 1px solid #f1f5f9;
+      text-align: left;
+      font-size: 16px;
+      color: #3f3f46;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .dropdown-item:hover { background: #f8fafc; }
+    .dropdown-item.logout { color: #ff3b30; border-bottom: none; }
+
+    .container { max-width: 1280px; margin: 40px auto; padding: 0 20px; }
+    .header-flex { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 28px; }
+    .header-copy h1 { font-size: 30px; font-weight: 800; margin-bottom: 8px; }
+    .header-copy p { color: var(--text-gray); line-height: 1.6; max-width: 720px; }
+    .btn-add {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 13px 20px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      box-shadow: 0 10px 24px rgba(34, 197, 94, 0.18);
+    }
+    .btn-add:hover { filter: brightness(1.04); transform: translateY(-2px); }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: var(--card-shadow);
+    }
+    .stat-card span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      font-size: 18px;
+    }
+    .stat-card h3 { font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+    .stat-card p { color: var(--text-gray); font-size: 14px; }
+
+    .tabs-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 25px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      padding: 10px 18px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-gray);
+      cursor: pointer;
+      transition: 0.25s ease;
+      position: relative;
+      border-radius: 999px;
+    }
+    .tab-btn.active { color: var(--text-dark); background: #ecfdf5; }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -11px;
+      left: 16px;
+      right: 16px;
+      height: 3px;
+      background: var(--primary);
+      border-radius: 10px;
+    }
+
+    .records-card {
+      background: white;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: var(--card-shadow);
+      border: 1px solid var(--border-color);
+    }
+    .table-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .table-head h2 { font-size: 20px; font-weight: 800; }
+    .table-head p { color: var(--text-gray); font-size: 14px; }
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 880px; }
+    th {
+      text-align: left;
+      padding: 15px;
+      border-bottom: 2px solid #f1f5f9;
+      color: var(--text-gray);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    td {
+      padding: 18px 15px;
+      border-bottom: 1px solid #f8fafc;
+      font-size: 14px;
+      color: #334155;
+      vertical-align: top;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .status-pill { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; display: inline-block; }
+    .status-completed { background: #dcfce7; color: #166534; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-critical { background: #fee2e2; color: #991b1b; }
+    .status-info { background: #dbeafe; color: #1d4ed8; }
+
+    .action-set { display: flex; align-items: center; gap: 14px; }
+    .action-icon { color: var(--text-gray); cursor: pointer; transition: 0.2s; }
+    .action-icon:hover { color: var(--text-dark); }
+
+    .table-footer {
+      margin-top: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .table-footer p { font-size: 13px; color: var(--text-gray); }
+    .pager { display: flex; gap: 8px; }
+    .pager button {
+      padding: 9px 15px;
+      border: 1px solid var(--border-color);
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--text-dark);
+    }
+    .pager button.active-page { background: #f8fafc; font-weight: 700; }
+
+    .footer { background: #020617; padding: 60px 80px 20px; color: #94a3b8; border-top: 1px solid #1e293b; margin-top: 80px; }
+
+    @media (max-width: 1080px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 900px) {
+      .navbar { padding: 15px 24px; flex-wrap: wrap; gap: 16px; }
+      .nav-links { flex-wrap: wrap; justify-content: flex-end; }
+      .header-flex { flex-direction: column; align-items: flex-start; }
+    }
+
+    @media (max-width: 640px) {
+      .navbar { justify-content: center; }
+      .nav-links { justify-content: center; }
+      .profile-menu { margin-left: 0; }
+      .profile-name { display: none; }
+      .container { margin: 28px auto; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .tab-btn { padding: 10px 14px; }
+      .records-card { padding: 18px; }
+      .footer { padding: 40px 20px 20px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <a href="farmer_dashboard.html" class="nav-logo"><i class="fa-solid fa-leaf"></i> Digital Farm</a>
+    <ul class="nav-links">
+      <li><a href="farmer_dashboard.html">Dashboard</a></li>
+      <li><a href="farmer_ai_check.html">AI Diagnostic</a></li>
+      <li><a href="farmer_add_data.html">Data Entry</a></li>
+      <li><a href="farmer_animal_records.html" class="active">Records</a></li>
+      <li><a href="farmer_biosecurity.html">Biosecurity</a></li>
+      <li class="profile-menu">
+        <button class="profile-trigger" id="profileMenuButton" type="button" aria-expanded="false" aria-controls="profileDropdown">
+          <span class="profile-name">Hello, Raj!</span>
+          <span class="profile-avatar">R</span>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <a href="farmer_profile.html" class="dropdown-item">View Profile</a>
+          <a href="farmer_setting.html" class="dropdown-item">Settings</a>
+          <a href="farmer_login.html" class="dropdown-item logout">Logout</a>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="header-flex">
+      <div class="header-copy">
+        <h1>Health and Population Records</h1>
+        <p>Manage multi-animal records for livestock population, vaccination history, mortality, AI scans, and farmer complaints in one place.</p>
+      </div>
+      <a href="farmer_add_data.html" class="btn-add"><i class="fa-solid fa-plus"></i> New Entry</a>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <span style="background:#eff6ff; color:#2563eb;"><i class="fa-solid fa-paw"></i></span>
+        <h3>28</h3>
+        <p>Livestock logs across cattle, buffalo, poultry, goats, and pigs</p>
+      </div>
+      <div class="stat-card">
+        <span style="background:#f0fdf4; color:#16a34a;"><i class="fa-solid fa-syringe"></i></span>
+        <h3>19</h3>
+        <p>Vaccination entries with scheduled follow-up and dose history</p>
+      </div>
+      <div class="stat-card">
+        <span style="background:#fef2f2; color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        <h3>11</h3>
+        <p>Mortality and complaint records requiring review or closure</p>
+      </div>
+      <div class="stat-card">
+        <span style="background:#ede9fe; color:#7c3aed;"><i class="fa-solid fa-microchip"></i></span>
+        <h3>19</h3>
+        <p>AI scan reports linked to farm risk monitoring and checks</p>
+      </div>
+    </div>
+
+    <div class="tabs-container" role="tablist" aria-label="Record categories">
+      <button class="tab-btn active" type="button" data-tab="livestock" aria-selected="true">Livestock Logs</button>
+      <button class="tab-btn" type="button" data-tab="vaccination" aria-selected="false">Vaccination History</button>
+      <button class="tab-btn" type="button" data-tab="mortality" aria-selected="false">Mortality Reports</button>
+      <button class="tab-btn" type="button" data-tab="complaints" aria-selected="false">Complaints</button>
+      <button class="tab-btn" type="button" data-tab="ai-scan" aria-selected="false">AI Scan History</button>
+    </div>
+
+    <div class="records-card">
+      <div class="table-head">
+        <div>
+          <h2 id="tableTitle">Livestock Logs</h2>
+          <p id="tableDescription">Latest population records grouped by animal type, unit, and health state.</p>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr id="tableHeadRow"></tr>
+          </thead>
+          <tbody id="recordsTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="table-footer">
+        <p id="recordsSummary">Showing 5 of 28 livestock records</p>
+        <div class="pager">
+          <button type="button">Previous</button>
+          <button type="button" class="active-page">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer" style="background: #020617; padding: 60px 80px 20px; color: #94a3b8; border-top: 1px solid #1e293b;">
+    <div style="text-align:center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
+      <h2 style="color:var(--primary);">Digital Farm</h2>
+    </div>
+    <p style="text-align:center; padding-top:20px; font-size:12px;">&copy; 2026 Digital Farm | Built for Farmers</p>
+  </footer>
+
+  <script src="risk_engine.js"></script>
+  <script>
+    const profileMenuButton = document.getElementById('profileMenuButton');
+    const profileDropdown = document.getElementById('profileDropdown');
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tableHeadRow = document.getElementById('tableHeadRow');
+    const recordsTableBody = document.getElementById('recordsTableBody');
+    const recordsSummary = document.getElementById('recordsSummary');
+    const tableTitle = document.getElementById('tableTitle');
+    const tableDescription = document.getElementById('tableDescription');
+
+    const actionIcons = '<div class="action-set"><i class="fa-solid fa-eye action-icon"></i><i class="fa-solid fa-download action-icon"></i></div>';
+    const storageKeys = window.DigitalFarmRisk.STORAGE_KEYS;
+
+    const fallbackTabData = {
+      livestock: {
+        title: 'Livestock Logs',
+        description: 'Latest population records grouped by animal type, unit, and health state.',
+        summary: 'Showing 5 of 28 livestock records',
+        columns: ['Date', 'Record ID', 'Animal Type', 'Breed / Unit', 'Population', 'Health Status', 'Actions'],
+        rows: [
+          ['<strong>Apr 03, 2026</strong>', '#LIV-2108', 'Cow', 'Gir • Dairy Unit 1', '42 Animals', '<span class="status-pill status-completed">Healthy</span>', actionIcons],
+          ['<strong>Apr 02, 2026</strong>', '#LIV-2107', 'Buffalo', 'Murrah • Milk Block A', '18 Animals', '<span class="status-pill status-pending">Monitoring</span>', actionIcons],
+          ['<strong>Apr 02, 2026</strong>', '#LIV-2106', 'Poultry', 'Layer Shed A', '1,250 Birds', '<span class="status-pill status-completed">Excellent</span>', actionIcons],
+          ['<strong>Apr 01, 2026</strong>', '#LIV-2105', 'Goat', 'Sirohi • Pen 3', '36 Animals', '<span class="status-pill status-info">New Entry</span>', actionIcons],
+          ['<strong>Mar 30, 2026</strong>', '#LIV-2104', 'Pig', 'Grower Unit B', '22 Animals', '<span class="status-pill status-critical">Risk Detected</span>', actionIcons]
+        ]
+      },
+      vaccination: {
+        title: 'Vaccination History',
+        description: 'Cross-animal vaccine logs from poultry, cattle, buffalo, goats, sheep, and pigs.',
+        summary: 'Showing 5 of 19 vaccination records',
+        columns: ['Date', 'Animal Type', 'Vaccine / Disease', 'Target Group', 'Status', 'Actions'],
+        rows: [
+          ['<strong>Apr 03, 2026</strong>', 'Cow', 'Foot and Mouth Disease (FMD)', 'Dairy Unit 1', '<span class="status-pill status-completed">Completed</span>', actionIcons],
+          ['<strong>Apr 01, 2026</strong>', 'Poultry', 'Newcastle Disease (ND)', 'Layer Shed A', '<span class="status-pill status-completed">Completed</span>', actionIcons],
+          ['<strong>Mar 29, 2026</strong>', 'Buffalo', 'Hemorrhagic Septicemia (HS)', 'Milk Block A', '<span class="status-pill status-pending">Due Soon</span>', actionIcons],
+          ['<strong>Mar 27, 2026</strong>', 'Goat', 'PPR', 'Pen 3', '<span class="status-pill status-completed">Completed</span>', actionIcons],
+          ['<strong>Mar 24, 2026</strong>', 'Pig', 'Classical Swine Fever', 'Grower Unit B', '<span class="status-pill status-info">Scheduled</span>', actionIcons]
+        ]
+      },
+      mortality: {
+        title: 'Mortality Reports',
+        description: 'Loss records organised by species, unit, count, and suspected cause.',
+        summary: 'Showing 5 of 11 mortality reports',
+        columns: ['Date', 'Report ID', 'Animal Type', 'Affected Unit', 'Loss Count', 'Cause / Review', 'Actions'],
+        rows: [
+          ['<strong>Apr 02, 2026</strong>', '#MRT-3011', 'Poultry', 'Broiler Shed 1', '6 Birds', '<span class="status-pill status-critical">Suspected Infection</span>', actionIcons],
+          ['<strong>Mar 31, 2026</strong>', '#MRT-3010', 'Cow', 'Dairy Unit 2', '1 Animal', '<span class="status-pill status-pending">Under Vet Review</span>', actionIcons],
+          ['<strong>Mar 30, 2026</strong>', '#MRT-3009', 'Goat', 'Pen 5', '2 Animals', '<span class="status-pill status-info">Observation Ongoing</span>', actionIcons],
+          ['<strong>Mar 28, 2026</strong>', '#MRT-3008', 'Buffalo', 'Quarantine Yard', '1 Animal', '<span class="status-pill status-pending">Post Treatment</span>', actionIcons],
+          ['<strong>Mar 25, 2026</strong>', '#MRT-3007', 'Pig', 'Grower Unit A', '3 Animals', '<span class="status-pill status-critical">Feed Contamination</span>', actionIcons]
+        ]
+      },
+      complaints: {
+        title: 'Complaints and Incidents',
+        description: 'Farmer complaints submitted from the data entry page with urgency, symptoms, and location details.',
+        summary: 'Showing 5 of 14 complaint records',
+        columns: ['Date', 'Complaint ID', 'Animal Type', 'Incident Type', 'Urgency', 'Location', 'Actions'],
+        rows: [
+          ['<strong>Apr 03, 2026</strong>', '#CMP-1184', 'Cow', 'Unusual Symptoms Observed', '<span class="status-pill status-critical">High</span>', 'Dairy Unit 1', actionIcons],
+          ['<strong>Apr 02, 2026</strong>', '#CMP-1183', 'Poultry', 'Sudden Mortality Spike', '<span class="status-pill status-critical">High</span>', 'Broiler Shed 1', actionIcons],
+          ['<strong>Apr 01, 2026</strong>', '#CMP-1182', 'Buffalo', 'Vaccination Delay', '<span class="status-pill status-pending">Medium</span>', 'Milk Block A', actionIcons],
+          ['<strong>Mar 30, 2026</strong>', '#CMP-1181', 'Goat', 'Biosecurity Breach', '<span class="status-pill status-pending">Medium</span>', 'Pen 3', actionIcons],
+          ['<strong>Mar 27, 2026</strong>', '#CMP-1180', 'Pig', 'Feed / Water Contamination', '<span class="status-pill status-info">Logged</span>', 'Grower Unit B', actionIcons]
+        ]
+      },
+      'ai-scan': {
+        title: 'AI Scan History',
+        description: 'AI diagnostic outputs and risk scores for different farm areas and animal groups.',
+        summary: 'Showing 5 of 19 AI scan reports',
+        columns: ['Date', 'Scan ID', 'Animal / Area', 'Symptoms or Focus', 'Risk Score', 'Result', 'Actions'],
+        rows: [
+          ['<strong>Apr 03, 2026</strong>', '#SCAN-8132', 'Cow • Dairy Unit 1', 'Fever and mouth lesions', '82/100', '<span class="status-pill status-critical">High Risk</span>', actionIcons],
+          ['<strong>Apr 02, 2026</strong>', '#SCAN-8128', 'Poultry • Layer Shed A', 'Respiratory signs', '77/100', '<span class="status-pill status-critical">High Risk</span>', actionIcons],
+          ['<strong>Apr 01, 2026</strong>', '#SCAN-8120', 'Buffalo • Milk Block A', 'Low appetite', '41/100', '<span class="status-pill status-pending">Observe</span>', actionIcons],
+          ['<strong>Mar 29, 2026</strong>', '#SCAN-8112', 'Goat • Pen 3', 'Skin lesions', '34/100', '<span class="status-pill status-info">Needs Review</span>', actionIcons],
+          ['<strong>Mar 27, 2026</strong>', '#SCAN-8098', 'Entry Gate Camera', 'Biosecurity check', '18/100', '<span class="status-pill status-completed">Low Risk</span>', actionIcons]
+        ]
+      }
+    };
+
+    function statusPill(label, tone) {
+      return `<span class="status-pill ${tone}">${label}</span>`;
+    }
+
+    function formatDate(value) {
+      if (!value) return 'Not set';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function getDynamicTabData() {
+      const population = window.DigitalFarmRisk.readStore(storageKeys.population, []);
+      const vaccinations = window.DigitalFarmRisk.readStore(storageKeys.vaccination, []);
+      const complaints = window.DigitalFarmRisk.readStore(storageKeys.complaints, []);
+      const aiHistory = window.DigitalFarmRisk.readStore(storageKeys.aiHistory, []);
+
+      const mortalityRows = population
+        .filter((record) => Number(record.mortalityCount || 0) > 0)
+        .map((record) => [
+          `<strong>${formatDate(record.date)}</strong>`,
+          `#MRT-${record.id.split('-').pop()}`,
+          record.animalType,
+          record.farmUnit,
+          `${record.mortalityCount} Animals`,
+          Number(record.mortalityCount) >= 3 ? statusPill('Critical Review', 'status-critical') : statusPill('Under Review', 'status-pending'),
+          actionIcons
+        ]);
+
+      return {
+        livestock: population.length ? {
+          title: 'Livestock Logs',
+          description: 'Latest population records grouped by animal type, unit, and health state.',
+          summary: `Showing ${Math.min(population.length, 5)} of ${population.length} livestock records`,
+          columns: ['Date', 'Record ID', 'Animal Type', 'Breed / Unit', 'Population', 'Health Status', 'Actions'],
+          rows: population.slice(0, 5).map((record) => [
+            `<strong>${formatDate(record.date)}</strong>`,
+            `#${record.id}`,
+            record.animalType,
+            `${record.breedName} • ${record.farmUnit}`,
+            `${record.totalAnimals} Animals`,
+            String(record.currentHealthState || '').toLowerCase().includes('critical')
+              ? statusPill(record.currentHealthState, 'status-critical')
+              : String(record.currentHealthState || '').toLowerCase().includes('monitor')
+                ? statusPill(record.currentHealthState, 'status-pending')
+                : statusPill(record.currentHealthState || 'Healthy', 'status-completed'),
+            actionIcons
+          ])
+        } : fallbackTabData.livestock,
+        vaccination: vaccinations.length ? {
+          title: 'Vaccination History',
+          description: 'Cross-animal vaccine logs from poultry, cattle, buffalo, goats, sheep, and pigs.',
+          summary: `Showing ${Math.min(vaccinations.length, 5)} of ${vaccinations.length} vaccination records`,
+          columns: ['Date', 'Animal Type', 'Vaccine / Disease', 'Target Group', 'Status', 'Actions'],
+          rows: vaccinations.slice(0, 5).map((record) => {
+            const dueInDays = record.nextDueDate ? Math.round((new Date(record.nextDueDate) - new Date()) / (24 * 60 * 60 * 1000)) : Infinity;
+            const status = dueInDays <= 0 ? statusPill('Overdue', 'status-critical') : dueInDays <= 7 ? statusPill('Due Soon', 'status-pending') : statusPill('Completed', 'status-completed');
+            return [
+              `<strong>${formatDate(record.dateAdministered)}</strong>`,
+              record.animalType,
+              record.diseaseName,
+              record.targetGroup,
+              status,
+              actionIcons
+            ];
+          })
+        } : fallbackTabData.vaccination,
+        mortality: mortalityRows.length ? {
+          title: 'Mortality Reports',
+          description: 'Loss records organised by species, unit, count, and suspected cause.',
+          summary: `Showing ${Math.min(mortalityRows.length, 5)} of ${mortalityRows.length} mortality reports`,
+          columns: ['Date', 'Report ID', 'Animal Type', 'Affected Unit', 'Loss Count', 'Cause / Review', 'Actions'],
+          rows: mortalityRows.slice(0, 5)
+        } : fallbackTabData.mortality,
+        complaints: complaints.length ? {
+          title: 'Complaints and Incidents',
+          description: 'Farmer complaints submitted from the data entry page with urgency, symptoms, and location details.',
+          summary: `Showing ${Math.min(complaints.length, 5)} of ${complaints.length} complaint records`,
+          columns: ['Date', 'Complaint ID', 'Animal Type', 'Incident Type', 'Urgency', 'Location', 'Actions'],
+          rows: complaints.slice(0, 5).map((record) => [
+            `<strong>${formatDate(record.incidentDate)}</strong>`,
+            `#${record.id}`,
+            record.animalType,
+            record.incidentType,
+            String(record.urgencyShort || '').toLowerCase() === 'high'
+              ? statusPill(record.urgencyShort, 'status-critical')
+              : String(record.urgencyShort || '').toLowerCase() === 'medium'
+                ? statusPill(record.urgencyShort, 'status-pending')
+                : statusPill(record.urgencyShort || 'Low', 'status-info'),
+            record.location,
+            actionIcons
+          ])
+        } : fallbackTabData.complaints,
+        'ai-scan': aiHistory.length ? {
+          title: 'AI Scan History',
+          description: 'AI diagnostic outputs and risk scores for different farm areas and animal groups.',
+          summary: `Showing ${Math.min(aiHistory.length, 5)} of ${aiHistory.length} AI scan reports`,
+          columns: ['Date', 'Scan ID', 'Animal / Area', 'Symptoms or Focus', 'Risk Score', 'Result', 'Actions'],
+          rows: aiHistory.slice().reverse().slice(0, 5).map((record) => [
+            `<strong>${formatDate(record.dateISO || record.date)}</strong>`,
+            `#SCAN-${record.id}`,
+            `${(record.animalType || 'Animal').toString().toUpperCase()} • AI Check`,
+            record.symptoms,
+            `${record.risk}/100`,
+            record.risk >= 80 ? statusPill('High Risk', 'status-critical') : record.risk >= 50 ? statusPill('Observe', 'status-pending') : statusPill('Low Risk', 'status-completed'),
+            actionIcons
+          ])
+        } : fallbackTabData['ai-scan']
+      };
+    }
+
+    function renderTable(tabKey) {
+      const tabData = getDynamicTabData();
+      const selected = tabData[tabKey];
+
+      tableTitle.textContent = selected.title;
+      tableDescription.textContent = selected.description;
+      tableHeadRow.innerHTML = selected.columns.map((column) => `<th>${column}</th>`).join('');
+      recordsTableBody.innerHTML = selected.rows.map((row) => `
+        <tr>
+          ${row.map((cell) => `<td>${cell}</td>`).join('')}
+        </tr>
+      `).join('');
+      recordsSummary.textContent = selected.summary;
+    }
+
+    profileMenuButton.addEventListener('click', () => {
+      const isOpen = profileDropdown.classList.toggle('open');
+      profileMenuButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!profileMenuButton.contains(event.target) && !profileDropdown.contains(event.target)) {
+        profileDropdown.classList.remove('open');
+        profileMenuButton.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    tabButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        tabButtons.forEach((tab) => {
+          tab.classList.remove('active');
+          tab.setAttribute('aria-selected', 'false');
+        });
+
+        button.classList.add('active');
+        button.setAttribute('aria-selected', 'true');
+        renderTable(button.dataset.tab);
+      });
+    });
+
+    renderTable('livestock');
+  </script>
+
+</body>
+</html>

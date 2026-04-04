@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Farmer Portal Login | Digital Farm</title>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #22c55e;
+      --bg-dark: #0f172a;
+      --card-bg: rgba(30, 41, 59, 0.8);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --text-dim: #94a3b8;
+      --footer-bg: #020617;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg-dark);
+      background-image: radial-gradient(circle at top right, rgba(34, 197, 94, 0.1), transparent),
+                        radial-gradient(circle at bottom left, rgba(34, 197, 94, 0.05), transparent);
+      color: #f8fafc;
+    }
+
+    .navbar {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--glass-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 60px;
+      position: fixed;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .nav-logo {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+
+    .nav-links { display: flex; gap: 30px; list-style: none; }
+    .nav-links li a {
+      text-decoration: none;
+      color: var(--text-dim);
+      font-size: 14px;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+    .nav-links li a:hover { color: var(--primary); }
+
+    .page-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 20px 80px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card-bg);
+      backdrop-filter: blur(15px);
+      padding: 40px;
+      border-radius: 24px;
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      border-top: 4px solid var(--primary);
+    }
+
+    .login-card h2 { font-size: 28px; margin-bottom: 10px; font-weight: 700; }
+    .login-card p { color: var(--text-dim); font-size: 14px; margin-bottom: 30px; }
+
+    .input-group { text-align: left; margin-bottom: 20px; }
+    .input-group label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 8px; font-weight: 600; }
+
+    .input-wrapper { position: relative; display: flex; align-items: center; }
+    .input-wrapper i.main-icon { position: absolute; left: 15px; color: var(--primary); font-size: 16px; }
+
+    .input-wrapper input {
+      width: 100%;
+      padding: 12px 45px 12px 45px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      color: white;
+      outline: none;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+    .input-wrapper input:focus { border-color: var(--primary); background: rgba(15, 23, 42, 0.8); }
+
+    .form-utils { display: flex; justify-content: space-between; align-items: center; font-size: 13px; margin-bottom: 25px; }
+    .form-utils label { display: flex; align-items: center; gap: 5px; cursor: pointer; color: var(--text-dim); }
+    .form-utils button.forgot-link { background: none; border: none; color: var(--primary); font-weight: 700; cursor: pointer; font-family: inherit; font-size: 13px; }
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+    .login-btn:hover { background: #16a34a; transform: translateY(-2px); }
+
+    .signup-prompt {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 14px;
+      color: var(--text-dim);
+    }
+    .signup-prompt a { color: var(--primary); font-weight: 700; text-decoration: none; }
+
+    /* MODAL STYLES */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.85);
+      backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-card {
+      background: #1e293b; border: 1px solid var(--glass-border); border-radius: 24px;
+      padding: 35px; max-width: 400px; width: 100%; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .footer {
+      background: var(--footer-bg);
+      padding: 60px 80px 20px;
+      border-top: 1px solid var(--glass-border);
+    }
+
+    @media (max-width: 768px) {
+      .navbar { padding: 15px 25px; }
+      .nav-links { display: none; }
+      .footer { padding: 40px 20px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">
+      <i class="fa-solid fa-leaf"></i> Digital Farm
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="blog.html">Blog</a></li>
+      <li><a href="information.html">Information</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="contact.html">Contact</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-content">
+    <div class="login-card">
+      <i class="fa-solid fa-tractor" style="font-size: 40px; color: var(--primary); margin-bottom: 15px;"></i>
+      <h2>Farmer Portal Login</h2>
+      <p>Sign in to report health issues and monitor livestock.</p>
+
+      <form action="farmer_dashboard.html">
+        <div class="input-group">
+          <label>Email Address</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-envelope main-icon"></i>
+            <input type="email" placeholder="raj@gmail.com" required>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Password</label>
+          <div class="input-wrapper">
+            <i class="fa-solid fa-lock main-icon"></i>
+            <input type="password" id="passwordField" placeholder="Enter your password" required>
+            <i class="fa-solid fa-eye-slash" id="togglePassword" style="position: absolute; right: 15px; cursor: pointer; color: #64748b;"></i>
+          </div>
+        </div>
+
+        <div class="form-utils">
+          <label><input type="checkbox"> Remember me</label>
+          <button type="button" class="forgot-link" onclick="openForgotModal()">Forgot password?</button>
+        </div>
+
+        <button type="submit" class="login-btn">Sign In <i class="fa-solid fa-arrow-right-to-bracket"></i></button>
+      </form>
+
+      <div class="signup-prompt">
+        New to Digital Farm? <a href="farmer_register.html">Create an account</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="forgotModal">
+    <div class="modal-card">
+      <i class="fa-solid fa-key" style="font-size: 30px; color: var(--primary); margin-bottom: 15px;"></i>
+      <h3 style="margin-bottom: 10px;">Reset Password</h3>
+      <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 25px;">Enter your registered email to receive a secure reset link.</p>
+      
+      <div class="input-group">
+        <div class="input-wrapper">
+          <i class="fa-solid fa-paper-plane main-icon"></i>
+          <input type="email" placeholder="your-email@example.com" id="resetEmail">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button class="login-btn" style="background: transparent; border: 1px solid var(--glass-border); flex: 1;" onclick="closeForgotModal()">Cancel</button>
+        <button class="login-btn" style="flex: 2;" onclick="handleReset()">Send Link</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer">
+    <div style="text-align:center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
+      <h2 style="color:var(--primary);">Digital Farm</h2>
+    </div>
+    <p style="text-align:center; padding-top:20px; font-size:12px; color: #64748b;">&copy; 2026 Digital Farm | Built for Indian Farmers</p>
+  </footer>
+
+  <script>
+    // --- Toggle Password Visibility ---
+    const togglePassword = document.querySelector('#togglePassword');
+    const passwordField = document.querySelector('#passwordField');
+
+    togglePassword.addEventListener('click', function() {
+      const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordField.setAttribute('type', type);
+      this.classList.toggle('fa-eye');
+      this.classList.toggle('fa-eye-slash');
+    });
+
+    // --- Modal Logic ---
+    const modal = document.getElementById('forgotModal');
+
+    function openForgotModal() {
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden'; // Stop scrolling
+    }
+
+    function closeForgotModal() {
+      modal.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    function handleReset() {
+      const email = document.getElementById('resetEmail').value;
+      if (email) {
+        alert("Success: Password reset link has been sent to " + email);
+        closeForgotModal();
+      } else {
+        alert("Please enter a valid email address.");
+      }
+    }
+
+    // Close modal if clicking outside the card
+    window.onclick = function(event) {
+      if (event.target == modal) {
+        closeForgotModal();
+      }
+    }
+  </script>
+
+</body>
+</html>

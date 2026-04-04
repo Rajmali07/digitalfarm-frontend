@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About | Digital Farm</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+:root {
+  --primary: #22c55e;
+  --text-dim: #94a3b8;
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+body {
+  background: linear-gradient(135deg, #020617, #0f172a);
+  color: #fff;
+}
+
+.navbar {
+  position: sticky; top: 0; width: 100%;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--glass-border);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 60px; z-index: 1000;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-links { display: flex; gap: 12px; list-style: none; align-items: center; }
+.nav-links li a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--text-dim);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  transition: background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+.nav-links li a:hover { color: #dbeafe; background: rgba(255, 255, 255, 0.06); }
+.nav-links li a.active {
+  color: #ffffff;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+.menu-toggle { display: none; font-size: 24px; color: white; cursor: pointer; }
+
+.hero {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.hero h1 {
+  font-size: 42px;
+  color: var(--primary);
+}
+
+.hero p {
+  max-width: 600px;
+  margin: 15px auto;
+  color: #94a3b8;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  color: #86efac;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 12px var(--primary);
+}
+
+.section {
+  padding: 60px 40px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+.section h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: var(--primary);
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px,1fr));
+  gap: 25px;
+}
+
+.card {
+  background: rgba(255,255,255,0.05);
+  padding: 25px;
+  border-radius: 12px;
+  transition: 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
+
+.card h3 {
+  margin-bottom: 10px;
+  color: var(--primary);
+}
+
+.card p {
+  font-size: 14px;
+  color: #94a3b8;
+}
+
+.story-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 30px;
+  align-items: center;
+}
+
+.story-panel {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 30px;
+}
+
+.story-panel h3 {
+  color: var(--primary);
+  margin-bottom: 14px;
+  font-size: 22px;
+}
+
+.story-panel p {
+  color: #94a3b8;
+  font-size: 15px;
+}
+
+.story-highlights {
+  display: grid;
+  gap: 14px;
+}
+
+.story-item {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 18px 20px;
+}
+
+.story-item strong {
+  display: block;
+  color: white;
+  margin-bottom: 6px;
+}
+
+.story-item span {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+}
+
+.value-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 18px;
+  padding: 26px;
+  text-align: left;
+}
+
+.value-card i {
+  color: var(--primary);
+  font-size: 22px;
+  margin-bottom: 14px;
+}
+
+.value-card h3 {
+  color: white;
+  margin-bottom: 10px;
+}
+
+.value-card p {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.cta-box {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(8, 145, 178, 0.12));
+  border: 1px solid rgba(34, 197, 94, 0.16);
+  border-radius: 24px;
+  padding: 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.cta-box h3 {
+  color: white;
+  font-size: 30px;
+  margin-bottom: 10px;
+}
+
+.cta-box p {
+  color: #94a3b8;
+  font-size: 15px;
+  max-width: 620px;
+}
+
+.cta-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.cta-link {
+  text-decoration: none;
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-weight: 700;
+  transition: 0.3s;
+}
+
+.cta-link.primary {
+  background: var(--primary);
+  color: white;
+}
+
+.cta-link.secondary {
+  color: white;
+  border: 1px solid var(--glass-border);
+  background: rgba(255,255,255,0.04);
+}
+
+.cta-link:hover {
+  transform: translateY(-2px);
+}
+
+.team {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.member {
+  background: #111827;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  width: 200px;
+}
+
+.member h4 {
+  color: var(--primary);
+}
+
+.member p {
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.footer {
+  background: #020617;
+  padding: 80px 60px 40px;
+  margin-top: 60px;
+  border-top: 1px solid var(--glass-border);
+  color: var(--text-dim);
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 40px;
+}
+
+.footer-section h3 {
+  color: white;
+  margin-bottom: 20px;
+  font-size: 16px;
+  text-transform: uppercase;
+}
+
+.footer-logo {
+  color: var(--primary);
+  font-size: 24px;
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.footer-section p,
+.footer-section a {
+  color: var(--text-dim);
+  font-size: 14px;
+  display: block;
+  margin-bottom: 12px;
+  text-decoration: none;
+}
+
+.footer-section a:hover {
+  color: var(--primary);
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 40px;
+  border-top: 1px solid var(--glass-border);
+  padding-top: 20px;
+  font-size: 12px;
+}
+
+@media(max-width:900px){
+  .navbar {
+    padding: 15px 30px;
+  }
+  .story-grid, .values-grid, .cta-box {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .menu-toggle { display: block; }
+  .nav-links { position: fixed; top: 70px; right: -100%; flex-direction: column; background: #0f172a; width: 100%; height: 100vh; padding: 40px; transition: 0.4s ease; }
+  .nav-links.active { right: 0; }
+  .footer { padding: 50px 30px 30px; }
+  .footer-container { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <div class="logo"><i class="fa-solid fa-seedling"></i> Digital Farm</div>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="information.html">Information</a></li>
+    <li><a href="about.html" class="active">About</a></li>
+    <li><a href="contact.html">Contact</a></li>
+  </ul>
+  <div class="menu-toggle" id="menuToggle"><i class="fa-solid fa-bars-staggered"></i></div>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge">
+    <span class="pulse-dot"></span>
+    DIGITAL FARM PLATFORM STORY
+  </div>
+  <h1>About Digital Farm</h1>
+  <p>
+    Digital Farm is a smart livestock biosecurity platform designed to connect awareness, farmer reporting, AI support, records, and admin action in one practical system.
+  </p>
+</section>
+
+<section class="section">
+  <h2>Why We Built It</h2>
+  <div class="story-grid">
+    <div class="story-panel">
+      <h3>Built for real farm coordination</h3>
+      <p>
+        Many livestock problems are not caused only by a lack of information, but by delays between noticing symptoms, recording them, escalating issues, and responding at the admin level. Digital Farm was built to reduce that gap.
+      </p>
+    </div>
+    <div class="story-highlights">
+      <div class="story-item">
+        <strong>Public awareness to action</strong>
+        <span>Users can move from awareness content into support, feedback, or reporting without losing context.</span>
+      </div>
+      <div class="story-item">
+        <strong>Farmer-friendly workflows</strong>
+        <span>Daily records, complaints, biosecurity checks, and health tracking are structured to be simple and practical.</span>
+      </div>
+      <div class="story-item">
+        <strong>Admin visibility</strong>
+        <span>Zone monitoring, complaint handling, feedback review, and community communication stay connected.</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Our Mission</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>Protect Farms</h3>
+      <p>Reduce disease outbreaks through better biosecurity practices.</p>
+    </div>
+    <div class="card">
+      <h3>Empower Farmers</h3>
+      <p>Provide simple tools for risk assessment and farm management.</p>
+    </div>
+    <div class="card">
+      <h3>Data-Driven Decisions</h3>
+      <p>Enable smarter decisions using real-time analytics.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>What We Do</h2>
+  <div class="cards">
+    <div class="card">
+      <h3>Risk Assessment</h3>
+      <p>Analyze farm data and calculate biosecurity risk score.</p>
+    </div>
+    <div class="card">
+      <h3>Real-Time Alerts</h3>
+      <p>Notify farmers about disease outbreaks and risks.</p>
+    </div>
+    <div class="card">
+      <h3>Training & Awareness</h3>
+      <p>Educate farmers on best biosecurity practices.</p>
+    </div>
+    <div class="card">
+      <h3>Compliance Tracking</h3>
+      <p>Help farms follow government biosecurity standards.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Our Values</h2>
+  <div class="values-grid">
+    <div class="value-card">
+      <i class="fa-solid fa-handshake-angle"></i>
+      <h3>Practical support</h3>
+      <p>We focus on tools and flows that are useful for real livestock operations, not just technical demos.</p>
+    </div>
+    <div class="value-card">
+      <i class="fa-solid fa-shield-heart"></i>
+      <h3>Prevention first</h3>
+      <p>Early action, awareness, records, and reporting are central to reducing outbreak risk and protecting animal health.</p>
+    </div>
+    <div class="value-card">
+      <i class="fa-solid fa-chart-simple"></i>
+      <h3>Connected decision-making</h3>
+      <p>Better decisions happen when public guidance, farmer data, and admin review all support one another.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>Our Team</h2>
+  <div class="team">
+    <div class="member">
+      <h4>Raj Mali</h4>
+      <p>Full Stack Developer</p>
+    </div>
+    <div class="member">
+      <h4>Ananya Mali</h4>
+      <p>AI/ML Engineer</p>
+    </div>
+    <div class="member">
+      <h4>Shivam Mali</h4>
+      <p>Blockchain Lead</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="cta-box">
+    <div>
+      <h3>Want to explore the platform further?</h3>
+      <p>Read awareness content, visit the public blog, contact the team, or continue into the farmer and admin workflows from the main entry points.</p>
+    </div>
+    <div class="cta-actions">
+      <a class="cta-link primary" href="information.html">Awareness Hub</a>
+      <a class="cta-link secondary" href="contact.html">Contact Us</a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer" style="background: #020617; padding: 60px 80px 20px; color: #94a3b8; border-top: 1px solid #1e293b;">
+  <div style="text-align:center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
+    <h2 style="color:var(--primary);">Digital Farm</h2>
+  </div>
+  <p style="text-align:center; padding-top:20px; font-size:12px;">&copy; 2026 Digital Farm | Built for Farmers</p>
+</footer>
+
+<script>
+  const toggle = document.getElementById("menuToggle");
+  const nav = document.getElementById("navLinks");
+  toggle.addEventListener("click", () => nav.classList.toggle("active"));
+</script>
+
+</body>
+</html>

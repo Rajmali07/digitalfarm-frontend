@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Entry Portal | Digital Farm</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #22c55e;
+      --bg-slate: #f8fafc;
+      --text-dark: #0f172a;
+      --text-gray: #64748b;
+      --border-color: #e2e8f0;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --card-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body { background: var(--bg-slate); color: var(--text-dark); }
+
+    .navbar {
+      background: #0f172a;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      padding: 15px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .nav-logo {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+    }
+    .nav-links { display: flex; list-style: none; align-items: center; gap: 10px; }
+    .nav-links a {
+      text-decoration: none;
+      color: #94a3b8;
+      font-size: 14px;
+      padding: 8px 20px;
+      transition: 0.3s;
+    }
+    .nav-links a.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border-radius: 50px;
+      font-weight: 600;
+    }
+    .profile-menu { position: relative; margin-left: 18px; }
+    .profile-trigger {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: transparent;
+      border: none;
+      color: white;
+      cursor: pointer;
+      padding: 0;
+    }
+    .profile-name { font-size: 16px; font-weight: 600; color: #f8fafc; }
+    .profile-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .profile-dropdown {
+      position: absolute;
+      top: calc(100% + 18px);
+      right: 0;
+      width: 270px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+      border: 1px solid #e5e7eb;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+      z-index: 1200;
+    }
+    .profile-dropdown.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown-item {
+      display: block;
+      width: 100%;
+      padding: 18px 22px;
+      background: white;
+      border: none;
+      border-bottom: 1px solid #f1f5f9;
+      text-align: left;
+      font-size: 16px;
+      color: #3f3f46;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .dropdown-item:hover { background: #f8fafc; }
+    .dropdown-item.logout { color: #ff3b30; border-bottom: none; }
+
+    .container { max-width: 1220px; margin: 40px auto; padding: 0 20px 70px; }
+    .header-section { margin-bottom: 28px; }
+    .header-section h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+    .header-section p { color: var(--text-gray); max-width: 760px; line-height: 1.6; }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+    .quick-card {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: var(--card-shadow);
+    }
+    .quick-card span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      margin-bottom: 14px;
+      font-size: 18px;
+    }
+    .quick-card h3 { font-size: 18px; margin-bottom: 6px; }
+    .quick-card p { color: var(--text-gray); font-size: 14px; line-height: 1.5; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 28px;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--card-shadow);
+    }
+    .full-width { grid-column: span 2; }
+
+    h3 {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .card-subtext {
+      color: var(--text-gray);
+      font-size: 14px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .icon-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+    }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-gray);
+      margin-bottom: 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: #fcfcfd;
+      font-size: 14px;
+      outline: none;
+      transition: 0.2s ease;
+      color: var(--text-dark);
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+    .form-group textarea { resize: vertical; min-height: 120px; }
+
+    .inline-grid-2,
+    .inline-grid-3 {
+      display: grid;
+      gap: 15px;
+    }
+    .inline-grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .inline-grid-3 { grid-template-columns: repeat(3, 1fr); }
+
+    .hint-box {
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--text-gray);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .hint-box strong { color: var(--text-dark); }
+
+    .btn-submit {
+      width: 100%;
+      padding: 13px 16px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 800;
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-size: 15px;
+      margin-top: 10px;
+    }
+    .btn-animals { background: #dbeafe; color: #1d4ed8; }
+    .btn-vax { background: #dcfce7; color: #166534; }
+    .btn-complaint { background: #fee2e2; color: #b91c1c; }
+    .btn-submit:hover { transform: translateY(-2px); filter: brightness(0.98); }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 18px;
+    }
+
+    .footer {
+      background: #020617;
+      padding: 60px 80px 20px;
+      color: #94a3b8;
+      border-top: 1px solid #1e293b;
+    }
+
+    @media (max-width: 980px) {
+      .navbar { padding: 15px 24px; flex-wrap: wrap; gap: 15px; }
+      .nav-links { flex-wrap: wrap; justify-content: flex-end; }
+      .quick-grid,
+      .form-grid { grid-template-columns: 1fr; }
+      .full-width { grid-column: span 1; }
+    }
+
+    @media (max-width: 720px) {
+      .inline-grid-2,
+      .inline-grid-3 { grid-template-columns: 1fr; }
+      .profile-name { display: none; }
+    }
+
+    @media (max-width: 560px) {
+      .container { margin: 28px auto; }
+      .header-section h1 { font-size: 28px; }
+      .card { padding: 22px; }
+      .footer { padding: 40px 20px 20px; }
+      .nav-links { justify-content: center; }
+      .profile-menu { margin-left: 0; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="navbar">
+    <a href="farmer_dashboard.html" class="nav-logo"><i class="fa-solid fa-leaf"></i> Digital Farm</a>
+    <ul class="nav-links">
+      <li><a href="farmer_dashboard.html">Dashboard</a></li>
+      <li><a href="farmer_ai_check.html">AI Diagnostic</a></li>
+      <li><a href="farmer_add_data.html" class="active">Data Entry</a></li>
+      <li><a href="farmer_animal_records.html">Records</a></li>
+      <li><a href="farmer_biosecurity.html">Biosecurity</a></li>
+      <li class="profile-menu">
+        <button class="profile-trigger" id="profileMenuButton" type="button">
+          <span class="profile-name">Hello, Raj!</span>
+          <span class="profile-avatar">R</span>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown">
+          <a href="farmer_profile.html" class="dropdown-item">View Profile</a>
+          <a href="farmer_setting.html" class="dropdown-item">Settings</a>
+          <a href="farmer_login.html" class="dropdown-item logout">Logout</a>
+        </div>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <div class="header-section">
+      <h1>Log New Data</h1>
+      <p>Update livestock records for cow, buffalo, poultry, goat, sheep, pig, and other farm animals. This page also lets you register vaccinations and submit complaints or incidents from the same workflow.</p>
+    </div>
+
+    <div class="quick-grid">
+      <div class="quick-card">
+        <span style="background:#eff6ff; color:#3b82f6;"><i class="fa-solid fa-cow"></i></span>
+        <h3>Multi-Animal Support</h3>
+        <p>Use one form structure for cattle, buffalo, poultry, goats, sheep, pigs, and custom animal types.</p>
+      </div>
+      <div class="quick-card">
+        <span style="background:#f0fdf4; color:#22c55e;"><i class="fa-solid fa-syringe"></i></span>
+        <h3>Vaccination Logging</h3>
+        <p>Disease options change automatically based on the animal type you choose.</p>
+      </div>
+      <div class="quick-card">
+        <span style="background:#fef2f2; color:#ef4444;"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        <h3>Complaint Reporting</h3>
+        <p>Raise incidents with animal type, affected count, symptoms, urgency, and evidence details.</p>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="card">
+        <h3><div class="icon-box" style="background:#eff6ff; color:#3b82f6;"><i class="fa-solid fa-paw"></i></div> Animal Population</h3>
+        <p class="card-subtext">Capture stock changes for any animal category and link the update to a farm unit, breed, and health state.</p>
+
+        <form id="populationForm">
+          <div class="status-chip"><i class="fa-solid fa-circle-info"></i> Works for cattle, buffalo, poultry, goats, sheep, pigs, and others</div>
+
+          <div class="inline-grid-2">
+            <div class="form-group">
+              <label for="populationAnimalType">Animal Type</label>
+              <select id="populationAnimalType" required>
+                <option value="cow">Cow</option>
+                <option value="buffalo">Buffalo</option>
+                <option value="poultry">Poultry</option>
+                <option value="goat">Goat</option>
+                <option value="sheep">Sheep</option>
+                <option value="pig">Pig</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="batchId">Batch / Group ID</label>
+              <input id="batchId" type="text" placeholder="e.g. BCH-9902 or COW-UNIT-A" required>
+            </div>
+          </div>
+
+          <div class="inline-grid-3">
+            <div class="form-group">
+              <label for="breedName">Breed / Variety</label>
+              <input id="breedName" type="text" placeholder="e.g. Gir, Murrah, Broiler, Sirohi">
+            </div>
+            <div class="form-group">
+              <label for="ageGroup">Age Group</label>
+              <select id="ageGroup">
+                <option>Young</option>
+                <option>Growing</option>
+                <option>Adult</option>
+                <option>Mixed Group</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="farmUnit">Farm Unit / Shed</label>
+              <input id="farmUnit" type="text" placeholder="e.g. Shed B, Dairy Unit 2">
+            </div>
+          </div>
+
+          <div class="inline-grid-3">
+            <div class="form-group">
+              <label for="totalAnimals">Current Total</label>
+              <input id="totalAnimals" type="number" min="0" value="0">
+            </div>
+            <div class="form-group">
+              <label for="newAdditions">New Additions</label>
+              <input id="newAdditions" type="number" min="0" value="0">
+            </div>
+            <div class="form-group">
+              <label for="mortalityCount">Mortality (Dead)</label>
+              <input id="mortalityCount" type="number" min="0" value="0" style="color: var(--danger);">
+            </div>
+          </div>
+
+          <div class="inline-grid-2">
+            <div class="form-group">
+              <label for="genderGroup">Gender Group</label>
+              <select id="genderGroup">
+                <option>Mixed</option>
+                <option>Male</option>
+                <option>Female</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="currentHealthState">Current Health State</label>
+              <select id="currentHealthState">
+                <option>Healthy</option>
+                <option>Monitoring Required</option>
+                <option>Critical (Symptoms visible)</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit btn-animals">Sync Population</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3><div class="icon-box" style="background:#f0fdf4; color:#22c55e;"><i class="fa-solid fa-syringe"></i></div> Vaccination Entry</h3>
+        <p class="card-subtext">Choose the animal type first, then log the right disease and vaccine schedule for that category.</p>
+
+        <form id="vaccinationForm">
+          <div class="hint-box"><strong>Smart selection:</strong> disease options below update automatically for cow, buffalo, poultry, goat, sheep, pig, or custom animals.</div>
+
+          <div class="inline-grid-2">
+            <div class="form-group">
+              <label for="vaxAnimalType">Animal Type</label>
+              <select id="vaxAnimalType" required></select>
+            </div>
+            <div class="form-group">
+              <label for="diseaseName">Disease / Vaccine Name</label>
+              <select id="diseaseName" required></select>
+            </div>
+          </div>
+
+          <div class="inline-grid-2">
+            <div class="form-group">
+              <label for="targetGroup">Target Group / Unit</label>
+              <input id="targetGroup" type="text" placeholder="e.g. Calves Unit, Layer Shed A">
+            </div>
+            <div class="form-group">
+              <label for="doseCount">Animals Vaccinated</label>
+              <input id="doseCount" type="number" min="0" value="0">
+            </div>
+          </div>
+
+          <div class="inline-grid-2">
+            <div class="form-group">
+              <label for="dateAdministered">Date Administered</label>
+              <input id="dateAdministered" type="date">
+            </div>
+            <div class="form-group">
+              <label for="nextDueDate">Next Due Date</label>
+              <input id="nextDueDate" type="date">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="vaxNotes">Vaccination Notes</label>
+            <textarea id="vaxNotes" placeholder="Mention booster details, vet advice, batch number, or storage remarks..."></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit btn-vax">Log Vaccination</button>
+        </form>
+      </div>
+
+      <div class="card full-width">
+        <h3 style="color: var(--danger);"><div class="icon-box" style="background:#fef2f2; color:var(--danger);"><i class="fa-solid fa-circle-exclamation"></i></div> Report Incident / Complaint</h3>
+        <p class="card-subtext">Use this complaint section to report illness, mortality, unauthorized entry, hygiene breaches, or technical problems with enough detail for follow-up.</p>
+
+        <form id="complaintForm">
+          <div class="inline-grid-3">
+            <div class="form-group">
+              <label for="complaintAnimalType">Animal Type</label>
+              <select id="complaintAnimalType" required></select>
+            </div>
+            <div class="form-group">
+              <label for="incidentType">Type of Incident</label>
+              <select id="incidentType" required>
+                <option>Sudden Mortality Spike</option>
+                <option>Unusual Symptoms Observed</option>
+                <option>Vaccination Delay</option>
+                <option>Unauthorized Visitor Entry</option>
+                <option>Biosecurity Breach</option>
+                <option>Feed / Water Contamination</option>
+                <option>Technical Issue (App/Sensors)</option>
+                <option>Other Complaint</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="urgencyLevel">Urgency Level</label>
+              <select id="urgencyLevel" required style="color: var(--danger); font-weight: 700;">
+                <option>Low - General follow-up</option>
+                <option>Medium - Review within 24h</option>
+                <option>High - Immediate attention required</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="inline-grid-3">
+            <div class="form-group">
+              <label for="affectedCount">Affected Animals</label>
+              <input id="affectedCount" type="number" min="0" value="0">
+            </div>
+            <div class="form-group">
+              <label for="complaintLocation">Farm Unit / Location</label>
+              <input id="complaintLocation" type="text" placeholder="e.g. Dairy Shed 1, Layer Block B">
+            </div>
+            <div class="form-group">
+              <label for="complaintDate">Incident Date</label>
+              <input id="complaintDate" type="date">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="symptomsObserved">Symptoms / Problem Summary</label>
+            <input id="symptomsObserved" type="text" placeholder="e.g. fever, coughing, limping, low feed intake, foul odor, broken fence">
+          </div>
+
+          <div class="form-group">
+            <label for="complaintDescription">Detailed Complaint Description</label>
+            <textarea id="complaintDescription" rows="5" placeholder="Describe what happened, when it started, how many animals were involved, and what action has already been taken..."></textarea>
+          </div>
+
+          <div class="inline-grid-2">
+            <div class="form-group">
+              <label for="evidenceUpload">Upload Evidence (Optional)</label>
+              <input id="evidenceUpload" type="file">
+            </div>
+            <div class="form-group">
+              <label for="contactPreference">Preferred Follow-up</label>
+              <select id="contactPreference">
+                <option>Phone Call</option>
+                <option>In-App Review</option>
+                <option>Vet Visit</option>
+                <option>Email Update</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:flex-end;">
+            <button type="submit" class="btn-submit btn-complaint" style="max-width:260px;">Submit Complaint</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer" style="background: #020617; padding: 60px 80px 20px; color: #94a3b8; border-top: 1px solid #1e293b;">
+    <div style="text-align:center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
+      <h2 style="color:var(--primary);">Digital Farm</h2>
+    </div>
+    <p style="text-align:center; padding-top:20px; font-size:12px;">&copy; 2026 Digital Farm | Built for Farmers</p>
+  </footer>
+
+  <script src="risk_engine.js"></script>
+  <script>
+    const profileMenuButton = document.getElementById('profileMenuButton');
+    const profileDropdown = document.getElementById('profileDropdown');
+    const vaxAnimalType = document.getElementById('vaxAnimalType');
+    const complaintAnimalType = document.getElementById('complaintAnimalType');
+    const diseaseName = document.getElementById('diseaseName');
+    const storageKeys = window.DigitalFarmRisk.STORAGE_KEYS;
+
+    const diseaseOptions = {
+      cow: ['Foot and Mouth Disease (FMD)', 'Hemorrhagic Septicemia (HS)', 'Black Quarter (BQ)', 'Brucellosis', 'Lumpy Skin Disease'],
+      buffalo: ['Foot and Mouth Disease (FMD)', 'Hemorrhagic Septicemia (HS)', 'Black Quarter (BQ)', 'Brucellosis'],
+      poultry: ['Newcastle Disease (ND)', 'Infectious Bronchitis (IB)', 'Marek\'s Disease', 'Fowl Pox', 'Gumboro (IBD)'],
+      goat: ['PPR', 'Enterotoxaemia', 'Goat Pox', 'Foot and Mouth Disease (FMD)'],
+      sheep: ['PPR', 'Enterotoxaemia', 'Sheep Pox', 'Foot and Mouth Disease (FMD)'],
+      pig: ['Classical Swine Fever', 'Foot and Mouth Disease (FMD)', 'Swine Erysipelas'],
+      other: ['General Preventive Vaccine', 'Custom Entry Required']
+    };
+
+    function fillAnimalTypeSelect(selectEl) {
+      selectEl.innerHTML = `
+        <option value="cow">Cow</option>
+        <option value="buffalo">Buffalo</option>
+        <option value="poultry">Poultry</option>
+        <option value="goat">Goat</option>
+        <option value="sheep">Sheep</option>
+        <option value="pig">Pig</option>
+        <option value="other">Other</option>
+      `;
+    }
+
+    function updateDiseaseOptions() {
+      const selectedType = vaxAnimalType.value;
+      const options = diseaseOptions[selectedType] || diseaseOptions.other;
+      diseaseName.innerHTML = options.map((option) => `<option>${option}</option>`).join('');
+    }
+
+    fillAnimalTypeSelect(vaxAnimalType);
+    fillAnimalTypeSelect(complaintAnimalType);
+    vaxAnimalType.value = 'poultry';
+    complaintAnimalType.value = 'poultry';
+    updateDiseaseOptions();
+
+    vaxAnimalType.addEventListener('change', updateDiseaseOptions);
+
+    profileMenuButton.addEventListener('click', function (event) {
+      event.stopPropagation();
+      profileDropdown.classList.toggle('open');
+    });
+
+    document.addEventListener('click', function (event) {
+      if (!profileDropdown.contains(event.target) && !profileMenuButton.contains(event.target)) {
+        profileDropdown.classList.remove('open');
+      }
+    });
+
+    function createRecordId(prefix) {
+      return prefix + '-' + Math.floor(1000 + Math.random() * 9000);
+    }
+
+    function animalLabel(value) {
+      return value.charAt(0).toUpperCase() + value.slice(1);
+    }
+
+    document.getElementById('populationForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const records = window.DigitalFarmRisk.readStore(storageKeys.population, []);
+      const totalAnimals = Number(document.getElementById('totalAnimals').value || 0);
+      const mortalityCount = Number(document.getElementById('mortalityCount').value || 0);
+
+      records.unshift({
+        id: createRecordId('LIV'),
+        date: new Date().toISOString().split('T')[0],
+        reportedAt: new Date().toLocaleString(),
+        animalType: animalLabel(document.getElementById('populationAnimalType').value),
+        batchId: document.getElementById('batchId').value,
+        breedName: document.getElementById('breedName').value || 'Not specified',
+        ageGroup: document.getElementById('ageGroup').value,
+        farmUnit: document.getElementById('farmUnit').value || 'General unit',
+        totalAnimals,
+        newAdditions: Number(document.getElementById('newAdditions').value || 0),
+        mortalityCount,
+        genderGroup: document.getElementById('genderGroup').value,
+        currentHealthState: document.getElementById('currentHealthState').value
+      });
+
+      window.DigitalFarmRisk.writeStore(storageKeys.population, records);
+      window.DigitalFarmRisk.syncOverallRisk();
+      alert('Population data synced successfully.');
+      event.target.reset();
+      document.getElementById('totalAnimals').value = '0';
+      document.getElementById('newAdditions').value = '0';
+      document.getElementById('mortalityCount').value = '0';
+    });
+
+    document.getElementById('vaccinationForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const records = window.DigitalFarmRisk.readStore(storageKeys.vaccination, []);
+      records.unshift({
+        id: createRecordId('VAX'),
+        dateAdministered: document.getElementById('dateAdministered').value || new Date().toISOString().split('T')[0],
+        nextDueDate: document.getElementById('nextDueDate').value || '',
+        animalType: animalLabel(vaxAnimalType.value),
+        diseaseName: diseaseName.value,
+        targetGroup: document.getElementById('targetGroup').value || 'General unit',
+        doseCount: Number(document.getElementById('doseCount').value || 0),
+        notes: document.getElementById('vaxNotes').value || ''
+      });
+
+      window.DigitalFarmRisk.writeStore(storageKeys.vaccination, records);
+      window.DigitalFarmRisk.syncOverallRisk();
+      alert('Vaccination entry logged successfully.');
+      event.target.reset();
+      vaxAnimalType.value = 'poultry';
+      updateDiseaseOptions();
+      document.getElementById('doseCount').value = '0';
+    });
+
+    function createComplaintId() {
+      const stamp = Math.floor(1000 + Math.random() * 9000);
+      return 'CMP-' + stamp;
+    }
+
+    function saveComplaintRecord() {
+      const complaintDateValue = document.getElementById('complaintDate').value;
+      const complaintDate = complaintDateValue || new Date().toISOString().split('T')[0];
+      const urgency = document.getElementById('urgencyLevel').value;
+      const evidenceFile = document.getElementById('evidenceUpload').files[0];
+      const complaints = JSON.parse(localStorage.getItem('farmerComplaints')) || [];
+
+      const complaintRecord = {
+        id: createComplaintId(),
+        farmerName: 'Rajesh Kumar',
+        farmerId: 'FMR-9901',
+        animalType: document.getElementById('complaintAnimalType').value,
+        incidentType: document.getElementById('incidentType').value,
+        urgency: urgency,
+        urgencyShort: urgency.split(' - ')[0],
+        affectedCount: document.getElementById('affectedCount').value || '0',
+        location: document.getElementById('complaintLocation').value || 'Location not provided',
+        incidentDate: complaintDate,
+        symptoms: document.getElementById('symptomsObserved').value || 'No symptom summary provided',
+        description: document.getElementById('complaintDescription').value || 'No detailed complaint description provided.',
+        contactPreference: document.getElementById('contactPreference').value,
+        evidenceName: evidenceFile ? evidenceFile.name : 'No file uploaded',
+        evidenceType: evidenceFile ? evidenceFile.type : '',
+        reportedAt: new Date().toLocaleString(),
+        status: urgency.includes('High') ? 'HIGH RISK: Needs Immediate Review' : urgency.includes('Medium') ? 'UNDER REVIEW' : 'NEW COMPLAINT',
+        adminPrescription: '',
+        internalDiagnosis: '',
+        syncedToFarmer: false
+      };
+
+      complaints.unshift(complaintRecord);
+      localStorage.setItem('farmerComplaints', JSON.stringify(complaints));
+      localStorage.setItem('activeComplaintId', complaintRecord.id);
+      window.DigitalFarmRisk.syncOverallRisk();
+      return complaintRecord;
+    }
+
+    document.getElementById('complaintForm').addEventListener('submit', function (event) {
+      event.preventDefault();
+      const savedComplaint = saveComplaintRecord();
+      alert('Complaint submitted successfully. Case ID: ' + savedComplaint.id);
+      window.location.href = 'farmer_animal_records.html';
+    });
+  </script>
+
+</body>
+</html>
