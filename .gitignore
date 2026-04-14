@@ -1,0 +1,88 @@
+# =========================
+# Node
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =========================
+# Build
+# =========================
+dist/
+build/
+.vite/
+.cache/
+
+# =========================
+# Environment
+# =========================
+.env
+.env.*
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# Python
+# =========================
+venv/
+env/
+.venv/
+__pycache__/
+*.pyc
+
+# =========================
+# ML / Large files
+# =========================
+*.pt
+*.pth
+*.dll
+
+# =========================
+# Database
+# =========================
+*.sqlite
+*.db
+
+# =========================
+# Temp / uploads
+# =========================
+uploads/
+tmp/
+temp/
+
+# Python virtual env (extra safety)
+venv.bak/
+
+# Jupyter / notebooks
+.ipynb_checkpoints/
+
+# Python build files
+*.egg-info/
+*.egg
+
+# Runtime
+*.pid
+*.seed
+
+# Dataset
+data/
+dataset/
