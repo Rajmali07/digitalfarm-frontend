@@ -7,11 +7,12 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="api_cache.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --admin-primary: #0891b2; /* Deep Cyan */
+            --admin-primary: #0891b2;
             --admin-hover: #0e7490;
             --bg-dark: #020617;
             --card-bg: rgba(15, 23, 42, 0.8);
@@ -31,7 +32,6 @@
             min-height: 100vh;
         }
 
-        /* SIDEBAR (Mirrored from Admin Dashboard) */
         .sidebar {
             width: 260px;
             height: 100vh;
@@ -108,7 +108,6 @@
             background: rgba(248, 113, 113, 0.08);
         }
 
-        /* TOPBAR (Mirrored from Admin Dashboard) */
         .topbar {
             margin-left: 260px;
             width: calc(100% - 260px);
@@ -142,7 +141,6 @@
             border: 1px solid var(--glass-border);
         }
 
-        /* MAIN CONTENT AREA */
         .main {
             margin-left: 260px;
             padding: 40px;
@@ -166,7 +164,6 @@
             font-weight: 800;
         }
 
-        /* FORM ELEMENTS */
         input, select, textarea {
             background: rgba(2, 6, 23, 0.6) !important;
             border: 1px solid var(--glass-border) !important;
@@ -177,7 +174,10 @@
             outline: none;
             font-size: 14px;
         }
-        input:focus, select:focus, textarea:focus { border-color: var(--admin-primary) !important; }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--admin-primary) !important;
+        }
 
         .btn-cyan {
             background: var(--admin-primary);
@@ -192,12 +192,29 @@
             border: none;
             cursor: pointer;
         }
-        .btn-cyan:hover { background: var(--admin-hover); transform: translateY(-2px); box-shadow: 0 10px 20px rgba(8, 145, 178, 0.2); }
 
-        /* TABLE STYLES */
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 15px 10px; border-bottom: 1px solid var(--glass-border); font-size: 14px; text-align: left; }
-        th { color: var(--text-dim); font-weight: 600; }
+        .btn-cyan:hover {
+            background: var(--admin-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(8, 145, 178, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px 10px;
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 14px;
+            text-align: left;
+        }
+
+        th {
+            color: var(--text-dim);
+            font-weight: 600;
+        }
 
         .empty-state {
             text-align: center;
@@ -278,7 +295,30 @@
             display: block;
         }
 
-        /* RESPONSIVE */
+        .preview-card {
+            display: none;
+            margin-top: 12px;
+            padding: 10px;
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            background: rgba(2, 6, 23, 0.5);
+        }
+
+        .preview-card img,
+        .preview-card video {
+            width: 100%;
+            max-height: 220px;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+
+        .preview-label {
+            margin-top: 8px;
+            color: var(--text-dim);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
         @media(max-width:1024px){
             .sidebar { display: none; }
             .topbar, .main { margin-left: 0; width: 100%; }
@@ -324,7 +364,6 @@
     <h3 class="section-title">Global Feed Management</h3>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
         <div class="lg:col-span-2">
             <div class="card">
                 <div id="blog-message" class="message-banner"></div>
@@ -342,8 +381,7 @@
                                 <th style="text-align: right;">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="blog-table-body">
-                            </tbody>
+                        <tbody id="blog-table-body"></tbody>
                     </table>
                 </div>
             </div>
@@ -352,10 +390,10 @@
         <div class="lg:col-span-1">
             <div class="card sticky top-28">
                 <h3 id="form-title" style="color: var(--admin-primary); font-size: 16px; font-weight: 800; margin-bottom: 20px;">CREATE NEW POST</h3>
-                
+
                 <form id="blog-form" class="space-y-4">
                     <input type="text" id="post-title" placeholder="Enter post title" required>
-                    
+
                     <select id="post-category" required>
                         <option value="Disease Alerts">Disease Alerts</option>
                         <option value="Farmer Tips">Farmer Tips</option>
@@ -365,13 +403,14 @@
 
                     <div class="space-y-2">
                         <label style="font-size: 10px; font-weight: 800; color: var(--text-dim); text-transform: uppercase;">Upload Image / Video</label>
-                        <div class="relative border-2 border-dashed border-glass-border rounded-xl p-6 hover:border-admin-cyan transition-all group text-center cursor-pointer">
+                        <div class="relative border-2 border-dashed rounded-xl p-6 transition-all text-center cursor-pointer" style="border-color: var(--glass-border);">
                             <input type="file" id="post-media" accept="image/*,video/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                             <div id="upload-placeholder">
-                                <i data-lucide="clapperboard" class="mx-auto mb-2 text-slate-500 group-hover:text-admin-cyan"></i>
+                                <i data-lucide="clapperboard" class="mx-auto mb-2 text-slate-500"></i>
                                 <p class="text-[11px] text-slate-400" id="file-name-display">Click or drag media</p>
                             </div>
                         </div>
+                        <div id="media-preview" class="preview-card"></div>
                     </div>
 
                     <textarea id="post-content" rows="5" placeholder="Write caption or detailed content..."></textarea>
@@ -393,7 +432,7 @@
                     </div>
 
                     <button type="submit" id="submit-btn" class="btn-cyan mt-4">PUBLISH POST</button>
-                    <button type="button" onclick="resetForm()" class="text-[10px] text-slate-500 w-full text-center hover:text-white transition uppercase font-bold mt-2">Clear Form</button>
+                    <button type="button" id="clear-form-btn" class="text-[10px] text-slate-500 w-full text-center hover:text-white transition uppercase font-bold mt-2">Clear Form</button>
                 </form>
             </div>
         </div>
@@ -402,7 +441,8 @@
 
 <script>
     lucide.createIcons();
-    const BLOG_STORAGE_KEY = 'digitalFarmAdminPosts';
+
+    const API_URL = "http://localhost:5000/api/v1/blogs";
     const blogForm = document.getElementById('blog-form');
     const tableBody = document.getElementById('blog-table-body');
     const postCount = document.getElementById('post-count');
@@ -412,55 +452,27 @@
     const categoryInput = document.getElementById('post-category');
     const contentInput = document.getElementById('post-content');
     const linkInput = document.getElementById('post-link');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const previewContainer = document.getElementById('media-preview');
+    const linkContainer = document.getElementById('link-container');
+    const submitButton = document.getElementById('submit-btn');
+    const formTitle = document.getElementById('form-title');
+    let currentPosts = [];
+    let uploadedMedia = null;
+    let editingPostId = null;
 
-    // Toggle External Link field based on radio selection
-    document.querySelectorAll('input[name="status"]').forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            document.getElementById('link-container').classList.toggle('hidden', e.target.value !== 'link');
+    document.querySelectorAll('input[name="status"]').forEach((radio) => {
+        radio.addEventListener('change', (event) => {
+            linkContainer.classList.toggle('hidden', event.target.value !== 'link');
         });
     });
 
-    // File Name Display Logic
-    mediaInput.addEventListener('change', function(e) {
-        const fileName = e.target.files[0]?.name || "Click or drag media";
-        const display = document.getElementById('file-name-display');
-        display.innerText = fileName;
-        if(e.target.files[0]) display.style.color = "#0891b2";
-    });
-
-    function getStoredPosts() {
-        try {
-            const stored = JSON.parse(localStorage.getItem(BLOG_STORAGE_KEY)) || [];
-            if (stored.length) {
-                return stored;
-            }
-        } catch (error) {
-            console.error('Unable to read saved posts:', error);
-        }
-
-        const seededPosts = [
-            {
-                id: 'post-seed-1',
-                title: 'Poultry Infection',
-                category: 'Disease Alerts',
-                status: 'published',
-                summary: 'Keep aware of infection symptoms and isolate affected birds early.',
-                link: '',
-                mediaName: '',
-                createdAt: new Date().toISOString()
-            }
-        ];
-
-        localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(seededPosts));
-        return seededPosts;
-    }
-
-    function saveStoredPosts(posts) {
-        localStorage.setItem(BLOG_STORAGE_KEY, JSON.stringify(posts));
+    function getToken() {
+        return localStorage.getItem('token');
     }
 
     function escapeHtml(value) {
-        return String(value).replace(/[&<>"']/g, (char) => ({
+        return String(value ?? '').replace(/[&<>"']/g, (char) => ({
             '&': '&amp;',
             '<': '&lt;',
             '>': '&gt;',
@@ -478,8 +490,85 @@
         }, 3000);
     }
 
-    function renderPosts() {
-        const posts = getStoredPosts();
+    function formatStatus(status) {
+        const normalized = (status || 'draft').toLowerCase();
+        return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    }
+
+    function setStatusSelection(status) {
+        const normalized = (status || 'published').toLowerCase();
+        const radio = document.querySelector(`input[name="status"][value="${normalized}"]`);
+
+        if (radio) {
+            radio.checked = true;
+        }
+
+        linkContainer.classList.toggle('hidden', normalized !== 'link');
+    }
+
+    function renderPreview(media) {
+        if (!media?.url) {
+            previewContainer.style.display = 'none';
+            previewContainer.innerHTML = '';
+            return;
+        }
+
+        const isVideo = media.type.startsWith('video/');
+        previewContainer.style.display = 'block';
+        previewContainer.innerHTML = `
+            ${isVideo
+                ? `<video controls muted><source src="${media.url}" type="${media.type}"></video>`
+                : `<img src="${media.url}" alt="Selected media preview">`
+            }
+            <div class="preview-label">${escapeHtml(media.name)}</div>
+        `;
+    }
+
+    async function readMediaFile(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+
+            reader.onload = () => {
+                resolve({
+                    url: reader.result,
+                    type: file.type || 'application/octet-stream',
+                    name: file.name
+                });
+            };
+
+            reader.onerror = () => reject(new Error('Unable to read selected media.'));
+            reader.readAsDataURL(file);
+        });
+    }
+
+    mediaInput.addEventListener('change', async (event) => {
+        const file = event.target.files[0];
+
+        if (!file) {
+            uploadedMedia = null;
+            fileNameDisplay.innerText = 'Click or drag media';
+            fileNameDisplay.style.color = '';
+            renderPreview(null);
+            return;
+        }
+
+        try {
+            uploadedMedia = await readMediaFile(file);
+            fileNameDisplay.innerText = file.name;
+            fileNameDisplay.style.color = '#0891b2';
+            renderPreview(uploadedMedia);
+        } catch (error) {
+            console.error(error);
+            uploadedMedia = null;
+            mediaInput.value = '';
+            fileNameDisplay.innerText = 'Click or drag media';
+            fileNameDisplay.style.color = '';
+            renderPreview(null);
+            showMessage(error.message || 'Unable to read selected media.');
+        }
+    });
+
+    function renderPosts(posts) {
         postCount.textContent = posts.length;
 
         if (!posts.length) {
@@ -490,14 +579,15 @@
         tableBody.innerHTML = posts.map((post) => `
             <tr>
                 <td>
-                    <div style="font-weight: 700; color: var(--text-main);">${escapeHtml(post.title)}</div>
-                    <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">${escapeHtml(post.summary)}</div>
+                    <div style="font-weight: 700; color: var(--text-main);">${escapeHtml(post.title || 'Untitled post')}</div>
+                    <div style="font-size: 12px; color: var(--text-dim); margin-top: 4px;">${escapeHtml((post.content || 'No content added yet.').slice(0, 88))}</div>
                 </td>
-                <td>${escapeHtml(post.category)}</td>
-                <td><span class="status-pill ${escapeHtml(post.status)}">${escapeHtml(post.status)}</span></td>
+                <td>${escapeHtml(post.category || 'General')}</td>
+                <td><span class="status-pill ${escapeHtml((post.status || 'draft').toLowerCase())}">${escapeHtml(formatStatus(post.status))}</span></td>
                 <td>
                     <div class="table-actions">
                         ${post.link ? `<a class="action-btn" href="${escapeHtml(post.link)}" target="_blank" rel="noopener noreferrer">Open</a>` : ''}
+                        <button type="button" class="action-btn" onclick="beginEdit('${post.id}')">Edit</button>
                         <button type="button" class="action-btn delete" onclick="deletePost('${post.id}')">Delete</button>
                     </div>
                 </td>
@@ -505,62 +595,175 @@
         `).join('');
     }
 
-    function buildPostPayload() {
+    async function fetchBlogs() {
+        try {
+            const response = await fetch(API_URL);
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Unable to load blogs.');
+            }
+
+            currentPosts = result.data || [];
+            renderPosts(currentPosts);
+        } catch (error) {
+            console.error(error);
+            currentPosts = [];
+            renderPosts([]);
+            showMessage(error.message || 'Unable to load blogs right now.');
+        }
+    }
+
+    function buildPayload() {
         const status = document.querySelector('input[name="status"]:checked').value;
-        const summary = contentInput.value.trim() || (mediaInput.files[0]?.name ? `Media attached: ${mediaInput.files[0].name}` : 'No description provided');
 
         return {
-            id: `post-${Date.now()}`,
             title: titleInput.value.trim(),
+            content: contentInput.value.trim(),
             category: categoryInput.value,
             status,
-            summary,
             link: status === 'link' ? linkInput.value.trim() : '',
-            mediaName: mediaInput.files[0]?.name || '',
-            createdAt: new Date().toISOString()
+            image_url: uploadedMedia?.url || ''
         };
+    }
+
+    function beginEdit(id) {
+        const post = currentPosts.find((entry) => entry.id === id);
+
+        if (!post) {
+            showMessage('Unable to find that post.');
+            return;
+        }
+
+        editingPostId = id;
+        formTitle.innerText = 'EDIT POST';
+        submitButton.textContent = 'UPDATE POST';
+        titleInput.value = post.title || '';
+        categoryInput.value = post.category || 'Disease Alerts';
+        contentInput.value = post.content || '';
+        linkInput.value = post.link || '';
+        setStatusSelection(post.status || 'published');
+
+        uploadedMedia = post.image_url
+            ? {
+                url: post.image_url,
+                type: post.image_url.startsWith('data:video/') ? 'video/mp4' : 'image/*',
+                name: 'Current media attached'
+            }
+            : null;
+
+        if (uploadedMedia) {
+            fileNameDisplay.innerText = uploadedMedia.name;
+            fileNameDisplay.style.color = '#0891b2';
+            renderPreview(uploadedMedia);
+        } else {
+            fileNameDisplay.innerText = 'Click or drag media';
+            fileNameDisplay.style.color = '';
+            renderPreview(null);
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function resetForm() {
         blogForm.reset();
-        document.getElementById('form-title').innerText = "CREATE NEW POST";
-        document.getElementById('submit-btn').innerText = "PUBLISH POST";
-        document.getElementById('file-name-display').innerText = "Click or drag media";
-        document.getElementById('file-name-display').style.color = "";
-        document.getElementById('link-container').classList.add('hidden');
+        editingPostId = null;
+        formTitle.innerText = 'CREATE NEW POST';
+        submitButton.textContent = 'PUBLISH POST';
+        setStatusSelection('published');
+        fileNameDisplay.innerText = 'Click or drag media';
+        fileNameDisplay.style.color = '';
+        uploadedMedia = null;
+        renderPreview(null);
     }
 
-    function deletePost(postId) {
-        const nextPosts = getStoredPosts().filter((post) => post.id !== postId);
-        saveStoredPosts(nextPosts);
-        renderPosts();
-        showMessage('Post removed successfully.');
-    }
-
-    window.deletePost = deletePost;
-
-    blogForm.addEventListener('submit', (event) => {
+    blogForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        const post = buildPostPayload();
-        if (!post.title) return;
+        const token = getToken();
+        if (!token) {
+            showMessage('Please login again to publish a post.');
+            return;
+        }
 
-        if (post.status === 'link' && !post.link) {
+        const payload = buildPayload();
+
+        if (!payload.title) {
+            showMessage('Please enter a post title.');
+            return;
+        }
+
+        if (payload.status === 'link' && !payload.link) {
             showMessage('Please add an external URL for link posts.');
             return;
         }
 
-        const posts = getStoredPosts();
-        posts.unshift(post);
-        saveStoredPosts(posts);
-        renderPosts();
-        resetForm();
-        showMessage(`Post "${post.title}" published successfully.`);
+        const isEditing = Boolean(editingPostId);
+        submitButton.disabled = true;
+        submitButton.textContent = isEditing ? 'UPDATING...' : 'PUBLISHING...';
+
+        try {
+            const response = await fetch(isEditing ? `${API_URL}/${editingPostId}` : API_URL, {
+                method: isEditing ? 'PUT' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || `Unable to ${isEditing ? 'update' : 'publish'} post.`);
+            }
+
+            const savedTitle = payload.title;
+            resetForm();
+            showMessage(`Post "${savedTitle}" ${isEditing ? 'updated' : 'saved'} successfully.`);
+            await fetchBlogs();
+        } catch (error) {
+            console.error(error);
+            showMessage(error.message || `Unable to ${isEditing ? 'update' : 'publish'} post.`);
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = editingPostId ? 'UPDATE POST' : 'PUBLISH POST';
+        }
     });
 
-    window.onload = () => {
-        renderPosts();
-    };
+    async function deletePost(id) {
+        const token = getToken();
+        if (!token) {
+            showMessage('Please login again to delete posts.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_URL}/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Unable to delete post.');
+            }
+
+            showMessage('Post removed successfully.');
+            await fetchBlogs();
+        } catch (error) {
+            console.error(error);
+            showMessage(error.message || 'Unable to delete post.');
+        }
+    }
+
+    document.getElementById('clear-form-btn').addEventListener('click', resetForm);
+    window.beginEdit = beginEdit;
+    window.deletePost = deletePost;
+    window.addEventListener('load', fetchBlogs);
 </script>
 
 </body>

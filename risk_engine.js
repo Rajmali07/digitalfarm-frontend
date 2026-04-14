@@ -51,14 +51,28 @@
     return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
+  function isSameDay(value) {
+    if (!value) return false;
+
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return false;
+
+    const today = new Date();
+    return (
+      date.getFullYear() === today.getFullYear() &&
+      date.getMonth() === today.getMonth() &&
+      date.getDate() === today.getDate()
+    );
+  }
+
   function ensureExternalFactors() {
     const defaults = {
-      temperature: 32,
-      humidity: 78,
-      weatherCondition: 'Humid',
-      governmentAlertLevel: 'Medium',
-      nearbyInfections: 1,
-      notes: 'Regional disease advisory active'
+      temperature: null,
+      humidity: null,
+      weatherCondition: 'Unavailable',
+      governmentAlertLevel: 'Low',
+      nearbyInfections: 0,
+      notes: 'Live weather unavailable'
     };
     const existing = readStore(STORAGE_KEYS.external, null);
     if (!existing) {
@@ -70,11 +84,13 @@
 
   function computeBiosecurityRisk() {
     const audit = readStore(STORAGE_KEYS.biosecurity, null);
-    if (!audit || !audit.responses) {
+    const auditDate = audit?.updatedAt || audit?.created_at;
+
+    if (!audit || !audit.responses || !isSameDay(auditDate)) {
       return {
         score: 0,
         label: 'No audit yet',
-        reasons: ['Complete the biosecurity audit to activate preventive risk scoring.'],
+        reasons: ['Complete today\'s biosecurity audit to activate preventive risk scoring.'],
         raw: null
       };
     }
@@ -352,9 +368,72 @@
     };
   }
 
+  async function storeRiskInDB(summary) {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return;
+      const user = JSON.parse(userStr);
+      if (!user || (!user.id && !user.profileId)) return;
+      
+      const farmerId = user.profileId || user.id;
+
+      // We will use standard fetch to Supabase REST API so it doesn't break if supabase-js is missing on some pages
+      const SUPABASE_URL = 'https://ppksvtcjyvtbcrdncvsm.supabase.co';
+      const SUPABASE_KEY = 'sb_publishable_Mz-YMegdeHu08iMHfaIMwQ_61VvS1XE';
+      
+      const payload = {
+        farmer_id: farmerId,
+        biosecurity_risk: summary.factors.biosecurity ? summary.factors.biosecurity.score : 0,
+        animal_risk: summary.factors.records ? summary.factors.records.score : 0,
+        ai_risk: summary.factors.ai ? summary.factors.ai.score : 0,
+        external_risk: summary.factors.external ? summary.factors.external.score : 0,
+        total_risk: summary.score,
+        risk_level: summary.level
+      };
+
+      // Check if exists
+      const checkRes = await fetch(`${SUPABASE_URL}/rest/v1/farm_risk?farmer_id=eq.${farmerId}&select=id`, {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      const existing = await checkRes.json();
+
+      if (existing && existing.length > 0) {
+        // Update
+        await fetch(`${SUPABASE_URL}/rest/v1/farm_risk?id=eq.${existing[0].id}`, {
+          method: 'PATCH',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        // Insert
+        await fetch(`${SUPABASE_URL}/rest/v1/farm_risk`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(payload)
+        });
+      }
+    } catch (e) {
+      console.error('Error storing risk to farm_risk table:', e);
+    }
+  }
+
   function syncOverallRisk() {
     const summary = computeOverallRisk();
     writeStore(STORAGE_KEYS.overall, summary);
+    storeRiskInDB(summary);
     return summary;
   }
 

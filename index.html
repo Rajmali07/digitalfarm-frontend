@@ -6,6 +6,7 @@
   <title>Digital Farm | Smart Biosecurity AI</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -404,15 +405,15 @@
       </div>
       <div class="hero-stat-row">
         <div class="hero-stat">
-          <strong>2,500+</strong>
+          <strong id="heroFarmers">--</strong>
           <span>farmers supported</span>
         </div>
         <div class="hero-stat">
-          <strong>1.2M</strong>
+          <strong id="heroAnimals">--</strong>
           <span>animals monitored</span>
         </div>
         <div class="hero-stat">
-          <strong>24/7</strong>
+          <strong id="heroReadiness">--</strong>
           <span>alert and review readiness</span>
         </div>
       </div>
@@ -560,10 +561,10 @@
   <section class="section">
     <h2>Platform Overview</h2>
     <div class="grid-4">
-      <div class="card"><h2>2500</h2><p>Farmers</p></div>
-      <div class="card"><h2>1.2M</h2><p>Animals</p></div>
-      <div class="card"><h2>320</h2><p>Active Cases</p></div>
-      <div class="card"><h2>2100</h2><p>Resolved Cases</p></div>
+      <div class="card"><h2 id="overviewFarmers">--</h2><p>Farmers</p></div>
+      <div class="card"><h2 id="overviewAnimals">--</h2><p>Animals</p></div>
+      <div class="card"><h2 id="overviewActiveCases">--</h2><p>Active Cases</p></div>
+      <div class="card"><h2 id="overviewResolvedCases">--</h2><p>Resolved Cases</p></div>
     </div>
   </section>
 
@@ -672,9 +673,99 @@
 </footer>
 
   <script>
+    const SUPABASE_URL = 'https://ppksvtcjyvtbcrdncvsm.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Mz-YMegdeHu08iMHfaIMwQ_61VvS1XE';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     const toggle = document.getElementById("menuToggle");
     const nav = document.getElementById("navLinks");
     toggle.addEventListener("click", () => nav.classList.toggle("active"));
+
+    function formatCount(value) {
+      return new Intl.NumberFormat('en-IN').format(value || 0);
+    }
+
+    async function fetchFarmerCount() {
+      const { count, error } = await supabaseClient
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .eq('role', 'FARMER');
+
+      if (error) throw error;
+      return Number(count || 0);
+    }
+
+    async function fetchAnimalTotal() {
+      const { data, error } = await supabaseClient
+        .from('animals')
+        .select('farmer_id, animal_type, farm_unit, total_animals, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const latestByUnit = new Map();
+      (data || []).forEach((item) => {
+        const key = [
+          item.farmer_id || 'unknown-farmer',
+          item.animal_type || 'unknown-animal',
+          item.farm_unit || 'unknown-unit'
+        ].join('|');
+
+        if (!latestByUnit.has(key)) {
+          latestByUnit.set(key, Number(item.total_animals || 0));
+        }
+      });
+
+      return Array.from(latestByUnit.values()).reduce((sum, value) => sum + value, 0);
+    }
+
+    async function fetchComplaintStatusSummary() {
+      const { data, error } = await supabaseClient
+        .from('complaints')
+        .select('status');
+
+      if (error) throw error;
+
+      const rows = Array.isArray(data) ? data : [];
+      const isResolvedStatus = (status) => {
+        const value = String(status || '').toUpperCase();
+        return value.includes('SYNCED') || value.includes('RESOLVED') || value.includes('CLOSED');
+      };
+
+      const resolvedCases = rows.filter((item) => isResolvedStatus(item.status)).length;
+      const activeCases = rows.length - resolvedCases;
+
+      return { activeCases, resolvedCases };
+    }
+
+    function applyHomepageStats({ farmers, animals, activeCases, resolvedCases }) {
+      const totalCases = activeCases + resolvedCases;
+      const readiness = totalCases > 0 ? Math.round((resolvedCases / totalCases) * 100) : 0;
+
+      document.getElementById('heroFarmers').textContent = `${formatCount(farmers)}+`;
+      document.getElementById('heroAnimals').textContent = formatCount(animals);
+      document.getElementById('heroReadiness').textContent = `${readiness}%`;
+
+      document.getElementById('overviewFarmers').textContent = formatCount(farmers);
+      document.getElementById('overviewAnimals').textContent = formatCount(animals);
+      document.getElementById('overviewActiveCases').textContent = formatCount(activeCases);
+      document.getElementById('overviewResolvedCases').textContent = formatCount(resolvedCases);
+    }
+
+    async function loadHomepageStats() {
+      const [farmersRes, animalsRes, complaintRes] = await Promise.allSettled([
+        fetchFarmerCount(),
+        fetchAnimalTotal(),
+        fetchComplaintStatusSummary()
+      ]);
+
+      const farmers = farmersRes.status === 'fulfilled' ? farmersRes.value : 0;
+      const animals = animalsRes.status === 'fulfilled' ? animalsRes.value : 0;
+      const activeCases = complaintRes.status === 'fulfilled' ? complaintRes.value.activeCases : 0;
+      const resolvedCases = complaintRes.status === 'fulfilled' ? complaintRes.value.resolvedCases : 0;
+
+      applyHomepageStats({ farmers, animals, activeCases, resolvedCases });
+    }
 
     function switchLogin(type) {
       const farmerBtn = document.getElementById('farmerToggle');
@@ -690,6 +781,11 @@
         label.innerText = 'Farmer ID / Email';
       }
     }
+
+    loadHomepageStats().catch((error) => {
+      console.error('Failed to load homepage stats:', error);
+      applyHomepageStats({ farmers: 0, animals: 0, activeCases: 0, resolvedCases: 0 });
+    });
   </script>
 
 </body>

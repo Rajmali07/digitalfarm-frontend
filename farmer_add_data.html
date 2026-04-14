@@ -6,6 +6,7 @@
   <title>Data Entry Portal | Digital Farm</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="api_cache.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -208,6 +209,23 @@
       transition: 0.2s ease;
       color: var(--text-dark);
     }
+    .form-group select {
+      height: 56px;
+      padding: 0 44px 0 14px;
+      line-height: normal;
+      vertical-align: middle;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #475569 50%), linear-gradient(135deg, #475569 50%, transparent 50%);
+      background-position: calc(100% - 22px) 50%, calc(100% - 16px) 50%;
+      background-size: 7px 7px, 7px 7px;
+      background-repeat: no-repeat;
+    }
+    .form-group select option {
+      color: var(--text-dark);
+      white-space: normal;
+    }
     .form-group input:focus,
     .form-group select:focus,
     .form-group textarea:focus {
@@ -296,6 +314,23 @@
     }
   </style>
 </head>
+<div id="toast" style="
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #22c55e;
+  color: white;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 0.3s ease;
+  z-index: 9999;
+">
+  Success Message
+</div>
 
 <body>
 
@@ -353,6 +388,7 @@
         <form id="populationForm">
           <div class="status-chip"><i class="fa-solid fa-circle-info"></i> Works for cattle, buffalo, poultry, goats, sheep, pigs, and others</div>
 
+          
           <div class="inline-grid-2">
             <div class="form-group">
               <label for="populationAnimalType">Animal Type</label>
@@ -395,7 +431,7 @@
           <div class="inline-grid-3">
             <div class="form-group">
               <label for="totalAnimals">Current Total</label>
-              <input id="totalAnimals" type="number" min="0" value="0">
+              <input id="totalAnimals" type="number" min="0" value="0" readonly>
             </div>
             <div class="form-group">
               <label for="newAdditions">New Additions</label>
@@ -440,11 +476,25 @@
           <div class="inline-grid-2">
             <div class="form-group">
               <label for="vaxAnimalType">Animal Type</label>
-              <select id="vaxAnimalType" required></select>
+              <select id="vaxAnimalType" required>
+                <option value="cow">Cow</option>
+                <option value="buffalo">Buffalo</option>
+                <option value="poultry" selected>Poultry</option>
+                <option value="goat">Goat</option>
+                <option value="sheep">Sheep</option>
+                <option value="pig">Pig</option>
+                <option value="other">Other</option>
+              </select>
             </div>
             <div class="form-group">
               <label for="diseaseName">Disease / Vaccine Name</label>
-              <select id="diseaseName" required></select>
+              <select id="diseaseName" required>
+                <option selected>Newcastle Disease (ND)</option>
+                <option>Infectious Bronchitis (IB)</option>
+                <option>Marek's Disease</option>
+                <option>Fowl Pox</option>
+                <option>Gumboro (IBD)</option>
+              </select>
             </div>
           </div>
 
@@ -487,7 +537,15 @@
           <div class="inline-grid-3">
             <div class="form-group">
               <label for="complaintAnimalType">Animal Type</label>
-              <select id="complaintAnimalType" required></select>
+              <select id="complaintAnimalType" required>
+                <option value="cow">Cow</option>
+                <option value="buffalo">Buffalo</option>
+                <option value="poultry" selected>Poultry</option>
+                <option value="goat">Goat</option>
+                <option value="sheep">Sheep</option>
+                <option value="pig">Pig</option>
+                <option value="other">Other</option>
+              </select>
             </div>
             <div class="form-group">
               <label for="incidentType">Type of Incident</label>
@@ -560,7 +618,6 @@
       </div>
     </div>
   </div>
-
   <footer class="footer" style="background: #020617; padding: 60px 80px 20px; color: #94a3b8; border-top: 1px solid #1e293b;">
     <div style="text-align:center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
       <h2 style="color:var(--primary);">Digital Farm</h2>
@@ -570,12 +627,42 @@
 
   <script src="risk_engine.js"></script>
   <script>
+
+    function showToast(message, type = "success") {
+  const toast = document.getElementById("toast");
+
+  toast.innerText = message;
+
+  // Color based on type
+  if (type === "success") {
+    toast.style.background = "#22c55e";
+  } else if (type === "error") {
+    toast.style.background = "#ef4444";
+  }
+
+  toast.style.opacity = "1";
+  toast.style.transform = "translateY(0)";
+
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(-20px)";
+  }, 3000);
+}
+
     const profileMenuButton = document.getElementById('profileMenuButton');
     const profileDropdown = document.getElementById('profileDropdown');
     const vaxAnimalType = document.getElementById('vaxAnimalType');
     const complaintAnimalType = document.getElementById('complaintAnimalType');
     const diseaseName = document.getElementById('diseaseName');
     const storageKeys = window.DigitalFarmRisk.STORAGE_KEYS;
+    const populationAnimalType = document.getElementById('populationAnimalType');
+    const batchIdInput = document.getElementById('batchId');
+    const farmUnitInput = document.getElementById('farmUnit');
+    const totalAnimalsInput = document.getElementById('totalAnimals');
+    const newAdditionsInput = document.getElementById('newAdditions');
+    const mortalityCountInput = document.getElementById('mortalityCount');
+    let animalPopulationRecords = [];
+    let populationBaseTotal = 0;
 
     const diseaseOptions = {
       cow: ['Foot and Mouth Disease (FMD)', 'Hemorrhagic Septicemia (HS)', 'Black Quarter (BQ)', 'Brucellosis', 'Lumpy Skin Disease'],
@@ -587,31 +674,82 @@
       other: ['General Preventive Vaccine', 'Custom Entry Required']
     };
 
-    function fillAnimalTypeSelect(selectEl) {
-      selectEl.innerHTML = `
-        <option value="cow">Cow</option>
-        <option value="buffalo">Buffalo</option>
-        <option value="poultry">Poultry</option>
-        <option value="goat">Goat</option>
-        <option value="sheep">Sheep</option>
-        <option value="pig">Pig</option>
-        <option value="other">Other</option>
-      `;
+    function fillAnimalTypeSelect(selectEl, defaultValue = 'cow') {
+      const animalTypes = [
+        { value: 'cow', label: 'Cow' },
+        { value: 'buffalo', label: 'Buffalo' },
+        { value: 'poultry', label: 'Poultry' },
+        { value: 'goat', label: 'Goat' },
+        { value: 'sheep', label: 'Sheep' },
+        { value: 'pig', label: 'Pig' },
+        { value: 'other', label: 'Other' }
+      ];
+
+      selectEl.innerHTML = '';
+      animalTypes.forEach((animalType) => {
+        selectEl.add(new Option(animalType.label, animalType.value));
+      });
+      selectEl.value = defaultValue;
+
+      if (!selectEl.value && selectEl.options.length > 0) {
+        selectEl.selectedIndex = 0;
+      }
     }
 
     function updateDiseaseOptions() {
-      const selectedType = vaxAnimalType.value;
+      const selectedType = vaxAnimalType.value || 'other';
       const options = diseaseOptions[selectedType] || diseaseOptions.other;
-      diseaseName.innerHTML = options.map((option) => `<option>${option}</option>`).join('');
+
+      diseaseName.innerHTML = '';
+      options.forEach((optionLabel) => {
+        diseaseName.add(new Option(optionLabel, optionLabel));
+      });
+
+      if (diseaseName.options.length > 0) {
+        diseaseName.selectedIndex = 0;
+      }
     }
 
-    fillAnimalTypeSelect(vaxAnimalType);
-    fillAnimalTypeSelect(complaintAnimalType);
-    vaxAnimalType.value = 'poultry';
-    complaintAnimalType.value = 'poultry';
+    fillAnimalTypeSelect(vaxAnimalType, 'poultry');
+    fillAnimalTypeSelect(complaintAnimalType, 'poultry');
     updateDiseaseOptions();
 
     vaxAnimalType.addEventListener('change', updateDiseaseOptions);
+
+    function getStoredUser() {
+      try {
+        return JSON.parse(localStorage.getItem('user') || 'null');
+      } catch (error) {
+        console.error('Failed to parse stored user', error);
+        return null;
+      }
+    }
+
+    function renderProfileHeader() {
+      const user = getStoredUser();
+      if (!user) return;
+
+      const displayName = user.name || user.full_name || user.email || 'Farmer';
+      const firstName = displayName.split(' ')[0];
+      const initials = displayName.trim().charAt(0).toUpperCase() || 'F';
+      const avatarEl = document.querySelector('.profile-avatar');
+
+      document.querySelector('.profile-name').innerText = `Hello, ${firstName}!`;
+      if (!avatarEl) return;
+
+      if (user.avatar_url) {
+        avatarEl.innerText = '';
+        avatarEl.style.backgroundImage = `url('${user.avatar_url}')`;
+        avatarEl.style.backgroundSize = 'cover';
+        avatarEl.style.backgroundPosition = 'center';
+        avatarEl.style.backgroundRepeat = 'no-repeat';
+        avatarEl.style.color = 'transparent';
+      } else {
+        avatarEl.innerText = initials;
+        avatarEl.style.backgroundImage = '';
+        avatarEl.style.color = '';
+      }
+    }
 
     profileMenuButton.addEventListener('click', function (event) {
       event.stopPropagation();
@@ -624,6 +762,8 @@
       }
     });
 
+    renderProfileHeader();
+
     function createRecordId(prefix) {
       return prefix + '-' + Math.floor(1000 + Math.random() * 9000);
     }
@@ -632,108 +772,294 @@
       return value.charAt(0).toUpperCase() + value.slice(1);
     }
 
-    document.getElementById('populationForm').addEventListener('submit', function (event) {
-      event.preventDefault();
-      const records = window.DigitalFarmRisk.readStore(storageKeys.population, []);
-      const totalAnimals = Number(document.getElementById('totalAnimals').value || 0);
-      const mortalityCount = Number(document.getElementById('mortalityCount').value || 0);
+    function toSafeNumber(value) {
+      const numericValue = Number(value);
+      return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : 0;
+    }
 
-      records.unshift({
-        id: createRecordId('LIV'),
-        date: new Date().toISOString().split('T')[0],
-        reportedAt: new Date().toLocaleString(),
-        animalType: animalLabel(document.getElementById('populationAnimalType').value),
-        batchId: document.getElementById('batchId').value,
-        breedName: document.getElementById('breedName').value || 'Not specified',
-        ageGroup: document.getElementById('ageGroup').value,
-        farmUnit: document.getElementById('farmUnit').value || 'General unit',
-        totalAnimals,
-        newAdditions: Number(document.getElementById('newAdditions').value || 0),
-        mortalityCount,
-        genderGroup: document.getElementById('genderGroup').value,
-        currentHealthState: document.getElementById('currentHealthState').value
-      });
+    function normalizeLookupValue(value) {
+      return String(value || '').trim().toLowerCase();
+    }
 
-      window.DigitalFarmRisk.writeStore(storageKeys.population, records);
-      window.DigitalFarmRisk.syncOverallRisk();
-      alert('Population data synced successfully.');
-      event.target.reset();
-      document.getElementById('totalAnimals').value = '0';
-      document.getElementById('newAdditions').value = '0';
-      document.getElementById('mortalityCount').value = '0';
+    function findPopulationBaseRecord() {
+      const selectedAnimalType = normalizeLookupValue(populationAnimalType.value);
+      const selectedBatchId = normalizeLookupValue(batchIdInput.value);
+      const selectedFarmUnit = normalizeLookupValue(farmUnitInput.value);
+
+      const animalTypeRecords = animalPopulationRecords.filter(
+        (record) => normalizeLookupValue(record.animal_type) === selectedAnimalType
+      );
+
+      if (!animalTypeRecords.length) {
+        return null;
+      }
+
+      // 1) Best match: same animal type + batch + farm unit.
+      if (selectedBatchId && selectedFarmUnit) {
+        const strictMatch = animalTypeRecords.find((record) => (
+          normalizeLookupValue(record.batch_id) === selectedBatchId &&
+          normalizeLookupValue(record.farm_unit) === selectedFarmUnit
+        ));
+
+        if (strictMatch) return strictMatch;
+      }
+
+      // 2) Next match: same animal type + batch id.
+      if (selectedBatchId) {
+        const batchMatch = animalTypeRecords.find(
+          (record) => normalizeLookupValue(record.batch_id) === selectedBatchId
+        );
+
+        if (batchMatch) return batchMatch;
+      }
+
+      // 3) Next match: same animal type + farm unit.
+      if (selectedFarmUnit) {
+        const farmUnitMatch = animalTypeRecords.find(
+          (record) => normalizeLookupValue(record.farm_unit) === selectedFarmUnit
+        );
+
+        if (farmUnitMatch) return farmUnitMatch;
+      }
+
+      // 4) Final fallback: latest record for selected animal type.
+      return animalTypeRecords[0];
+    }
+
+    function updateCalculatedPopulationTotal() {
+      const additions = toSafeNumber(newAdditionsInput.value);
+      const mortality = toSafeNumber(mortalityCountInput.value);
+      const currentTotal = Math.max(populationBaseTotal + additions - mortality, 0);
+
+      totalAnimalsInput.value = String(currentTotal);
+    }
+
+    function syncPopulationBaseTotal() {
+      const matchingRecord = findPopulationBaseRecord();
+      populationBaseTotal = toSafeNumber(matchingRecord ? matchingRecord.total_animals : 0);
+      updateCalculatedPopulationTotal();
+    }
+
+    function resetPopulationEntryFields() {
+      newAdditionsInput.value = '0';
+      mortalityCountInput.value = '0';
+      document.getElementById('breedName').value = '';
+      document.getElementById('ageGroup').selectedIndex = 0;
+      document.getElementById('genderGroup').selectedIndex = 0;
+      document.getElementById('currentHealthState').selectedIndex = 0;
+    }
+
+    async function loadPopulationRecords() {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        syncPopulationBaseTotal();
+        return;
+      }
+
+      try {
+        const response = await fetch('http://localhost:5000/api/v1/animals', {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || 'Failed to load animal records');
+        }
+
+        animalPopulationRecords = Array.isArray(result.data) ? result.data : [];
+      } catch (error) {
+        console.error('Unable to load animal population records', error);
+        animalPopulationRecords = [];
+      }
+
+      syncPopulationBaseTotal();
+    }
+
+    [populationAnimalType, batchIdInput, farmUnitInput].forEach((field) => {
+      field.addEventListener('change', syncPopulationBaseTotal);
+      field.addEventListener('input', syncPopulationBaseTotal);
     });
 
-    document.getElementById('vaccinationForm').addEventListener('submit', function (event) {
-      event.preventDefault();
-      const records = window.DigitalFarmRisk.readStore(storageKeys.vaccination, []);
-      records.unshift({
-        id: createRecordId('VAX'),
-        dateAdministered: document.getElementById('dateAdministered').value || new Date().toISOString().split('T')[0],
-        nextDueDate: document.getElementById('nextDueDate').value || '',
-        animalType: animalLabel(vaxAnimalType.value),
-        diseaseName: diseaseName.value,
-        targetGroup: document.getElementById('targetGroup').value || 'General unit',
-        doseCount: Number(document.getElementById('doseCount').value || 0),
-        notes: document.getElementById('vaxNotes').value || ''
-      });
-
-      window.DigitalFarmRisk.writeStore(storageKeys.vaccination, records);
-      window.DigitalFarmRisk.syncOverallRisk();
-      alert('Vaccination entry logged successfully.');
-      event.target.reset();
-      vaxAnimalType.value = 'poultry';
-      updateDiseaseOptions();
-      document.getElementById('doseCount').value = '0';
+    [newAdditionsInput, mortalityCountInput].forEach((field) => {
+      field.addEventListener('change', updateCalculatedPopulationTotal);
+      field.addEventListener('input', updateCalculatedPopulationTotal);
     });
+
+    totalAnimalsInput.value = '0';
+    loadPopulationRecords();
+
+    document.getElementById('populationForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const token = localStorage.getItem("token");
+  syncPopulationBaseTotal();
+
+  const data = {
+    animalType: document.getElementById('populationAnimalType').value,
+    batchId: document.getElementById('batchId').value,
+    breedName: document.getElementById('breedName').value,
+    ageGroup: document.getElementById('ageGroup').value,
+    farmUnit: document.getElementById('farmUnit').value,
+    totalAnimals: toSafeNumber(document.getElementById('totalAnimals').value),
+    newAdditions: toSafeNumber(document.getElementById('newAdditions').value),
+    mortalityCount: toSafeNumber(document.getElementById('mortalityCount').value),
+    genderGroup: document.getElementById('genderGroup').value,
+    currentHealthState: document.getElementById('currentHealthState').value
+  };
+  if (!token) {
+  alert("Please login first");
+  window.location.href = "farmer_login.html";
+  return;
+}
+
+  try {
+    const res = await fetch("http://localhost:5000/api/v1/animals", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+
+    if (res.ok) {
+      showToast("Animal data saved successfully ✅");
+      animalPopulationRecords = Array.isArray(animalPopulationRecords) ? [result.data, ...animalPopulationRecords] : [result.data];
+      populationBaseTotal = toSafeNumber(result.data && result.data.total_animals);
+      resetPopulationEntryFields();
+      totalAnimalsInput.value = String(populationBaseTotal);
+      await loadPopulationRecords();
+    } else {
+      alert(result.message || "Error occurred");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Server error ❌");
+  }
+});
+
+    document.getElementById('vaccinationForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const token = localStorage.getItem("token");
+
+  const data = {
+    animalType: document.getElementById('vaxAnimalType').value,
+    diseaseName: document.getElementById('diseaseName').value,
+    targetGroup: document.getElementById('targetGroup').value,
+    doseCount: Number(document.getElementById('doseCount').value),
+    dateAdministered: document.getElementById('dateAdministered').value,
+    nextDueDate: document.getElementById('nextDueDate').value,
+    notes: document.getElementById('vaxNotes').value
+  };
+
+  try {
+    const res = await fetch("http://localhost:5000/api/v1/vaccinations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+
+    if (res.ok) {
+      showToast("Vaccination saved successfully 💉");
+      e.target.reset();
+    } else {
+      showToast(result.message || "Error occurred ❌", "error");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Server error ❌");
+  }
+});
 
     function createComplaintId() {
       const stamp = Math.floor(1000 + Math.random() * 9000);
       return 'CMP-' + stamp;
     }
 
-    function saveComplaintRecord() {
-      const complaintDateValue = document.getElementById('complaintDate').value;
-      const complaintDate = complaintDateValue || new Date().toISOString().split('T')[0];
-      const urgency = document.getElementById('urgencyLevel').value;
-      const evidenceFile = document.getElementById('evidenceUpload').files[0];
-      const complaints = JSON.parse(localStorage.getItem('farmerComplaints')) || [];
+document.getElementById('complaintForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
 
-      const complaintRecord = {
-        id: createComplaintId(),
-        farmerName: 'Rajesh Kumar',
-        farmerId: 'FMR-9901',
-        animalType: document.getElementById('complaintAnimalType').value,
-        incidentType: document.getElementById('incidentType').value,
-        urgency: urgency,
-        urgencyShort: urgency.split(' - ')[0],
-        affectedCount: document.getElementById('affectedCount').value || '0',
-        location: document.getElementById('complaintLocation').value || 'Location not provided',
-        incidentDate: complaintDate,
-        symptoms: document.getElementById('symptomsObserved').value || 'No symptom summary provided',
-        description: document.getElementById('complaintDescription').value || 'No detailed complaint description provided.',
-        contactPreference: document.getElementById('contactPreference').value,
-        evidenceName: evidenceFile ? evidenceFile.name : 'No file uploaded',
-        evidenceType: evidenceFile ? evidenceFile.type : '',
-        reportedAt: new Date().toLocaleString(),
-        status: urgency.includes('High') ? 'HIGH RISK: Needs Immediate Review' : urgency.includes('Medium') ? 'UNDER REVIEW' : 'NEW COMPLAINT',
-        adminPrescription: '',
-        internalDiagnosis: '',
-        syncedToFarmer: false
-      };
+  const token = localStorage.getItem("token");
 
-      complaints.unshift(complaintRecord);
-      localStorage.setItem('farmerComplaints', JSON.stringify(complaints));
-      localStorage.setItem('activeComplaintId', complaintRecord.id);
-      window.DigitalFarmRisk.syncOverallRisk();
-      return complaintRecord;
+  if (!token) {
+    showToast("Please login first ❌", "error");
+    window.location.href = "farmer_login.html";
+    return;
+  }
+
+  const formData = new FormData();
+  const incidentType = document.getElementById('incidentType').value;
+  const animalType = document.getElementById('complaintAnimalType').value;
+  const urgencyLevel = document.getElementById('urgencyLevel').value;
+  const affectedCount = document.getElementById('affectedCount').value;
+  const location = document.getElementById('complaintLocation').value;
+  const incidentDate = document.getElementById('complaintDate').value;
+  const symptoms = document.getElementById('symptomsObserved').value;
+  const description = document.getElementById('complaintDescription').value;
+  const contactPreference = document.getElementById('contactPreference').value;
+
+  formData.append("title", incidentType);
+  formData.append("description", description);
+  formData.append("animalType", animalType);
+  formData.append("incidentType", incidentType);
+  formData.append("urgencyLevel", urgencyLevel);
+  formData.append("affectedCount", affectedCount);
+  formData.append("location", location);
+  formData.append("incidentDate", incidentDate);
+  formData.append("symptoms", symptoms);
+  formData.append("contactPreference", contactPreference);
+
+  const urgency = urgencyLevel;
+  const priority = urgency.includes("High") ? "high"
+                   : urgency.includes("Medium") ? "medium"
+                   : "low";
+
+  formData.append("priority", priority);
+
+  // ✅ CORRECT FILE INPUT
+  const fileInput = document.getElementById("evidenceUpload");
+  if (fileInput.files[0]) {
+    formData.append("image", fileInput.files[0]);
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/api/v1/complaints", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer " + token
+        // ❌ DO NOT add Content-Type here
+      },
+      body: formData
+    });
+
+    const result = await res.json();
+
+    if (res.ok) {
+      showToast("Complaint submitted successfully 🚨");
+      e.target.reset();
+    } else {
+      showToast(result.message || "Error occurred ❌", "error");
     }
 
-    document.getElementById('complaintForm').addEventListener('submit', function (event) {
-      event.preventDefault();
-      const savedComplaint = saveComplaintRecord();
-      alert('Complaint submitted successfully. Case ID: ' + savedComplaint.id);
-      window.location.href = 'farmer_animal_records.html';
-    });
+  } catch (err) {
+    console.error(err);
+    showToast("Server error ❌", "error");
+  }
+});
   </script>
 
 </body>

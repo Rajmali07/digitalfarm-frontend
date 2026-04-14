@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contact | Digital Farm</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="api_cache.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
 <style>
@@ -157,6 +158,11 @@ body {
   background: #16a34a;
 }
 
+.contact-form button:disabled {
+  opacity: 0.75;
+  cursor: wait;
+}
+
 .form-status {
   margin-top: 14px;
   padding: 12px 14px;
@@ -303,62 +309,53 @@ body {
 </footer>
 
 <script>
-  const toggle = document.getElementById("menuToggle");
-  const nav = document.getElementById("navLinks");
+  const API_URL = "http://localhost:5000/api/v1/feedback";
   const contactForm = document.getElementById("contactForm");
   const contactStatus = document.getElementById("contactStatus");
-
-  toggle.addEventListener("click", () => nav.classList.toggle("active"));
-
-  function readFeedbackStore() {
-    try {
-      return JSON.parse(localStorage.getItem("siteFeedback") || "[]");
-    } catch (error) {
-      return [];
-    }
-  }
+  const submitButton = contactForm.querySelector('button[type="submit"]');
 
   function showStatus(message, type) {
     contactStatus.className = `form-status ${type}`;
     contactStatus.textContent = message;
   }
 
-  contactForm.addEventListener("submit", (event) => {
-    event.preventDefault();
+  contactForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-    const fullName = document.getElementById("contact-name").value.trim();
-    const email = document.getElementById("contact-email").value.trim();
-    const subject = document.getElementById("contact-subject").value.trim();
-    const message = document.getElementById("contact-message").value.trim();
-
-    if (!fullName || !email || !subject || !message) {
-      showStatus("Please fill in all fields before sending your feedback.", "error");
-      return;
-    }
-
-    const feedbackStore = readFeedbackStore();
-    const feedbackId = `FDB-${Date.now().toString().slice(-6)}`;
-    const submittedAt = new Date().toISOString();
-
-    const feedbackRecord = {
-      id: feedbackId,
-      sender: fullName,
-      email,
-      subject,
-      message,
-      status: "Unreviewed",
-      impactScore: 5,
-      adminNotes: "",
-      submittedAt,
-      dateLabel: new Date(submittedAt).toLocaleDateString("en-GB")
+    const payload = {
+      sender: document.getElementById("contact-name").value.trim(),
+      email: document.getElementById("contact-email").value.trim(),
+      subject: document.getElementById("contact-subject").value.trim(),
+      message: document.getElementById("contact-message").value.trim()
     };
 
-    feedbackStore.unshift(feedbackRecord);
-    localStorage.setItem("siteFeedback", JSON.stringify(feedbackStore));
-    localStorage.setItem("activeFeedbackId", feedbackId);
+    submitButton.disabled = true;
+    submitButton.textContent = "Sending...";
 
-    contactForm.reset();
-    showStatus("Your message has been sent successfully. The admin review console can see it now.", "success");
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.message || "Unable to send message right now.");
+      }
+
+      contactForm.reset();
+      showStatus("Message sent successfully.", "success");
+    } catch (error) {
+      console.error(error);
+      showStatus(error.message || "Error sending message.", "error");
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = "Send Message";
+    }
   });
 </script>
 

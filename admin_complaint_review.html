@@ -6,6 +6,8 @@
   <title>Complaint Review | Digital Farm Admin</title>
 
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="api_cache.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -140,8 +142,10 @@
       margin-left: 260px;
       padding: 34px 40px 40px;
       display: grid;
-      grid-template-columns: 340px 1.2fr 0.9fr;
-      grid-template-areas: "inbox detail actions";
+      grid-template-columns: 1.2fr 0.9fr;
+      grid-template-areas:
+        "inbox inbox"
+        "detail actions";
       gap: 24px;
       align-items: start;
     }
@@ -165,12 +169,13 @@
     }
 
     .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      display: flex;
       gap: 14px;
       margin-bottom: 18px;
     }
     .mini-stat {
+      flex: 1;
+      max-width: 250px;
       background: rgba(255,255,255,0.04);
       border: 1px solid var(--glass-border);
       border-radius: 16px;
@@ -189,13 +194,14 @@
     .inbox-card { height: fit-content; }
     .inbox-card { grid-area: inbox; }
     .inbox-list {
-      display: grid;
+      display: flex;
       gap: 12px;
-      max-height: 720px;
-      overflow-y: auto;
-      padding-right: 4px;
+      overflow-x: auto;
+      padding-bottom: 8px;
     }
     .complaint-item {
+      min-width: 320px;
+      flex-shrink: 0;
       background: rgba(255,255,255,0.04);
       border: 1px solid var(--glass-border);
       border-radius: 16px;
@@ -350,6 +356,18 @@
       justify-content: center;
       color: var(--text-dim);
     }
+    .evidence-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 10px;
+      display: block;
+    }
+    .evidence-preview.is-clickable {
+      cursor: pointer;
+      overflow: hidden;
+      border-style: solid;
+    }
 
     .action-panel { position: sticky; top: 100px; height: fit-content; }
     .action-panel { grid-area: actions; }
@@ -487,9 +505,9 @@
         <div class="data-item"><label>Incident Type</label><p id="incidentTypeValue">Not available</p></div>
         <div class="data-item"><label>Affected Animals</label><p id="affectedAnimals">0</p></div>
       </div>
-    </div>
 
-    <div class="card">
+      <hr style="border: none; border-top: 1px solid var(--glass-border); margin: 30px 0;">
+
       <h3 class="section-title">Case Description</h3>
       <div class="detail-box">
         <b>Symptoms / Summary:</b>
@@ -498,12 +516,26 @@
         <b>Detailed Complaint:</b>
         <span id="caseDescription">No complaint description provided.</span>
       </div>
-    </div>
 
-    <div class="card">
+      <hr style="border: none; border-top: 1px solid var(--glass-border); margin: 30px 0;">
+
+      <h3 class="section-title">Prescription Detail</h3>
+      <div class="detail-box">
+        <b>Admin Prescription:</b>
+        <div id="prescriptionDetail" style="margin-top:6px; white-space:pre-wrap;">No prescription synced yet.</div>
+        <br><br>
+        <b>Internal Diagnosis:</b>
+        <div id="diagnosisDetail" style="margin-top:6px; white-space:pre-wrap;">No diagnosis synced yet.</div>
+        <br><br>
+        <b>Prescription Attachment:</b>
+        <div id="prescriptionFileLink" style="margin-top:6px; white-space:pre-wrap;">No prescription attachment uploaded.</div>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid var(--glass-border); margin: 30px 0;">
+
       <h3 class="section-title">Evidence and Follow-up</h3>
       <div class="evidence-box">
-        <div class="evidence-preview"><i data-lucide="paperclip"></i></div>
+        <div class="evidence-preview" id="evidencePreview"><i data-lucide="paperclip"></i></div>
         <div>
           <div style="font-size:14px; font-weight:700;" id="evidenceName">No file uploaded</div>
           <div style="font-size:12px; color:var(--text-dim); margin-top:6px;" id="followUpPref">Preferred follow-up: Not available</div>
@@ -560,20 +592,135 @@
 <script>
   lucide.createIcons();
 
+  const SUPABASE_URL = "https://ppksvtcjyvtbcrdncvsm.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_Mz-YMegdeHu08iMHfaIMwQ_61VvS1XE";
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
   const complaintList = document.getElementById('complaintList');
   const complaintHistoryList = document.getElementById('complaintHistoryList');
   const prescriptionForm = document.getElementById('prescriptionForm');
   const fileInput = document.getElementById('resourceFile');
   const fileNameDisplay = document.getElementById('fileName');
 
-  let complaints = JSON.parse(localStorage.getItem('farmerComplaints')) || [];
-  let selectedComplaintId = localStorage.getItem('activeComplaintId') || (complaints[0] ? complaints[0].id : '');
+  let complaints = [];
+  let selectedComplaintId = localStorage.getItem('activeComplaintId') || '';
+
+  const getAuthToken = () => localStorage.getItem('token');
+  const getAuthHeaders = () => {
+    const token = getAuthToken();
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  async function markAsSeen(id) {
+    if (!id) return;
+
+    try {
+      await fetch(`http://localhost:5000/api/v1/complaints/${id}/seen`, {
+        method: 'PATCH',
+        headers: {
+          ...getAuthHeaders()
+        }
+      });
+    } catch (error) {
+      console.error('Error marking complaint as seen:', error);
+    }
+  }
+
+async function fetchComplaints() {
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      complaintList.innerHTML = `
+        <div class="empty-card">
+          <i data-lucide="shield-alert" style="width:40px; height:40px; margin-bottom:12px;"></i>
+          <div style="font-weight:700; margin-bottom:6px;">Admin login required</div>
+          <div style="font-size:13px;">Please sign in before viewing farmer complaints.</div>
+        </div>
+      `;
+      lucide.createIcons();
+      complaintHistoryList.innerHTML = '';
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from('complaints')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    const complaintIds = (data || []).map((item) => item.id).filter(Boolean);
+    const alertsByComplaintId = new Map();
+
+    if (complaintIds.length) {
+      const { data: alertRows, error: alertError } = await supabaseClient
+        .from('alerts')
+        .select('*')
+        .in('complaint_id', complaintIds)
+        .eq('type', 'complaint_prescription')
+        .order('created_at', { ascending: false });
+
+      if (!alertError && Array.isArray(alertRows)) {
+        alertRows.forEach((row) => {
+          if (!row?.complaint_id || alertsByComplaintId.has(row.complaint_id)) {
+            return;
+          }
+          alertsByComplaintId.set(row.complaint_id, row);
+        });
+      }
+    }
+
+    complaints = data.map(item => ({
+      alertRow: alertsByComplaintId.get(item.id) || null,
+      _id: item.id,
+      id: item.id,
+      farmerId: item.farmer_id,
+      farmerName: "Farmer",
+
+      animalType: item.animal_type,
+      incidentType: item.incident_type,
+      location: item.location,
+      affectedCount: item.affected_count,
+
+      symptoms: item.symptoms,
+      description: item.description,
+
+      status: item.status,
+      urgencyShort: item.priority,
+
+      reportedAt: new Date(item.created_at).toLocaleString(),
+
+      contactPreference: item.contact_preference,
+      incidentDate: item.incident_date,
+
+      image_url: item.image_url,
+      seenByAdmin: item.seen_by_admin,
+      adminPrescription: item.admin_response,
+      internalDiagnosis: item.internal_diagnosis || alertsByComplaintId.get(item.id)?.internal_diagnosis || null,
+      prescriptionFileUrl: item.prescription_file_url || alertsByComplaintId.get(item.id)?.prescription_file_url || alertsByComplaintId.get(item.id)?.prescription_file_u || null,
+      syncedToFarmer: String(item.status || '').toUpperCase().includes('SYNCED'),
+      evidenceName: item.image_url ? item.image_url.split('/').pop() : ''
+    }));
+
+    if (!selectedComplaintId && complaints[0]) {
+      selectedComplaintId = complaints[0].id;
+    }
+
+    renderAll();
+
+  } catch (error) {
+    console.error('Error fetching complaints:', error);
+  }
+}
 
   function getStatusClass(statusText) {
-    if (!statusText) return 'status-low';
-    if (statusText.includes('HIGH')) return 'status-high';
-    if (statusText.includes('UNDER REVIEW')) return 'status-medium';
-    if (statusText.includes('SYNCED')) return 'status-synced';
+    const normalized = String(statusText || '').toUpperCase();
+    if (!normalized) return 'status-low';
+    if (normalized.includes('HIGH')) return 'status-high';
+    if (normalized.includes('UNDER REVIEW') || normalized.includes('PENDING')) return 'status-medium';
+    if (normalized.includes('SYNCED')) return 'status-synced';
     return 'status-low';
   }
 
@@ -609,8 +756,8 @@
     }
 
     complaintList.innerHTML = complaints.map((item) => `
-      <div class="complaint-item ${item.id === selectedComplaintId ? 'active' : ''}" data-id="${item.id}">
-        <strong>#${item.id} - ${item.incidentType}</strong>
+      <div class="complaint-item ${item._id === selectedComplaintId ? 'active' : ''}" data-id="${item._id}">
+        <strong>#${item._id} - ${item.incidentType}</strong>
         <p>${item.animalType} - ${item.location}</p>
         <div class="item-meta">
           <span>${item.reportedAt}</span>
@@ -670,10 +817,10 @@
         </thead>
         <tbody>
           ${historyItems.map((item) => `
-            <tr class="history-row ${item.id === selectedComplaintId ? 'active' : ''}" data-id="${item.id}">
+            <tr class="history-row ${item._id === selectedComplaintId ? 'active' : ''}" data-id="${item._id}">
               <td>
                 <div class="history-name">
-                  <strong>#${item.id}</strong>
+                  <strong>#${item._id}</strong>
                   <span>${item.farmerName || 'Farmer complaint'}</span>
                 </div>
               </td>
@@ -701,17 +848,21 @@
       document.getElementById('affectedAnimals').textContent = '0';
       document.getElementById('symptomsSummary').textContent = 'No symptoms summary provided.';
       document.getElementById('caseDescription').textContent = 'No complaint description provided.';
+      document.getElementById('prescriptionDetail').textContent = 'No prescription synced yet.';
+      document.getElementById('diagnosisDetail').textContent = 'No diagnosis synced yet.';
+      document.getElementById('prescriptionFileLink').textContent = 'No prescription attachment uploaded.';
       document.getElementById('evidenceName').textContent = 'No file uploaded';
+      document.getElementById('evidencePreview').classList.remove('is-clickable');
+      document.getElementById('evidencePreview').innerHTML = '<i data-lucide="paperclip"></i>';
       document.getElementById('followUpPref').textContent = 'Preferred follow-up: Not available';
       document.getElementById('incidentDateValue').textContent = 'Incident date: Not available';
       document.getElementById('prescriptionText').value = '';
       return;
     }
 
-    const activeComplaint = complaints.find((item) => item.id === selectedComplaintId) || complaints[0];
+    const activeComplaint = complaints.find((item) => item._id === selectedComplaintId) || complaints[0];
     selectedComplaintId = activeComplaint.id;
-    activeComplaint.seenByAdmin = true;
-    complaints = complaints.map((item) => item.id === activeComplaint.id ? { ...item, seenByAdmin: true } : item);
+    complaints = complaints.map((item) => item._id === activeComplaint.id ? { ...item, seenByAdmin: true } : item);
     saveComplaints();
     localStorage.setItem('activeComplaintId', selectedComplaintId);
 
@@ -725,7 +876,22 @@
     document.getElementById('affectedAnimals').textContent = activeComplaint.affectedCount;
     document.getElementById('symptomsSummary').textContent = activeComplaint.symptoms;
     document.getElementById('caseDescription').textContent = activeComplaint.description;
+    document.getElementById('prescriptionDetail').textContent = activeComplaint.adminPrescription || 'No prescription synced yet.';
+    document.getElementById('diagnosisDetail').textContent = activeComplaint.internalDiagnosis || 'No diagnosis synced yet.';
+    document.getElementById('prescriptionFileLink').innerHTML = activeComplaint.prescriptionFileUrl
+      ? `<a href="${activeComplaint.prescriptionFileUrl}" target="_blank" rel="noreferrer" style="color:#7dd3fc; text-decoration:none; font-weight:700;">Open prescription attachment</a>`
+      : 'No prescription attachment uploaded.';
     document.getElementById('evidenceName').textContent = activeComplaint.evidenceName || 'No file uploaded';
+    const evidencePreview = document.getElementById('evidencePreview');
+    if (activeComplaint.image_url) {
+      evidencePreview.classList.add('is-clickable');
+      evidencePreview.innerHTML = `<img src="${activeComplaint.image_url}" alt="Complaint evidence">`;
+      evidencePreview.onclick = () => window.open(activeComplaint.image_url, '_blank');
+    } else {
+      evidencePreview.classList.remove('is-clickable');
+      evidencePreview.innerHTML = '<i data-lucide="paperclip"></i>';
+      evidencePreview.onclick = null;
+    }
     document.getElementById('followUpPref').textContent = 'Preferred follow-up: ' + (activeComplaint.contactPreference || 'Not available');
     document.getElementById('incidentDateValue').textContent = 'Incident date: ' + (activeComplaint.incidentDate || 'Not available');
     document.getElementById('prescriptionText').value = activeComplaint.adminPrescription || '';
@@ -733,7 +899,6 @@
   }
 
   function renderAll() {
-    complaints = JSON.parse(localStorage.getItem('farmerComplaints')) || [];
     renderStats();
     renderComplaintList();
     renderComplaintDetails();
@@ -747,37 +912,65 @@
     const selectedItem = item || historyItem;
     if (!selectedItem) return;
     selectedComplaintId = selectedItem.dataset.id;
+    markAsSeen(selectedComplaintId);
     renderAll();
   }
 
   complaintList.addEventListener('click', handleComplaintSelection);
   complaintHistoryList.addEventListener('click', handleComplaintSelection);
 
-  prescriptionForm.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const prescription = document.getElementById('prescriptionText').value.trim();
-    if (!prescription) {
-      alert('Please provide a prescription before syncing.');
-      return;
+  prescriptionForm.addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  const prescription = document.getElementById('prescriptionText').value.trim();
+  const attachmentFile = fileInput.files[0] || null;
+
+  if (!selectedComplaintId) {
+    alert('Please select a complaint before syncing.');
+    return;
+  }
+
+  if (!prescription) {
+    alert('Please provide a prescription before syncing.');
+    return;
+  }
+
+  try {
+    const requestBody = new FormData();
+    requestBody.append('adminPrescription', prescription);
+    requestBody.append('internalDiagnosis', document.getElementById('internalDiagnosis').value);
+    requestBody.append('status', 'SYNCED TO FARMER');
+    if (attachmentFile) {
+      requestBody.append('resourceFile', attachmentFile);
     }
 
-    complaints = complaints.map((item) => {
-      if (item.id !== selectedComplaintId) return item;
-      return {
-        ...item,
-        seenByAdmin: true,
-        adminPrescription: prescription,
-        internalDiagnosis: document.getElementById('internalDiagnosis').value,
-        status: 'SYNCED TO FARMER',
-        syncedToFarmer: true,
-        advisoryResource: fileInput.files[0] ? fileInput.files[0].name : item.advisoryResource || ''
-      };
+    const res = await fetch(`http://localhost:5000/api/v1/complaints/${selectedComplaintId}`, {
+      method: 'PUT',
+      headers: {
+        ...getAuthHeaders()
+      },
+      body: requestBody
     });
 
-    saveComplaints();
-    alert('Prescription for Case #' + selectedComplaintId + ' has been synced to the farmer.');
-    renderAll();
-  });
+    const data = await res.json();
+
+    if (!res.ok) {
+      const message = data?.message || data?.error || 'Failed to sync prescription';
+      throw new Error(message);
+    }
+
+    alert('Prescription synced successfully');
+
+    // 🔁 Refresh latest data from backend
+    fetchComplaints();
+    fileInput.value = '';
+    fileNameDisplay.style.display = 'none';
+
+  } catch (error) {
+    console.error('Error:', error);
+    alert(`Error syncing prescription: ${error.message || 'Unknown error'}`);
+  }
+});
 
   fileInput.addEventListener('change', function() {
     if (this.files[0]) {
@@ -793,8 +986,7 @@
     seenByAdmin: Boolean(item.seenByAdmin)
   }));
   saveComplaints();
-
-  renderAll();
+  fetchComplaints();
 </script>
 
 </body>

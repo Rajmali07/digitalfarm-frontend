@@ -6,6 +6,7 @@
     <title>AI Disease Diagnostic | Digital Farm</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="api_cache.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -70,6 +71,22 @@
         .table-header { font-weight: bold; color: #64748b; border-bottom: 2px solid #e2e8f0; font-size: 13px; }
         .table-row { border-bottom: 1px solid #f1f5f9; font-size: 14px; }
         .table-row:hover { background: #f8fafc; }
+        .history-action { display: inline-flex; align-items: center; justify-content: center; padding: 8px 14px; border-radius: 999px; border: 1px solid #cbd5e1; background: #fff; color: #4f46e5; font-weight: 700; cursor: pointer; }
+        .history-action:hover { background: #eef2ff; border-color: #a5b4fc; }
+        .history-modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 1500; overflow: auto; }
+        .history-modal.open { display: flex; }
+        .history-modal-card { width: min(760px, 100%); max-height: calc(100vh - 40px); background: white; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 25px 60px rgba(15, 23, 42, 0.22); overflow: hidden; display: flex; flex-direction: column; }
+        .history-modal-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 24px 28px 18px; margin-bottom: 0; border-bottom: 1px solid #e2e8f0; background: white; position: sticky; top: 0; z-index: 1; }
+        .history-modal-title { font-size: 24px; font-weight: 800; color: #0f172a; }
+        .history-modal-close { border: none; background: #f1f5f9; color: #475569; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 18px; }
+        .history-modal-body { overflow-y: auto; padding: 20px 28px 28px; }
+        .history-modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+        .history-meta { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; }
+        .history-meta label { display: block; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; }
+        .history-meta p { font-size: 14px; color: #0f172a; word-break: break-word; }
+        .history-detail-box { background: #fcfcfd; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+        .history-detail-box h4 { margin-bottom: 8px; color: #0f172a; font-size: 15px; }
+        .history-detail-box p { color: #475569; font-size: 14px; line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
 
         .tag { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; text-align: center; }
         .low { background: #dcfce7; color: #166534; }
@@ -83,6 +100,11 @@
             .container { grid-template-columns: 1fr; }
             .table-header { display: none; }
             .table-row { grid-template-columns: 1fr 1fr; gap: 15px; }
+            .history-modal { padding: 10px; align-items: flex-start; }
+            .history-modal-card { max-height: calc(100vh - 20px); margin: 0 auto; }
+            .history-modal-head { padding: 18px 18px 14px; }
+            .history-modal-body { padding: 16px 18px 20px; }
+            .history-modal-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -129,6 +151,8 @@
                         <option value="goat">Goat</option>
                         <option value="sheep">Sheep</option>
                         <option value="pig">Pig (Swine)</option>
+                        <option value="cat">Cat (Pet)</option>
+                        <option value="dog">Dog (Pet)</option>
                         <option value="other">Other</option>
                     </select>
                 </div>
@@ -201,6 +225,53 @@
         </div>
     </div>
 
+    <div class="history-modal" id="historyModal">
+        <div class="history-modal-card">
+            <div class="history-modal-head">
+                <div>
+                    <h3 class="history-modal-title">Diagnosis Details</h3>
+                    <p style="color: var(--text-gray); font-size: 14px;">Full AI analysis for this scan.</p>
+                </div>
+                <button type="button" class="history-modal-close" id="historyModalClose">&times;</button>
+            </div>
+            <div class="history-modal-body">
+                <div class="history-modal-grid">
+                    <div class="history-meta">
+                        <label>Scan ID</label>
+                        <p id="modalScanId">-</p>
+                    </div>
+                    <div class="history-meta">
+                        <label>Date</label>
+                        <p id="modalDate">-</p>
+                    </div>
+                    <div class="history-meta">
+                        <label>Predicted Disease</label>
+                        <p id="modalDisease">-</p>
+                    </div>
+                    <div class="history-meta">
+                        <label>Confidence</label>
+                        <p id="modalConfidence">-</p>
+                    </div>
+                </div>
+
+                <div class="history-detail-box">
+                    <h4>Symptoms</h4>
+                    <p id="modalSymptoms">-</p>
+                </div>
+
+                <div class="history-detail-box">
+                    <h4>Severity / Assessment</h4>
+                    <p id="modalAnalysis">-</p>
+                </div>
+
+                <div class="history-detail-box">
+                    <h4>Recommendation</h4>
+                    <p id="modalRecommendation">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer class="footer">
         <div style="text-align:center; padding-bottom: 20px; border-bottom: 1px solid #1e293b;">
             <h2 style="color:var(--primary);">Digital Farm</h2>
@@ -210,6 +281,8 @@
 
     <script src="risk_engine.js"></script>
     <script>
+        const API_BASE_URL = 'http://localhost:5000/api/v1';
+
         const profileBtn = document.getElementById('profileMenuButton');
         const profileDropdown = document.getElementById('profileDropdown');
         const aiForm = document.getElementById('aiForm');
@@ -218,6 +291,144 @@
         const scanLine = document.getElementById('scanLine');
         const loadingText = document.getElementById('loadingText');
         const defaultMsg = document.getElementById('defaultMsg');
+        const fileInput = document.getElementById('fileInput');
+        const uploadText = document.getElementById('uploadText');
+        const historyModal = document.getElementById('historyModal');
+        const historyModalClose = document.getElementById('historyModalClose');
+        let historyItems = [];
+
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        function getUser() {
+            try {
+                return JSON.parse(localStorage.getItem('user') || 'null');
+            } catch (error) {
+                console.error('Failed to parse user from localStorage', error);
+                return null;
+            }
+        }
+
+        function normalizeConfidence(value) {
+            if (typeof value === 'number') {
+                return value > 0 && value <= 1 ? Math.round(value * 100) : value;
+            }
+            const parsed = parseFloat(String(value || '').replace('%', ''));
+            if (!Number.isFinite(parsed)) return 0;
+            return parsed > 0 && parsed <= 1 ? Math.round(parsed * 100) : parsed;
+        }
+
+        function getRiskMeta(confidence) {
+            if (confidence > 80) return { className: 'high', label: 'High Risk' };
+            if (confidence > 50) return { className: 'medium', label: 'Observe' };
+            return { className: 'low', label: 'Low Risk' };
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function setLoadingState(isLoading) {
+            defaultMsg.style.display = isLoading ? 'none' : 'block';
+            resultContent.style.display = 'none';
+            loader.style.display = isLoading ? 'block' : 'none';
+            scanLine.style.display = isLoading ? 'block' : 'none';
+            loadingText.style.display = isLoading ? 'block' : 'none';
+        }
+
+        function getFriendlyAiErrorMessage(message) {
+            const normalized = String(message || '').toLowerCase();
+
+            if (
+                normalized.includes('503') ||
+                normalized.includes('service unavailable') ||
+                normalized.includes('high demand') ||
+                normalized.includes('temporarily unavailable') ||
+                normalized.includes('generativelanguage.googleapis.com')
+            ) {
+                return 'AI service is busy right now. Please try again in a moment.';
+            }
+
+            return message || 'AI analysis failed';
+        }
+
+        function showResult(result) {
+            const confidence = normalizeConfidence(result.confidence);
+            const riskMeta = getRiskMeta(confidence);
+            const severity = result.severity || riskMeta.label;
+            const gemini = result.gemini || {};
+            const ml = result.ml || {};
+            const geminiConfidence = normalizeConfidence(gemini.confidence || confidence);
+            const mlConfidence = normalizeConfidence(ml.confidence);
+            const mlTopPredictions = Array.isArray(ml.predictions) && ml.predictions.length
+                ? ml.predictions.slice(0, 3).map((item) => `${item.class} (${normalizeConfidence(item.confidence)}%)`).join(', ')
+                : '';
+
+            const combinedAnalysis = [
+                `Gemini symptom analysis: ${gemini.analysis || result.analysis || 'No detailed analysis returned.'}`,
+                ml.available
+                    ? `ML image prediction: ${ml.disease || 'Unknown'} at ${mlConfidence}%. Top matches: ${mlTopPredictions || 'No ranked matches available.'}`
+                    : `ML image prediction: ${ml.message || 'Skipped for this scan.'}`
+            ].join('\n\n');
+
+            const combinedRecommendation = [
+                gemini.recommendation || result.recommendation || 'Consult a veterinarian.',
+                ml.available
+                    ? `Image model note: visual classifier also detected ${ml.disease || 'Unknown'} at ${mlConfidence}% confidence.`
+                    : `Image model note: ${ml.message || 'No image-based prediction available for this scan.'}`
+            ].join(' ');
+
+            loader.style.display = 'none';
+            scanLine.style.display = 'none';
+            loadingText.style.display = 'none';
+            defaultMsg.style.display = 'none';
+            resultContent.style.display = 'block';
+
+            const severityBadge = document.getElementById('resSeverity');
+            severityBadge.textContent = severity;
+            severityBadge.className = `result-badge ${riskMeta.className}`;
+
+            document.getElementById('resDisease').innerText = `Detected: ${result.disease || 'Unknown'}`;
+            document.getElementById('resConfidence').innerText = ml.available
+                ? `Gemini Confidence: ${geminiConfidence}% | ML Confidence: ${mlConfidence}%`
+                : `AI Confidence: ${confidence}%`;
+            document.getElementById('resAnalysis').innerText = combinedAnalysis;
+            document.getElementById('resAction').innerHTML = `<b>Action:</b> ${combinedRecommendation}`;
+        }
+
+        function updateProfileUI() {
+            const user = getUser();
+            if (!user) return;
+
+            const displayName = user.name || user.full_name || user.email || 'Farmer';
+            const firstName = displayName.split(' ')[0];
+            const initial = displayName.trim().charAt(0).toUpperCase();
+
+            const nameEl = document.querySelector('.profile-name');
+            const avatarEl = document.querySelector('.profile-avatar');
+
+            if (nameEl) nameEl.textContent = `Hello, ${firstName}!`;
+            if (avatarEl) {
+                if (user.avatar_url) {
+                    avatarEl.textContent = '';
+                    avatarEl.style.backgroundImage = `url('${user.avatar_url}')`;
+                    avatarEl.style.backgroundSize = 'cover';
+                    avatarEl.style.backgroundPosition = 'center';
+                    avatarEl.style.backgroundRepeat = 'no-repeat';
+                    avatarEl.style.color = 'transparent';
+                } else {
+                    avatarEl.textContent = initial || 'F';
+                    avatarEl.style.backgroundImage = '';
+                    avatarEl.style.color = '';
+                }
+            }
+        }
 
         profileBtn.onclick = (e) => {
             e.stopPropagation();
@@ -225,103 +436,152 @@
         };
 
         window.onclick = () => profileDropdown.classList.remove('open');
-
-        document.getElementById('fileInput').onchange = (e) => {
-            if (e.target.files[0]) {
-                document.getElementById('uploadText').innerHTML = `<b style="color:var(--primary)">Photo Linked:</b> ${e.target.files[0].name}`;
+        historyModalClose.onclick = () => historyModal.classList.remove('open');
+        historyModal.onclick = (e) => {
+            if (e.target === historyModal) {
+                historyModal.classList.remove('open');
             }
         };
 
-        aiForm.onsubmit = (e) => {
+        fileInput.onchange = (e) => {
+            if (e.target.files[0]) {
+                uploadText.innerHTML = `<b style="color:var(--primary)">Photo Linked:</b> ${e.target.files[0].name}`;
+                return;
+            }
+
+            uploadText.innerHTML = '<b>Upload Photo</b> for Visual Verification';
+        };
+
+        aiForm.onsubmit = async (e) => {
             e.preventDefault();
+
+            const token = getToken();
             const animal = document.getElementById('animalType').value;
-            const symptoms = document.getElementById('symptoms').value;
+            const symptoms = document.getElementById('symptoms').value.trim();
+            const selectedFile = fileInput.files[0];
 
-            defaultMsg.style.display = 'none';
-            resultContent.style.display = 'none';
-            loader.style.display = 'block';
-            scanLine.style.display = 'block';
-            loadingText.style.display = 'block';
+            if (!token) {
+                alert('Please log in again to use AI diagnosis.');
+                window.location.href = 'farmer_login.html';
+                return;
+            }
 
-            setTimeout(() => {
+            setLoadingState(true);
+
+            try {
+                const formData = new FormData();
+                formData.append('animalType', animal);
+                formData.append('symptoms', symptoms);
+
+                if (selectedFile) {
+                    formData.append('image', selectedFile);
+                }
+
+                const res = await fetch(`${API_BASE_URL}/ai/analyze-risk`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || 'AI analysis failed');
+                }
+
+                showResult(data.data.analysis || {});
+                await loadHistory();
+            } catch (err) {
+                console.error(err);
                 loader.style.display = 'none';
                 scanLine.style.display = 'none';
                 loadingText.style.display = 'none';
-                resultContent.style.display = 'block';
-
-                let disease = '';
-                let risk = 0;
-                let action = '';
-
-                if (animal === 'poultry') {
-                    disease = 'Ranikhet (Newcastle)';
-                    risk = 88;
-                    action = 'Isolate batch immediately. Ensure high ventilation.';
-                } else if (animal === 'cow' || animal === 'buffalo') {
-                    disease = 'Foot and Mouth Disease';
-                    risk = 92;
-                    action = 'Use footbaths. Restrict movement and contact vet.';
-                } else if (animal === 'goat' || animal === 'sheep') {
-                    disease = 'PPR / Viral Fever';
-                    risk = 61;
-                    action = 'Separate the affected group and review feed, hydration, and vaccination records.';
-                } else if (animal === 'pig') {
-                    disease = 'Swine Viral Infection';
-                    risk = 67;
-                    action = 'Isolate the unit, improve hygiene, and contact the veterinary team.';
-                } else {
-                    disease = 'General Viral Infection';
-                    risk = 45;
-                    action = 'Monitor intake and keep surroundings clean.';
-                }
-
-                document.getElementById('resDisease').innerText = 'Detected: ' + disease;
-                document.getElementById('resConfidence').innerText = `AI Confidence Score: ${risk + 2}%`;
-                document.getElementById('resAnalysis').innerText = `Symptoms correlate with ${disease} markers commonly found in local breeds.`;
-                document.getElementById('resAction').innerHTML = `<b>Immediate Step:</b> ${action}`;
-
-                saveToHistory(animal, symptoms, disease, risk);
-                loadHistory();
-                window.DigitalFarmRisk.syncOverallRisk();
-            }, 2500);
+                defaultMsg.style.display = 'block';
+                resultContent.style.display = 'none';
+                alert(getFriendlyAiErrorMessage(err.message));
+            }
         };
 
-        function saveToHistory(animal, symptoms, disease, risk) {
-            const history = JSON.parse(localStorage.getItem('aiHistory')) || [];
-            history.push({
-                id: Math.floor(1000 + Math.random() * 9000),
-                animalType: animal,
-                date: new Date().toLocaleDateString('en-IN'),
-                dateISO: new Date().toISOString(),
-                symptoms: symptoms.substring(0, 30) + '...',
-                disease: disease,
-                risk: risk
-            });
-            localStorage.setItem('aiHistory', JSON.stringify(history));
-        }
-
-        function loadHistory() {
-            const history = JSON.parse(localStorage.getItem('aiHistory')) || [];
+        async function loadHistory() {
             const container = document.getElementById('historyData');
-            container.innerHTML = '';
-            
-            history.slice().reverse().forEach(item => {
-                let statusClass = item.risk > 70 ? 'high' : item.risk > 40 ? 'medium' : 'low';
-                let statusLabel = item.risk > 70 ? 'High Risk' : item.risk > 40 ? 'Observe' : 'Low Risk';
-                
-                container.innerHTML += `
-                    <div class="table-row">
-                        <span>${item.date}</span>
-                        <span style="font-weight:700;">#SCAN-${item.id}</span>
-                        <span style="color:#64748b;">${item.symptoms}</span>
-                        <span>${item.risk}%</span>
-                        <span><span class="tag ${statusClass}">${statusLabel}</span></span>
-                    </div>
-                `;
-            });
+            const token = getToken();
+
+            if (!token) {
+                container.innerHTML = 'Please log in to view history';
+                return;
+            }
+
+            container.innerHTML = 'Loading...';
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/ai/history`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to load history');
+                }
+
+                const history = data.data.history || [];
+                historyItems = history;
+
+                if (!history.length) {
+                    container.innerHTML = 'No AI scans yet';
+                    return;
+                }
+
+                container.innerHTML = history.map((item) => {
+                    const risk = normalizeConfidence(item.confidence);
+                    const riskMeta = getRiskMeta(risk);
+
+                    return `
+                        <div class="table-row">
+                            <span>${new Date(item.created_at).toLocaleDateString('en-IN')}</span>
+                            <span style="font-weight:700;">#${String(item.id).slice(0, 6)}</span>
+                            <span style="color:#64748b;">${escapeHtml(item.symptoms || '-')}</span>
+                            <span>${risk}%</span>
+                            <span><button type="button" class="history-action" data-history-id="${escapeHtml(item.id)}">View</button></span>
+                        </div>
+                    `;
+                }).join('');
+
+                container.querySelectorAll('[data-history-id]').forEach((button) => {
+                    button.addEventListener('click', () => openHistoryDetails(button.dataset.historyId));
+                });
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = 'Failed to load history';
+            }
         }
 
-        window.onload = loadHistory;
+        function openHistoryDetails(historyId) {
+            const item = historyItems.find((entry) => String(entry.id) === String(historyId));
+
+            if (!item) return;
+
+            const confidence = normalizeConfidence(item.confidence);
+
+            document.getElementById('modalScanId').textContent = `#${String(item.id).slice(0, 6)}`;
+            document.getElementById('modalDate').textContent = new Date(item.created_at).toLocaleString('en-IN');
+            document.getElementById('modalDisease').textContent = item.predicted_disease || 'Unknown';
+            document.getElementById('modalConfidence').textContent = `${confidence}%`;
+            document.getElementById('modalSymptoms').textContent = item.symptoms || 'No symptoms recorded.';
+            document.getElementById('modalAnalysis').textContent = item.severity || 'No severity assessment available.';
+            document.getElementById('modalRecommendation').textContent = item.recommendation || 'No recommendation available.';
+
+            historyModal.classList.add('open');
+        }
+
+        window.onload = () => {
+            updateProfileUI();
+            loadHistory();
+        };
     </script>
 </body>
 </html>

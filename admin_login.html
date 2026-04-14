@@ -151,12 +151,17 @@
       <h2>Admin Portal Login</h2>
       <p>Enter administrative credentials to manage regional biosecurity.</p>
 
-      <form action="admin_dashboard.html">
+      <form id="adminLoginForm">
         <div class="input-group">
           <label>Administrator Email / ID</label>
           <div class="input-wrapper">
             <i class="fa-solid fa-id-badge main-icon"></i>
-            <input type="text" placeholder="admin@digitalfarm.ai" required>
+<input 
+  type="text" 
+  id="adminEmail"
+  placeholder="admin@digitalfarm.ai" 
+  required
+>
           </div>
         </div>
 
@@ -166,20 +171,6 @@
             <i class="fa-solid fa-key main-icon"></i>
             <input type="password" id="accessKey" placeholder="••••••••••" required>
             <i class="fa-solid fa-eye-slash" id="toggleKey" style="position: absolute; right: 15px; cursor: pointer; color: #64748b;"></i>
-          </div>
-        </div>
-
-        <div class="input-group">
-          <label>Operational Level</label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-earth-americas main-icon"></i>
-            <select required>
-              <option value="" disabled selected>Select Access Level</option>
-              <option value="regional">Regional Supervisor</option>
-              <option value="district">District Monitor</option>
-              <option value="super">System Administrator</option>
-            </select>
-            <i class="fa-solid fa-chevron-down"></i>
           </div>
         </div>
 
@@ -234,48 +225,82 @@
     </div>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
   <script>
-    // --- Toggle Password Logic ---
-    const toggleKey = document.querySelector('#toggleKey');
-    const accessKeyField = document.querySelector('#accessKey');
 
-    toggleKey.addEventListener('click', function() {
-      const type = accessKeyField.getAttribute('type') === 'password' ? 'text' : 'password';
-      accessKeyField.setAttribute('type', type);
-      this.classList.toggle('fa-eye');
-      this.classList.toggle('fa-eye-slash');
+
+  const toggleKey = document.getElementById("toggleKey");
+  const accessKeyField = document.getElementById("accessKey");
+
+  toggleKey.addEventListener("click", () => {
+    const nextType = accessKeyField.getAttribute("type") === "password" ? "text" : "password";
+    accessKeyField.setAttribute("type", nextType);
+    toggleKey.classList.toggle("fa-eye");
+    toggleKey.classList.toggle("fa-eye-slash");
+  });
+
+  const supabaseUrl = "https://ppksvtcjyvtbcrdncvsm.supabase.co";
+  const supabaseKey = "sb_publishable_Mz-YMegdeHu08iMHfaIMwQ_61VvS1XE";
+
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+  document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("adminEmail").value;
+    const password = document.getElementById("accessKey").value;
+    const btn = document.querySelector(".login-btn");
+
+    btn.innerText = "Signing in...";
+    btn.disabled = true;
+
+    // 🔐 Supabase login
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password
     });
 
-    // --- Modal Logic ---
-    const modal = document.getElementById('forgotModal');
+    console.log("LOGIN RESPONSE:", data, error);
 
-    function openModal() {
-      modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
+    if (error) {
+      alert("Login failed ❌");
+      btn.innerText = "Initialize Console";
+      btn.disabled = false;
+      return;
     }
 
-    function closeModal() {
-      modal.style.display = 'none';
-      document.body.style.overflow = 'auto';
+    // 👤 Get profile
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("*")
+      .eq("id", data.user.id)
+      .single();
+
+    console.log("PROFILE:", profile);
+
+    if (profileError) {
+      alert("Profile fetch failed ❌");
+      return;
     }
 
-    function handleAdminReset() {
-      const adminId = document.getElementById('adminIdInput').value;
-      if (adminId) {
-        alert("Authorization: Reset request for " + adminId + " has been logged. Check your secure internal email.");
-        closeModal();
-      } else {
-        alert("Critical: Admin ID is required for verification.");
-      }
-    }
+    const adminUser = {
+      id: profile.id,
+      email: profile.email,
+      role: profile.role,
+      name: profile.full_name || profile.name || profile.email
+    };
 
-    // Close on backdrop click
-    window.onclick = function(event) {
-      if (event.target == modal) {
-        closeModal();
-      }
+    localStorage.setItem("token", data.session?.access_token || data.access_token || "");
+    localStorage.setItem("user", JSON.stringify(adminUser));
+
+    // 🔁 Redirect
+    if (profile.role === "ADMIN") {
+      window.location.href = "admin_dashboard.html";
+    } else {
+      alert("Access Denied ❌");
     }
-  </script>
+  });
+</script>
 
 </body>
 </html>

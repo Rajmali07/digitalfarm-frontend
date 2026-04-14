@@ -7,6 +7,7 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="api_cache.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -397,87 +398,22 @@
         </div>
     </div>
 
-    <div id="zoneList">
-        <div class="zone-row" data-zone="Zone 1">
-            <div>
-                <span class="zone-name">Zone 1</span>
-                <div class="zone-meta">
-                    <span class="zone-badge">North Cluster</span>
-                    <span>12 wards linked</span>
-                </div>
-            </div>
-            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
-        </div>
-        <div class="zone-row" data-zone="Zone 2">
-            <div>
-                <span class="zone-name">Zone 2</span>
-                <div class="zone-meta">
-                    <span class="zone-badge">Central Belt</span>
-                    <span>10 wards linked</span>
-                </div>
-            </div>
-            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
-        </div>
-        <div class="zone-row" data-zone="Zone 3">
-            <div>
-                <span class="zone-name">Zone 3</span>
-                <div class="zone-meta">
-                    <span class="zone-badge">East Corridor</span>
-                    <span>14 wards linked</span>
-                </div>
-            </div>
-            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
-        </div>
-        <div class="zone-row" data-zone="Zone 4">
-            <div>
-                <span class="zone-name">Zone 4</span>
-                <div class="zone-meta">
-                    <span class="zone-badge">West Edge</span>
-                    <span>8 wards linked</span>
-                </div>
-            </div>
-            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
-        </div>
-        <div class="zone-row" data-zone="Zone 5">
-            <div>
-                <span class="zone-name">Zone 5</span>
-                <div class="zone-meta">
-                    <span class="zone-badge">South Farms</span>
-                    <span>11 wards linked</span>
-                </div>
-            </div>
-            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
-        </div>
-        <div class="zone-row" data-zone="Zone 6">
-            <div>
-                <span class="zone-name">Zone 6</span>
-                <div class="zone-meta">
-                    <span class="zone-badge">Perimeter Watch</span>
-                    <span>9 wards linked</span>
-                </div>
-            </div>
-            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
-        </div>
-    </div>
+    <div id="zoneList"></div>
 
-    <div class="card map-section" id="zoneMapSection">
-        <h3 class="text-cyan-500 font-extrabold text-xs uppercase tracking-widest mb-6">Zone Map</h3>
+    <div class="map-section" id="zoneMapSection">
         <div class="map-box">
             <div class="map-grid"></div>
             <div class="map-legend">
-                <span class="legend-pill"><span class="legend-dot" style="background:#22c55e;"></span> Stable</span>
-                <span class="legend-pill"><span class="legend-dot" style="background:#f59e0b;"></span> Watch</span>
-                <span class="legend-pill"><span class="legend-dot" style="background:#ef4444;"></span> Critical</span>
+                <span class="legend-pill"><span class="legend-dot" style="background:#22c55e;"></span> Active Zones</span>
+                <span class="legend-pill"><span class="legend-dot" style="background:#0891b2;"></span> City Coverage</span>
             </div>
             <div class="map-copy">
-                <i data-lucide="map" class="opacity-20" size="52"></i>
-                <h4>GIS Zone View Ready</h4>
-                <p>Use this section to monitor region coverage, ward distribution, and zone-level risk sync before assigning farms.</p>
+                <i data-lucide="map-pinned" size="32"></i>
+                <h4>Zone coverage overview</h4>
+                <p>Use this section to review available regions and keep admin assignments aligned with the live zone list.</p>
             </div>
-            <div style="position: absolute; bottom: 10px; font-size: 10px; color: var(--text-dim);">GIS Sync: Online</div>
         </div>
     </div>
-</div>
 
 <div class="modal-overlay" id="zoneModalOverlay">
     <div class="zone-modal">
@@ -489,6 +425,13 @@
         </div>
         <label for="newZoneName">New Zone Name (e.g., Zone 7)</label>
         <input type="text" id="newZoneName" placeholder="Zone 7">
+        <label for="newZoneStatus">Zone Status</label>
+        <select id="newZoneStatus">
+            <option value="active" selected>Active</option>
+            <option value="inactive">Inactive</option>
+        </select>
+        <label for="newZoneKeywords">Keywords</label>
+        <input type="text" id="newZoneKeywords" placeholder="raipur, sejbahar, abhanpur">
         <p class="helper-text">Use a unique zone name so ward assignments remain clear across the admin center.</p>
         <div class="zone-modal-actions">
             <button type="button" id="submitZoneButton">Add Zone</button>
@@ -504,17 +447,107 @@
                 <i data-lucide="x" size="34"></i>
             </button>
         </div>
-        <label for="zoneSelect">Select Zone</label>
-        <select id="zoneSelect"></select>
+        
         <label for="editZoneName">Updated Zone Name</label>
         <input type="text" id="editZoneName" placeholder="Rename zone">
+        <label for="editZoneStatus">Zone Status</label>
+        <select id="editZoneStatus">
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+        </select>
+        <label for="editZoneKeywords">Keywords</label>
+        <input type="text" id="editZoneKeywords" placeholder="raipur, sejbahar, abhanpur">
         <div class="zone-modal-actions">
             <button type="button" id="saveZoneEditButton">Save Changes</button>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script>
+
+    const SUPABASE_URL = "https://ppksvtcjyvtbcrdncvsm.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_Mz-YMegdeHu08iMHfaIMwQ_61VvS1XE";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const zoneList = document.getElementById("zoneList");
+    let zonesById = {};
+
+    function formatKeywords(keywords) {
+      if (!Array.isArray(keywords) || !keywords.length) {
+        return "No keywords";
+      }
+
+      return keywords.join(", ");
+    }
+
+    function keywordsToInputValue(keywords) {
+      return Array.isArray(keywords) ? keywords.join(", ") : "";
+    }
+
+    function buildZonePayload(nameInput, statusInput, keywordsInput) {
+      return {
+        name: nameInput.value.trim(),
+        status: statusInput.value,
+        keywords: keywordsInput.value
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean)
+      };
+    }
+
+    function renderZoneEmptyState(message) {
+      zoneList.innerHTML = `<div class="card" style="color:#94a3b8; text-align:center;">${message}</div>`;
+      document.getElementById("count-zones").innerText = "0";
+    }
+
+async function loadZones() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('zones')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(error.message || "Unable to load zones.");
+    }
+
+    zoneList.innerHTML = "";
+
+    if (!data || !data.length) {
+      renderZoneEmptyState("No zones found. Add your first zone to see it here.");
+      return;
+    }
+
+    zonesById = Object.fromEntries(data.map((zone) => [zone.id, zone]));
+
+    data.forEach(zone => {
+      const row = document.createElement("div");
+      row.className = "zone-row";
+      row.innerHTML = `
+        <div>
+          <span class="zone-name">${zone.name}</span>
+          <div class="zone-meta">
+            <span class="zone-badge">${zone.status || 'active'}</span>
+            <span>${formatKeywords(zone.keywords)}</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-cyan" onclick="editZone('${zone.id}')">Edit</button>
+          <button class="btn-orange" onclick="deleteZone('${zone.id}')">Delete</button>
+        </div>
+      `;
+      zoneList.appendChild(row);
+    });
+
+    document.getElementById("count-zones").innerText = String(data.length);
+  } catch (error) {
+    console.error("Zone load failed", error);
+    renderZoneEmptyState("Unable to load zones right now.");
+  }
+}
+
+loadZones();
+
     lucide.createIcons();
 
     const zoneModalOverlay = document.getElementById('zoneModalOverlay');
@@ -525,8 +558,11 @@
     const closeEditZoneModal = document.getElementById('closeEditZoneModal');
     const submitZoneButton = document.getElementById('submitZoneButton');
     const saveZoneEditButton = document.getElementById('saveZoneEditButton');
-    const zoneSelect = document.getElementById('zoneSelect');
+    const newZoneStatus = document.getElementById('newZoneStatus');
+    const newZoneKeywords = document.getElementById('newZoneKeywords');
     const editZoneName = document.getElementById('editZoneName');
+    const editZoneStatus = document.getElementById('editZoneStatus');
+    const editZoneKeywords = document.getElementById('editZoneKeywords');
     const viewMapButton = document.getElementById('viewMapButton');
 
     openAddZoneModal.addEventListener('click', () => {
@@ -535,9 +571,7 @@
     });
 
     openEditZoneModal.addEventListener('click', () => {
-        populateZoneOptions();
         editZoneModalOverlay.classList.add('open');
-        editZoneName.value = zoneSelect.value;
         editZoneName.focus();
     });
 
@@ -561,105 +595,87 @@
         }
     });
 
-    function getZoneNames() {
-        return Array.from(document.querySelectorAll('#zoneList .zone-name')).map((item) => item.textContent.trim());
-    }
-
-    function populateZoneOptions() {
-        const zoneNames = getZoneNames();
-        zoneSelect.innerHTML = zoneNames.map((name) => `<option value="${name}">${name}</option>`).join('');
-    }
-
-    zoneSelect.addEventListener('change', () => {
-        editZoneName.value = zoneSelect.value;
-    });
-
     viewMapButton.addEventListener('click', () => {
         document.getElementById('zoneMapSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
-    function addZone() {
-        const nameInput = document.getElementById('newZoneName');
-        const name = nameInput.value.trim();
+async function addZone() {
+  const input = document.getElementById("newZoneName");
+  const payload = buildZonePayload(input, newZoneStatus, newZoneKeywords);
 
-        if (name === "") {
-            alert("Please enter a zone name");
-            return;
-        }
+  if (!payload.name) return alert("Enter zone name");
 
-        if (getZoneNames().some((zone) => zone.toLowerCase() === name.toLowerCase())) {
-            alert("This zone already exists");
-            return;
-        }
-
-        const zoneList = document.getElementById('zoneList');
-        const newRow = document.createElement('div');
-        newRow.className = 'zone-row';
-        newRow.setAttribute('data-zone', name);
-        newRow.innerHTML = `
-            <div>
-                <span class="zone-name">${name}</span>
-                <div class="zone-meta">
-                    <span class="zone-badge">New Zone</span>
-                    <span>Ward mapping pending</span>
-                </div>
-            </div>
-            <a href="admin_farmer_details.html" class="edit-wards-link">Edit Wards <i data-lucide="arrow-right" size="14"></i></a>
-        `;
-        
-        zoneList.appendChild(newRow);
-        nameInput.value = "";
-        zoneModalOverlay.classList.remove('open');
-        lucide.createIcons(); // Refresh icons for new row
-        
-        // Update stats
-        const count = document.querySelectorAll('.zone-row').length;
-        document.getElementById('count-zones').innerText = count < 10 ? '0' + count : count;
-    }
-
-    function saveZoneEdit() {
-        const selectedZone = zoneSelect.value;
-        const updatedName = editZoneName.value.trim();
-
-        if (!selectedZone) {
-            alert("Please select a zone");
-            return;
-        }
-
-        if (updatedName === "") {
-            alert("Please enter a new zone name");
-            return;
-        }
-
-        if (getZoneNames().some((zone) => zone.toLowerCase() === updatedName.toLowerCase() && zone !== selectedZone)) {
-            alert("Another zone already uses this name");
-            return;
-        }
-
-        const zoneItems = document.querySelectorAll('#zoneList .zone-name');
-        zoneItems.forEach((item) => {
-            if (item.textContent.trim() === selectedZone) {
-                item.textContent = updatedName;
-            }
-        });
-
-        editZoneModalOverlay.classList.remove('open');
-        populateZoneOptions();
-    }
-
-    document.addEventListener('click', (event) => {
-        const editLink = event.target.closest('.edit-wards-link');
-        if (!editLink) return;
-
-        event.preventDefault();
-        const zoneRow = editLink.closest('.zone-row');
-        const zoneName = zoneRow.querySelector('.zone-name').textContent.trim();
-        populateZoneOptions();
-        zoneSelect.value = zoneName;
-        editZoneName.value = zoneName;
-        editZoneModalOverlay.classList.add('open');
-        editZoneName.focus();
+  try {
+    const res = await fetch(API, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + localStorage.getItem("token")
+      },
+      body: JSON.stringify(payload)
     });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      throw new Error(result.message || "Operation failed");
+    }
+
+    input.value = "";
+    newZoneStatus.value = "active";
+    newZoneKeywords.value = "";
+    zoneModalOverlay.classList.remove('open');
+    await loadZones();
+  } catch (error) {
+    console.error("Zone create failed", error);
+    alert(error.message || "Operation failed");
+  }
+}
+
+    let editId = null;
+
+function editZone(id) {
+  const zone = zonesById[id];
+  if (!zone) {
+    alert("Zone data not found");
+    return;
+  }
+
+  editId = id;
+  editZoneName.value = zone.name || "";
+  editZoneStatus.value = zone.status || "active";
+  editZoneKeywords.value = keywordsToInputValue(zone.keywords);
+  editZoneModalOverlay.classList.add("open");
+}
+
+async function saveZoneEdit() {
+  const payload = buildZonePayload(editZoneName, editZoneStatus, editZoneKeywords);
+
+  if (!payload.name) {
+    alert("Enter zone name");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/${editId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      throw new Error(result.message || "Unable to update zone");
+    }
+
+    editZoneModalOverlay.classList.remove("open");
+    await loadZones();
+  } catch (error) {
+    console.error("Zone update failed", error);
+    alert(error.message || "Unable to update zone");
+  }
+}
 
     submitZoneButton.addEventListener('click', addZone);
     saveZoneEditButton.addEventListener('click', saveZoneEdit);
@@ -675,6 +691,26 @@
             saveZoneEdit();
         }
     });
+    async function deleteZone(id) {
+  if (!confirm("Delete this zone?")) return;
+
+  try {
+    const res = await fetch(`${API}/${id}`, {
+      method: "DELETE"
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      throw new Error(result.message || "Unable to delete zone");
+    }
+
+    await loadZones();
+  } catch (error) {
+    console.error("Zone delete failed", error);
+    alert(error.message || "Unable to delete zone");
+  }
+}
 </script>
 
 </body>

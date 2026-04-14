@@ -6,6 +6,7 @@
   <title>Create Farmer Account | Digital Farm</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="api_cache.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -351,13 +352,13 @@
       <h2>Create Farmer Account</h2>
       <p>Register your farm profile to report health issues, track livestock updates, and access Digital Farm tools.</p>
 
-      <form action="farmer_dashboard.html">
+      <form id="registerForm">
         <div class="form-grid">
           <div class="input-group">
             <label>Full Name</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-user"></i>
-              <input type="text" placeholder="Raj Kumar" required>
+              <input id="name" type="text" placeholder="eg. Raj Mali" required>
             </div>
           </div>
 
@@ -365,7 +366,7 @@
             <label>Farm Name</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-tractor"></i>
-              <input type="text" placeholder="Green Valley Farm" required>
+              <input id="farmName" type="text" placeholder="Green Valley Farm" required>
             </div>
           </div>
 
@@ -373,15 +374,34 @@
             <label>Email Address</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-envelope"></i>
-              <input type="email" placeholder="raj@gmail.com" required>
+              <input id="email" type="email" placeholder="raj@gmail.com" required>
             </div>
           </div>
+
+          <div class="input-group full-width">
+  <label style="font-weight:700; letter-spacing:1px;">FARM ADDRESS / LOCATION</label>
+  <div class="input-wrapper" style="padding-left:0;">
+    <input 
+      id="address" 
+      type="text" 
+      placeholder="e.g. Sejbahar, Raipur, Chhattisgarh"
+      style="
+        padding:14px 18px;
+        border-radius:14px;
+        background:#e5e7eb;
+        color:#111827;
+        font-weight:500;
+      "
+      required
+    >
+  </div>
+</div>
 
           <div class="input-group">
             <label>Phone Number</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-phone"></i>
-              <input type="tel" placeholder="+91 98765 43210" required>
+              <input id="phone" type="tel" placeholder="+91 98765 43210" required>
             </div>
           </div>
 
@@ -389,7 +409,7 @@
             <label>Farm Type</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-seedling"></i>
-              <select required>
+              <select id="farmType" required>
                 <option value="" selected disabled>Select farm type</option>
                 <option>Poultry</option>
                 <option>Dairy</option>
@@ -404,7 +424,7 @@
             <label>Password</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-lock"></i>
-              <input type="password" placeholder="Create a strong password" required>
+              <input id="password" type="password" required>
             </div>
           </div>
 
@@ -412,13 +432,14 @@
             <label>Confirm Password</label>
             <div class="input-wrapper">
               <i class="fa-solid fa-shield-halved"></i>
-              <input type="password" placeholder="Re-enter password" required>
+              <input id="confirmPassword" type="password" required>
             </div>
           </div>
         </div>
 
         <p class="helper-text">By creating an account, you can access disease alerts, farm records, and training resources from one dashboard.</p>
-
+        <p id="zoneHint" class="helper-text">Registration is allowed only for addresses that match an active zone or one of its keywords.</p>
+        <p id="successMsg" style="color:#22c55e; display:none; text-align:center; margin-bottom:10px;"></p>
         <button type="submit" class="register-btn">Create Account <i class="fa-solid fa-arrow-right"></i></button>
       </form>
 
@@ -434,6 +455,221 @@
   </div>
   <p style="text-align:center; padding-top:20px; font-size:12px;">&copy; 2026 Digital Farm | Built for Farmers</p>
 </footer>
+<script>
+const API_HOST_CANDIDATES = Array.from(new Set([
+  window.location.hostname,
+  "127.0.0.1",
+  "localhost"
+].filter(Boolean)));
+let activeApiBase = null;
+
+function getApiCandidates(path) {
+  return API_HOST_CANDIDATES.map((host) => `http://${host}:5000/api/v1${path}`);
+}
+
+async function fetchWithApiFallback(path, options = {}) {
+  let lastError = null;
+
+  for (const url of getApiCandidates(path)) {
+    try {
+      const res = await fetch(url, options);
+      activeApiBase = url.replace(path, "");
+      return res;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  throw lastError || new Error("Backend unavailable");
+}
+
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const password = document.getElementById("password").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+
+  if (password !== confirmPassword) {
+    alert("Passwords do not match ❌");
+    return;
+  }
+
+  const data = {
+    name: document.getElementById("name").value,
+    farm_name: document.getElementById("farmName").value,
+    email: document.getElementById("email").value,
+    address: document.getElementById("address").value,
+    phone: document.getElementById("phone").value,
+    farm_type: document.getElementById("farmType").value,
+    password: password
+  };
+
+  try {
+    const res = await fetchWithApiFallback("/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+
+    if (res.ok) {
+  const msg = document.getElementById("successMsg");
+  msg.innerText = "Registration Successful ✅ Redirecting...";
+  msg.style.display = "block";
+
+  document.getElementById("registerForm").reset();
+
+  setTimeout(() => {
+    window.location.href = "farmer_login.html";
+  }, 2000);
+
+} else {
+  alert(result.message || "Registration failed ❌");
+}
+
+  } catch (err) {
+    console.error(err);
+    alert("Cannot connect to the backend server. Start the backend on port 5000 and try again.");
+  }
+});
+</script>
+<script>
+const zoneHint = document.getElementById("zoneHint");
+const registerForm = document.getElementById("registerForm");
+const addressInput = document.getElementById("address");
+let activeZones = [];
+let zoneServiceAvailable = false;
+const LOCATION_STOP_WORDS = new Set([
+  "zone",
+  "area",
+  "district",
+  "block",
+  "sector",
+  "region",
+  "ward",
+  "village",
+  "city",
+  "state",
+  "farm"
+]);
+
+function normalizeText(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function tokenizeAddress(address) {
+  return normalizeText(address)
+    .split(/[\s,/-]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function getMeaningfulTokens(value) {
+  return tokenizeAddress(value).filter((token) => token.length > 2 && !LOCATION_STOP_WORDS.has(token));
+}
+
+function getZoneTerms(zone) {
+  const keywords = Array.isArray(zone.keywords) ? zone.keywords : [];
+  return [zone.name, ...keywords]
+    .map((term) => normalizeText(term))
+    .filter(Boolean);
+}
+
+function findMatchingZone(address) {
+  const lowerAddress = normalizeText(address);
+  const addressWords = tokenizeAddress(address);
+  const meaningfulAddressTokens = getMeaningfulTokens(address);
+
+  return activeZones.find((zone) =>
+    getZoneTerms(zone).some((term) => {
+      const termWords = tokenizeAddress(term);
+      const meaningfulTermTokens = getMeaningfulTokens(term);
+
+      return (
+        lowerAddress.includes(term) ||
+        term.includes(lowerAddress) ||
+        addressWords.includes(term) ||
+        termWords.some((word) => addressWords.includes(word)) ||
+        meaningfulTermTokens.some((token) => meaningfulAddressTokens.includes(token))
+      );
+    })
+  ) || null;
+}
+
+function updateZoneHint() {
+  const address = addressInput.value.trim();
+
+  if (!zoneServiceAvailable) {
+    zoneHint.textContent = "Zone service is unavailable. Start the backend on port 5000, then refresh this page.";
+    zoneHint.style.color = "#f59e0b";
+    return;
+  }
+
+  if (!address) {
+    zoneHint.textContent = "Registration is allowed only for addresses that match an active zone or one of its keywords.";
+    zoneHint.style.color = "#94a3b8";
+    return;
+  }
+
+  const matchedZone = findMatchingZone(address);
+
+  if (matchedZone) {
+    zoneHint.textContent = `Address matched with active zone: ${matchedZone.name}`;
+    zoneHint.style.color = "#22c55e";
+  } else {
+    zoneHint.textContent = "This address does not match any active zone yet.";
+    zoneHint.style.color = "#f87171";
+  }
+}
+
+async function loadActiveZones() {
+  try {
+    const res = await fetchWithApiFallback("/zones");
+    if (!res.ok) {
+      throw new Error(`Zone API returned ${res.status}`);
+    }
+
+    const result = await res.json();
+
+    if (!Array.isArray(result.data)) {
+      throw new Error(result.message || "Unable to load zones");
+    }
+
+    activeZones = result.data.filter((zone) => normalizeText(zone.status || "active") === "active");
+    zoneServiceAvailable = true;
+  } catch (error) {
+    console.error("Zone fetch failed", error);
+    activeZones = [];
+    zoneServiceAvailable = false;
+  }
+
+  updateZoneHint();
+}
+
+addressInput.addEventListener("input", updateZoneHint);
+
+registerForm.addEventListener("submit", (event) => {
+  if (!zoneServiceAvailable) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    alert("Registration is unavailable because the backend server is not reachable on port 5000.");
+    return;
+  }
+
+  const matchedZone = findMatchingZone(addressInput.value);
+
+  if (!matchedZone) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    alert("Registration allowed only for active zones and matching zone keywords.");
+  }
+}, true);
+
+loadActiveZones();
+</script>
 
 </body>
 </html>

@@ -6,6 +6,7 @@
   <title>Biosecurity Audit | Digital Farm</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="api_cache.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -237,6 +238,33 @@
       box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.08);
       z-index: 1000;
     }
+    .toast {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      padding: 14px 18px;
+      color: white;
+      border-radius: 12px;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      max-width: 360px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-20px);
+      transition: all 0.3s ease;
+      z-index: 2200;
+    }
+    .toast.success {
+      background: #22c55e;
+    }
+    .toast.error {
+      background: #ef4444;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
     .sync-copy strong { display: block; font-size: 14px; margin-bottom: 4px; }
     .sync-copy span { color: var(--text-gray); font-size: 13px; }
     .footer-actions { display: flex; align-items: center; gap: 12px; }
@@ -315,8 +343,8 @@
       <li><a href="farmer_biosecurity.html" class="active">Biosecurity</a></li>
       <li class="profile-menu">
         <button class="profile-trigger" id="profileMenuButton" type="button">
-          <span class="profile-name">Hello, Raj!</span>
-          <span class="profile-avatar">R</span>
+          <span class="profile-name">Hello, Farmer!</span>
+          <span class="profile-avatar">F</span>
         </button>
         <div class="profile-dropdown" id="profileDropdown">
           <a href="farmer_profile.html" class="dropdown-item">View Profile</a>
@@ -330,7 +358,7 @@
   <div class="container">
     <div class="page-header">
       <h1>Comprehensive Biosecurity Audit</h1>
-      <p>April 03, 2026 | Auditor: Rajesh (FMR-9901)</p>
+      <p id="pageAuditMeta">Today | Auditor: Farmer</p>
     </div>
 
     <div class="overview-grid">
@@ -370,19 +398,19 @@
         <p class="section-help">Protect the farm perimeter and maintain clean access procedures for people and vehicles.</p>
         <div class="q-row">
           <span class="q-label">Is farm entry restricted to essential personnel?</span>
-          <div class="toggle-pill" data-key="entry_restricted"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="entry_restricted"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
         <div class="q-row">
           <span class="q-label">Is a visitor log maintained for all entries?</span>
-          <div class="toggle-pill" data-key="visitor_log"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="visitor_log"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
         <div class="q-row">
           <span class="q-label">Is a functional footbath used at entry?</span>
-          <div class="toggle-pill" data-key="footbath_used"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="footbath_used"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
         <div class="q-row">
           <span class="q-label">Are vehicles disinfected before entry?</span>
-          <div class="toggle-pill" data-key="vehicles_disinfected"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="vehicles_disinfected"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
       </div>
 
@@ -391,11 +419,11 @@
         <p class="section-help">Daily cleaning and tool disinfection reduce transmission risk between units.</p>
         <div class="q-row">
           <span class="q-label">Are animal sheds cleaned and waste disposed daily?</span>
-          <div class="toggle-pill" data-key="daily_clean"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="daily_clean"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
         <div class="q-row">
           <span class="q-label">Is equipment disinfected after each use?</span>
-          <div class="toggle-pill" data-key="tools_disinfected"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="tools_disinfected"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
       </div>
 
@@ -404,11 +432,11 @@
         <p class="section-help">Track symptoms early and confirm routine health checks are completed on schedule.</p>
         <div class="q-row">
           <span class="q-label">Are any animals currently showing disease symptoms?</span>
-          <div class="toggle-pill" data-key="has_symptoms"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="has_symptoms"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
         <div class="q-row">
           <span class="q-label">Was a regular health check completed?</span>
-          <div class="toggle-pill" data-key="health_check_done"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="health_check_done"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
       </div>
 
@@ -417,11 +445,11 @@
         <p class="section-help">Keep current batches protected and confirm veterinary support is active when needed.</p>
         <div class="q-row">
           <span class="q-label">Are all vaccinations up to date for current batches?</span>
-          <div class="toggle-pill" data-key="vax_status"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="vax_status"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
         <div class="q-row">
           <span class="q-label">Has a vet consultation been done recently?</span>
-          <div class="toggle-pill" data-key="vet_consult"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="vet_consult"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
       </div>
 
@@ -430,11 +458,11 @@
         <p class="section-help">Separate risky units quickly and quarantine new arrivals before mixing them with healthy stock.</p>
         <div class="q-row">
           <span class="q-label">Are sick animals separated from healthy ones?</span>
-          <div class="toggle-pill" data-key="is_isolated"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="is_isolated"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
         <div class="q-row">
           <span class="q-label">Are new arrivals quarantined before herd introduction?</span>
-          <div class="toggle-pill" data-key="is_quarantined"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="is_quarantined"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
       </div>
 
@@ -443,11 +471,11 @@
         <p class="section-help">Minimise outside contamination from rodents, insects, and wild-animal exposure.</p>
         <div class="q-row">
           <span class="q-label">Are active rodent or insect control measures done?</span>
-          <div class="toggle-pill" data-key="pest_control"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="pest_control"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
         <div class="q-row">
           <span class="q-label">Is wild animal access restricted?</span>
-          <div class="toggle-pill" data-key="wildlife_restricted"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="wildlife_restricted"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
       </div>
 
@@ -456,7 +484,7 @@
         <p class="section-help">Shared tools and vehicles should be cleaned before they reach active farm areas.</p>
         <div class="q-row">
           <span class="q-label">Are shared tools or vehicles cleaned before entry?</span>
-          <div class="toggle-pill" data-key="equipment_shared"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="equipment_shared"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
       </div>
 
@@ -465,11 +493,11 @@
         <p class="section-help">Clean water and proper feed storage are essential to daily flock protection.</p>
         <div class="q-row">
           <span class="q-label">Is drinking water clean and tested regularly?</span>
-          <div class="toggle-pill" data-key="water_test_done"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="water_test_done"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
         <div class="q-row">
           <span class="q-label">Is feed storage hygienic and free from mold?</span>
-          <div class="toggle-pill" data-key="feed_mold_free"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="feed_mold_free"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
       </div>
 
@@ -478,7 +506,7 @@
         <p class="section-help">Confirm the farm can isolate, respond, and escalate quickly if a risk event occurs.</p>
         <div class="q-row">
           <span class="q-label">Is the isolation area ready and active?</span>
-          <div class="toggle-pill" data-key="isolation_ready"><button type="button" class="t-btn" onclick="toggle(this, 'yes')">YES</button><button type="button" class="t-btn" onclick="toggle(this, 'no')">NO</button></div>
+          <div class="toggle-pill" data-key="isolation_ready"><button type="button" class="t-btn">YES</button><button type="button" class="t-btn">NO</button></div>
         </div>
       </div>
 
@@ -500,12 +528,15 @@
     </div>
     <div class="footer-actions">
       <a href="farmer_dashboard.html" class="btn-secondary">Back to Dashboard</a>
-      <button class="btn-sync" type="button" onclick="syncData()">Submit Audit</button>
+      <button class="btn-sync" type="button" id="submitAuditBtn">Submit Audit</button>
     </div>
   </div>
 
+  <div id="toast" class="toast success" aria-hidden="true">Success</div>
+
   <script src="risk_engine.js"></script>
   <script>
+    const API_BASE_URL = 'http://localhost:5000/api/v1';
     const data = {
       entry_restricted: null,
       visitor_log: null,
@@ -534,39 +565,217 @@
     const statusNote = document.getElementById('statusNote');
     const statusIcon = document.getElementById('statusIcon');
     const progressText = document.getElementById('progressText');
+    const submitAuditBtn = document.getElementById('submitAuditBtn');
+    const remarksInput = document.getElementById('remarks');
+    const toast = document.getElementById('toast');
     const biosecurityKey = window.DigitalFarmRisk.STORAGE_KEYS.biosecurity;
+    const dailySubmissionLimit = 3;
+    let submissionCountToday = 0;
+    let toastTimer;
 
-    function restoreAudit() {
-      const storedAudit = window.DigitalFarmRisk.readStore(biosecurityKey, null);
-      if (!storedAudit || !storedAudit.responses) return;
+    function showToast(message, type = 'success', onDone, duration = 2200) {
+      clearTimeout(toastTimer);
+      toast.innerText = message;
+      toast.classList.remove('success', 'error', 'show');
+      toast.classList.add(type === 'error' ? 'error' : 'success');
+      toast.setAttribute('aria-hidden', 'false');
 
-      Object.entries(storedAudit.responses).forEach(([key, value]) => {
-        if (!(key in data) || value === null) return;
-        data[key] = value;
-        const pill = document.querySelector(`.toggle-pill[data-key="${key}"]`);
-        if (!pill) return;
-        Array.from(pill.children).forEach((button) => button.classList.remove('active-yes', 'active-no'));
-        const activeButton = value ? pill.children[0] : pill.children[1];
-        activeButton.classList.add(value ? 'active-yes' : 'active-no');
+      requestAnimationFrame(() => {
+        toast.classList.add('show');
       });
 
-      document.getElementById('remarks').value = storedAudit.remarks || '';
+      toastTimer = setTimeout(function () {
+        toast.classList.remove('show');
+        toast.setAttribute('aria-hidden', 'true');
+        if (typeof onDone === 'function') {
+          onDone();
+        }
+      }, duration);
     }
 
-    function toggle(btn, val) {
-      const parent = btn.parentElement;
-      const key = parent.dataset.key;
+    function updateHeaderFromUser() {
+      const storedUser = localStorage.getItem('user');
+      const today = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: '2-digit' });
 
-      Array.from(parent.children).forEach((button) => button.classList.remove('active-yes', 'active-no'));
-
-      if (val === 'yes') {
-        btn.classList.add('active-yes');
-        data[key] = true;
-      } else {
-        btn.classList.add('active-no');
-        data[key] = false;
+      if (!storedUser) {
+        document.getElementById('pageAuditMeta').innerText = `${today} | Auditor: Farmer`;
+        return;
       }
 
+      try {
+        const user = JSON.parse(storedUser);
+        const name = user.name || 'Farmer';
+        const firstName = name.split(' ')[0];
+        const initials = name.trim().charAt(0).toUpperCase() || 'F';
+        const shortId = user.id ? user.id.slice(0, 8).toUpperCase() : 'N/A';
+        const avatarEl = document.querySelector('.profile-avatar');
+
+        document.querySelector('.profile-name').innerText = `Hello, ${firstName}!`;
+        if (avatarEl) {
+          if (user.avatar_url) {
+            avatarEl.innerText = '';
+            avatarEl.style.backgroundImage = `url('${user.avatar_url}')`;
+            avatarEl.style.backgroundSize = 'cover';
+            avatarEl.style.backgroundPosition = 'center';
+            avatarEl.style.backgroundRepeat = 'no-repeat';
+            avatarEl.style.color = 'transparent';
+          } else {
+            avatarEl.innerText = initials;
+            avatarEl.style.backgroundImage = '';
+            avatarEl.style.color = '';
+          }
+        }
+        document.getElementById('pageAuditMeta').innerText = `${today} | Auditor: ${name} (${shortId})`;
+      } catch (error) {
+        console.error('Failed to parse local user data:', error);
+      }
+    }
+
+    function bindToggleButtons() {
+      document.querySelectorAll('.toggle-pill').forEach((pill) => {
+        const [yesBtn, noBtn] = pill.querySelectorAll('.t-btn');
+        yesBtn.addEventListener('click', () => toggle(pill, true));
+        noBtn.addEventListener('click', () => toggle(pill, false));
+      });
+    }
+
+    function persistLocalAuditState() {
+      window.DigitalFarmRisk.writeStore(biosecurityKey, {
+        responses: { ...data },
+        remarks: remarksInput.value.trim(),
+        statusText: statusText.innerText,
+        statusNote: statusNote.innerText,
+        updatedAt: new Date().toISOString(),
+        auditDate: new Date().toISOString().slice(0, 10),
+        submissionCountToday
+      });
+      window.DigitalFarmRisk.syncOverallRisk();
+    }
+
+    function updateSubmissionLimitUI() {
+      const remaining = Math.max(dailySubmissionLimit - submissionCountToday, 0);
+      const answeredCount = getAnsweredCount();
+      const totalCount = Object.keys(data).length;
+
+      if (remaining === 0) {
+        progressText.innerText = 'Today\'s 3 biosecurity submissions are already used. The checklist will refresh tomorrow.';
+        submitAuditBtn.disabled = true;
+        submitAuditBtn.innerText = 'Daily Limit Reached';
+        return;
+      }
+
+      submitAuditBtn.disabled = false;
+      submitAuditBtn.innerText = 'Submit Audit';
+      progressText.innerText = answeredCount === totalCount
+        ? `Today\'s checklist is complete. ${remaining} of ${dailySubmissionLimit} submissions remaining today.`
+        : `${answeredCount} of ${totalCount} checkpoints completed for today. ${remaining} submission${remaining === 1 ? '' : 's'} remaining.`;
+    }
+
+    function isSameDay(value) {
+      if (!value) return false;
+
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return false;
+
+      const now = new Date();
+      return (
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth() &&
+        date.getDate() === now.getDate()
+      );
+    }
+
+    function applyAuditSnapshot(snapshot) {
+      if (!snapshot || !snapshot.responses) return;
+
+      Object.entries(snapshot.responses).forEach(([key, value]) => {
+        if (!(key in data)) return;
+        data[key] = value;
+        setPillState(key, value);
+      });
+
+      remarksInput.value = snapshot.remarks || '';
+      submissionCountToday = Number(snapshot.submissionCountToday || 0);
+      runAI();
+    }
+
+    function resetAuditState() {
+      Object.keys(data).forEach((key) => {
+        data[key] = null;
+        setPillState(key, null);
+      });
+
+      remarksInput.value = '';
+      submissionCountToday = 0;
+      statusBox.className = 'status-header bg-safe';
+      statusText.innerText = 'SAFE';
+      statusNote.innerText = 'All critical controls look compliant so far. Complete the checklist to confirm today\'s audit.';
+      statusIcon.className = 'fa-solid fa-circle-check';
+      window.DigitalFarmRisk.writeStore(biosecurityKey, null);
+      window.DigitalFarmRisk.syncOverallRisk();
+      updateSubmissionLimitUI();
+    }
+
+    function restoreLocalAuditState() {
+      const savedAudit = window.DigitalFarmRisk.readStore(biosecurityKey, null);
+      if (!savedAudit || !isSameDay(savedAudit.updatedAt)) {
+        resetAuditState();
+        return;
+      }
+      applyAuditSnapshot(savedAudit);
+    }
+
+    function setPillState(key, value) {
+      const pill = document.querySelector(`.toggle-pill[data-key="${key}"]`);
+      if (!pill) return;
+
+      const [yesBtn, noBtn] = pill.querySelectorAll('.t-btn');
+      yesBtn.classList.remove('active-yes');
+      noBtn.classList.remove('active-no');
+
+      if (value === true) yesBtn.classList.add('active-yes');
+      if (value === false) noBtn.classList.add('active-no');
+    }
+
+    async function fetchPreviousAudit() {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        window.location.href = 'farmer_login.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/biosecurity/checklist`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const result = await res.json();
+
+        if (!res.ok || !result.success || !result.data) {
+          return;
+        }
+
+        submissionCountToday = Number(result.data.submissionCountToday || 0);
+
+        if (!isSameDay(result.data.created_at || result.data.updatedAt)) {
+          resetAuditState();
+          return;
+        }
+
+        applyAuditSnapshot(result.data);
+        persistLocalAuditState();
+      } catch (err) {
+        console.error('Failed to fetch previous biosecurity audit:', err);
+      }
+    }
+
+    function toggle(pill, value) {
+      const key = pill.dataset.key;
+      data[key] = value;
+      setPillState(key, value);
       runAI();
     }
 
@@ -604,37 +813,76 @@
         note = 'One or more frontline controls are weak. Tighten access, sanitation, and animal monitoring before the next cycle.';
         style = 'bg-risk';
         iconClass = 'fa-triangle-exclamation';
-      } else if (answeredCount === 0) {
-        status = 'SAFE';
-        note = 'All critical controls look compliant so far. Complete the checklist to confirm today\'s audit.';
-        style = 'bg-safe';
-        iconClass = 'fa-circle-check';
       }
 
-      statusBox.className = 'status-header ' + style;
+      statusBox.className = `status-header ${style}`;
       statusText.innerText = status;
       statusNote.innerText = note;
-      statusIcon.className = 'fa-solid ' + iconClass;
-      progressText.innerText = answeredCount + ' of ' + totalCount + ' checkpoints completed.';
+      statusIcon.className = `fa-solid ${iconClass}`;
+      persistLocalAuditState();
+      updateSubmissionLimitUI();
     }
 
-    function syncData() {
+    async function syncData() {
       if (Object.values(data).includes(null)) {
-        alert('Digital Farm Sync: Please complete all audit checkpoints before submitting.');
+        alert('Please complete all audit checkpoints before submitting.');
         return;
       }
 
-      window.DigitalFarmRisk.writeStore(biosecurityKey, {
-        responses: { ...data },
-        remarks: document.getElementById('remarks').value.trim(),
-        statusText: statusText.innerText,
-        statusNote: statusNote.innerText,
-        updatedAt: new Date().toISOString(),
-        updatedLabel: window.DigitalFarmRisk.formatDateLabel(new Date())
-      });
-      window.DigitalFarmRisk.syncOverallRisk();
-      alert('Digital Farm Sync: Checklist submitted successfully. Final Status: ' + statusText.innerText);
-      window.location.href = 'farmer_dashboard.html';
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        alert('Please log in again to continue.');
+        window.location.href = 'farmer_login.html';
+        return;
+      }
+
+      if (submissionCountToday >= dailySubmissionLimit) {
+        showToast('Daily biosecurity checklist limit reached. You can submit it only 3 times today.', 'error');
+        updateSubmissionLimitUI();
+        return;
+      }
+
+      submitAuditBtn.disabled = true;
+      submitAuditBtn.innerText = 'Submitting...';
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/biosecurity/report`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            responses: data,
+            remarks: remarksInput.value.trim(),
+            status: statusText.innerText
+          })
+        });
+
+        const result = await res.json();
+
+        if (!res.ok || !result.success) {
+          throw new Error(result.message || 'Failed to submit biosecurity audit');
+        }
+
+        submissionCountToday = Number(result.data.submissionCountToday || submissionCountToday + 1);
+        persistLocalAuditState();
+        window.DigitalFarmRisk.syncOverallRisk();
+        showToast(
+          `Audit submitted successfully. Final status: ${statusText.innerText}`,
+          'success',
+          function () {
+            window.location.href = 'farmer_dashboard.html';
+          }
+        );
+      } catch (err) {
+        console.error('Biosecurity submit error:', err);
+        showToast(err.message || 'Server error while submitting biosecurity audit.', 'error');
+      } finally {
+        submitAuditBtn.disabled = false;
+        submitAuditBtn.innerText = 'Submit Audit';
+      }
     }
 
     profileMenuButton.addEventListener('click', function (event) {
@@ -648,7 +896,12 @@
       }
     });
 
-    restoreAudit();
+    submitAuditBtn.addEventListener('click', syncData);
+    remarksInput.addEventListener('input', persistLocalAuditState);
+    updateHeaderFromUser();
+    bindToggleButtons();
+    restoreLocalAuditState();
+    fetchPreviousAudit();
     runAI();
   </script>
 

@@ -7,6 +7,7 @@
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="api_cache.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -156,7 +157,23 @@
     .ops-link { display: inline-flex; align-items: center; gap: 8px; color: var(--text-dark); text-decoration: none; font-weight: 800; }
 
     .chart-card { margin-top: 10px; }
-    .external-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; margin-top: 28px; margin-bottom: 28px; }
+    .weather-top { margin-top: 28px; margin-bottom: 28px; }
+    .analytics-slot { margin-top: 28px; margin-bottom: 28px; }
+    .insights-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 28px; margin-bottom: 28px; }
+    .insight-card { padding: 26px 30px 28px; }
+    .insight-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
+    .insight-kicker { font-size: 13px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: #6b84a6; margin-bottom: 12px; }
+    .insight-title { font-size: 26px; line-height: 1.2; margin: 0 0 10px; color: #0f2346; }
+    .insight-copy { color: #60708e; font-size: 15px; line-height: 1.7; margin: 0; }
+    .insight-pill { border-radius: 999px; padding: 12px 18px; font-size: 13px; font-weight: 800; white-space: nowrap; }
+    .insight-pill.analytics { background: #dcfce7; color: #15803d; }
+    .insight-pill.breakdown { background: #fef3c7; color: #b45309; }
+    .analytics-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 22px; margin-bottom: 20px; }
+    .analytics-stat { border-radius: 18px; padding: 16px 18px; background: #f8fbff; border: 1px solid #dbe7f5; }
+    .analytics-stat strong { display: block; font-size: 26px; color: #0f2346; margin-bottom: 6px; }
+    .analytics-stat span { display: block; color: #60708e; font-size: 13px; line-height: 1.5; }
+    .chart-shell { margin-top: 10px; border-radius: 22px; border: 1px solid #dbe7f5; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); padding: 18px 18px 10px; }
+    .insight-footer { margin-top: 20px; color: #60708e; font-size: 14px; line-height: 1.6; }
     .external-form { display: grid; gap: 14px; }
     .external-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
     .external-field label { display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-gray); margin-bottom: 7px; }
@@ -184,6 +201,125 @@
       cursor: pointer;
     }
     .external-save:hover { filter: brightness(1.04); }
+    .weather-card {
+      padding: 0;
+      overflow: hidden;
+      background: linear-gradient(135deg, #edf3ff 0%, #ffffff 100%);
+    }
+    .weather-heading {
+      padding: 22px 24px 0;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      font-size: 14px;
+      font-weight: 800;
+      color: #2f9dff;
+      text-align: center;
+    }
+    .weather-panel {
+      margin: 18px 22px 14px;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 45px rgba(59, 130, 246, 0.18);
+    }
+    .weather-city {
+      background: linear-gradient(180deg, #b95ff1 0%, #8373f4 100%);
+      color: white;
+      padding: 26px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 260px;
+    }
+    .weather-city-name {
+      font-size: 30px;
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      width: 100%;
+      max-width: 100%;
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+    }
+    .weather-city-day { font-size: 24px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .weather-city-date { font-size: 14px; opacity: 0.84; letter-spacing: 0.08em; margin-top: 6px; }
+    .weather-main {
+      background: linear-gradient(90deg, #2e70f4 0%, #2ed1e9 100%);
+      color: white;
+      padding: 24px 28px;
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: center;
+    }
+    .weather-main-copy { display: flex; flex-direction: column; gap: 12px; }
+    .weather-icon-wrap { position: relative; width: 150px; height: 110px; }
+    .weather-sun {
+      position: absolute;
+      right: 22px;
+      top: 8px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #ffe24c;
+      box-shadow: 0 0 0 7px rgba(255, 226, 76, 0.2);
+    }
+    .weather-cloud {
+      position: absolute;
+      left: 22px;
+      bottom: 20px;
+      width: 88px;
+      height: 36px;
+      background: #ffffff;
+      border-radius: 24px;
+    }
+    .weather-cloud::before,
+    .weather-cloud::after {
+      content: '';
+      position: absolute;
+      background: #ffffff;
+      border-radius: 50%;
+    }
+    .weather-cloud::before { width: 38px; height: 38px; left: 12px; top: -18px; }
+    .weather-cloud::after { width: 52px; height: 52px; left: 36px; top: -26px; }
+    .weather-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 18px;
+      height: 4px;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 999px;
+    }
+    .weather-condition-text { font-size: 14px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+    .weather-metrics { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; font-weight: 700; }
+    .weather-metric { display: inline-flex; align-items: center; gap: 6px; }
+    .weather-temp-block { text-align: right; min-width: 150px; }
+    .weather-range { font-size: 20px; font-weight: 700; opacity: 0.95; margin-bottom: 8px; }
+    .weather-current { font-size: 74px; line-height: 0.9; font-weight: 800; display: flex; justify-content: flex-end; align-items: flex-start; gap: 4px; }
+    .weather-current span { font-size: 28px; margin-top: 10px; }
+    .weather-forecast-strip,
+    .weather-meta-strip {
+      margin: 0 22px 14px;
+      border-radius: 20px;
+      background: linear-gradient(90deg, #7288f4 0%, #d35bef 100%);
+      color: white;
+      padding: 18px 20px;
+    }
+    .weather-forecast-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+    .weather-forecast-item { text-align: center; padding: 6px 4px; }
+    .weather-forecast-item strong { display: block; font-size: 12px; letter-spacing: 0.08em; margin-bottom: 10px; }
+    .weather-forecast-item i { font-size: 26px; margin-bottom: 8px; }
+    .weather-forecast-item span { display: block; font-size: 12px; opacity: 0.9; }
+    .weather-meta-strip { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 22px; }
+    .weather-meta-item { text-align: center; padding: 10px 6px; border-radius: 14px; background: rgba(255,255,255,0.08); }
+    .weather-meta-item i { display: block; font-size: 20px; margin-bottom: 8px; }
+    .weather-meta-item strong { display: block; font-size: 11px; letter-spacing: 0.08em; margin-bottom: 4px; }
+    .weather-meta-item span { display: block; font-size: 13px; opacity: 0.95; }
     .factor-list { display: grid; gap: 12px; margin-top: 14px; }
     .factor-item { border: 1px solid var(--border-color); border-radius: 14px; padding: 14px 16px; background: #f8fafc; }
     .factor-item strong { display: block; font-size: 15px; margin-bottom: 4px; }
@@ -193,15 +329,22 @@
 
     @media (max-width: 1180px) {
       .hero-grid, .ops-grid { grid-template-columns: 1fr; }
-      .external-grid { grid-template-columns: 1fr; }
       .summary-grid { grid-template-columns: repeat(3, 1fr); }
+      .insights-grid { grid-template-columns: 1fr; }
+      .weather-panel { grid-template-columns: 1fr; }
+      .weather-city { min-height: 160px; }
+      .weather-main { flex-direction: column; align-items: flex-start; }
+      .weather-temp-block { text-align: left; }
+      .weather-current { justify-content: flex-start; }
     }
 
     @media (max-width: 900px) {
       .navbar { padding: 15px 24px; flex-wrap: wrap; gap: 14px; }
       .nav-links { flex-wrap: wrap; justify-content: flex-end; }
       .summary-grid { grid-template-columns: repeat(2, 1fr); }
+      .analytics-stats { grid-template-columns: 1fr; }
       .issue-banner { flex-direction: column; align-items: flex-start; }
+      .weather-forecast-strip, .weather-meta-strip { grid-template-columns: repeat(3, 1fr); }
     }
 
     @media (max-width: 640px) {
@@ -215,6 +358,9 @@
       .profile-menu { margin-left: 0; }
       .profile-name { display: none; }
       .footer { padding: 40px 20px 20px; }
+      .weather-forecast-strip, .weather-meta-strip { grid-template-columns: repeat(2, 1fr); }
+      .insight-card { padding: 22px 20px 24px; }
+      .insight-top { flex-direction: column; }
     }
   </style>
 </head>
@@ -243,7 +389,11 @@
   </ul>
 </nav>
 
+
 <div class="container">
+  <section class="weather-top">
+    <div class="card" id="weatherCardHost"></div>
+  </section>
   <div class="hero-grid">
     <div class="card risk-card">
       <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px;">
@@ -281,25 +431,25 @@
 
       <div style="margin-top: 22px;">
         <p style="font-size: 13px; opacity: 0.78;">Farm Name</p>
-        <h2 style="font-size: 34px; margin-top: 6px;">Green Valley Mixed Farm</h2>
+        <h2 id="farmName">Loading...</h2>
       </div>
 
       <div class="farm-stats">
         <div class="farm-stat">
           <span>Farm Type</span>
-          <strong>Multi-Livestock</strong>
+          <strong id="farmType">Loading...</strong>
         </div>
         <div class="farm-stat">
           <span>Location</span>
-          <strong>Pune, MH</strong>
+          <strong id="farmLocation">Loading...</strong>
         </div>
         <div class="farm-stat">
-          <span>Active Units</span>
-          <strong id="activeUnitsCount">7</strong>
+          <span>Total Animals</span>
+          <strong id="topTotalAnimalsCount">0</strong>
         </div>
         <div class="farm-stat">
           <span>Animal Types</span>
-          <strong id="animalTypeCount">5</strong>
+          <strong id="animalTypeCount">0</strong>
         </div>
       </div>
     </div>
@@ -308,27 +458,27 @@
   <div class="summary-grid">
     <div class="summary-card">
       <span style="background:#eff6ff; color:#2563eb;"><i class="fa-solid fa-paw"></i></span>
-      <h3 id="totalAnimalsCount">1368</h3>
+      <h3 id="totalAnimalsCount">0</h3>
       <p>Total animals across cow, buffalo, poultry, goat, and pig records</p>
     </div>
     <div class="summary-card">
       <span style="background:#fef3c7; color:#b45309;"><i class="fa-solid fa-stethoscope"></i></span>
-      <h3 id="monitoringCount">31</h3>
+      <h3 id="monitoringCount">0</h3>
       <p>Animals or units under monitoring based on records and AI review</p>
     </div>
     <div class="summary-card">
       <span style="background:#fee2e2; color:#b91c1c;"><i class="fa-solid fa-skull-crossbones"></i></span>
-      <h3 id="mortalityCountSummary">13</h3>
+      <h3 id="mortalityCountSummary">0</h3>
       <p>Mortality cases or severe losses recorded in recent reports</p>
     </div>
     <div class="summary-card">
       <span style="background:#dcfce7; color:#15803d;"><i class="fa-solid fa-syringe"></i></span>
-      <h3 id="vaccinationDueCount">4</h3>
+      <h3 id="vaccinationDueCount">0</h3>
       <p>Vaccination schedules due soon across poultry, buffalo, goat, and pig units</p>
     </div>
     <div class="summary-card">
       <span style="background:#ede9fe; color:#7c3aed;"><i class="fa-solid fa-file-circle-exclamation"></i></span>
-      <h3 id="openComplaintCount">5</h3>
+      <h3 id="openComplaintCount">0</h3>
       <p>Open complaints and incidents still waiting for review or closure</p>
     </div>
   </div>
@@ -357,19 +507,19 @@
             <h4 class="ops-title">Alert and Complaint Snapshot</h4>
             <p class="ops-text">Summary of active risks, complaint submissions, and incident follow-up across different units.</p>
           </div>
-          <span class="ops-badge danger" id="complaintBadge">5 open issues</span>
+          <span class="ops-badge info" id="complaintBadge">Loading...</span>
         </div>
 
         <div class="ops-stats">
-          <div class="ops-stat"><span>Open Complaints</span><strong id="opsOpenComplaints">5</strong></div>
-          <div class="ops-stat"><span>High Priority</span><strong id="opsHighPriority">2</strong></div>
-          <div class="ops-stat"><span>Warnings</span><strong id="opsWarnings">3</strong></div>
+          <div class="ops-stat"><span>Open Complaints</span><strong id="opsOpenComplaints">0</strong></div>
+          <div class="ops-stat"><span>High Priority</span><strong id="opsHighPriority">0</strong></div>
+          <div class="ops-stat"><span>Warnings</span><strong id="opsWarnings">0</strong></div>
         </div>
 
         <div class="ops-list" id="complaintOpsList">
-          <div class="ops-item danger">
-            <strong>Poultry mortality spike reported</strong>
-            <p>Broiler Shed 1 has a high-priority complaint tied to suspected infection and mortality increase.</p>
+          <div class="ops-item info">
+            <strong>Loading complaint snapshot</strong>
+            <p>Fetching live complaint records from your farm workspace.</p>
           </div>
         </div>
 
@@ -386,13 +536,13 @@
             <h4 class="ops-title">Latest AI Health Watch</h4>
             <p class="ops-text">AI scans now reflect different species and areas instead of a poultry-only view.</p>
           </div>
-          <span class="ops-badge warning" id="aiBadge">82/100 top score</span>
+          <span class="ops-badge info" id="aiBadge">Loading...</span>
         </div>
 
         <div class="ops-list" id="aiOpsList">
-          <div class="ops-item warning">
-            <strong>No AI scan yet</strong>
-            <p>Run the AI health check to generate real-time disease likelihood for the shared risk engine.</p>
+          <div class="ops-item info">
+            <strong>Loading AI scans</strong>
+            <p>Fetching live AI diagnosis history for this farmer account.</p>
           </div>
         </div>
 
@@ -407,15 +557,15 @@
           <div>
             <div class="ops-kicker">Biosecurity Audit</div>
             <h4 class="ops-title">Checklist and Risk Status</h4>
-            <p class="ops-text">This status now matches the biosecurity page logic and no longer conflicts with the dashboard summary.</p>
+            <p class="ops-text" id="biosecuritySubtitle">Loading latest checklist status from live records.</p>
           </div>
-          <span class="ops-badge warning" id="biosecurityBadge">High risk</span>
+          <span class="ops-badge info" id="biosecurityBadge">Loading...</span>
         </div>
 
         <div class="ops-list" id="biosecurityOpsList">
           <div class="ops-item info">
-            <strong>No biosecurity audit submitted</strong>
-            <p>Complete the audit checklist so preventive risk becomes part of the shared intelligence score.</p>
+            <strong>Loading biosecurity audit</strong>
+            <p>Fetching the latest checklist submission and computed risk level.</p>
           </div>
         </div>
 
@@ -432,13 +582,13 @@
             <h4 class="ops-title">Multi-Animal Record Activity</h4>
             <p class="ops-text">Updated from the records center with mixed-animal livestock, vaccine, mortality, and complaint logs.</p>
           </div>
-          <span class="ops-badge safe" id="recordsBadge">28 livestock logs</span>
+          <span class="ops-badge info" id="recordsBadge">Loading...</span>
         </div>
 
         <div class="ops-list" id="recordsOpsList">
-          <div class="ops-item safe">
-            <strong>Records center is ready</strong>
-            <p>Population, vaccination, complaint, and AI entries will start driving the multi-factor risk score here.</p>
+          <div class="ops-item info">
+            <strong>Loading record activity</strong>
+            <p>Fetching live livestock, vaccination, and mortality records.</p>
           </div>
         </div>
 
@@ -450,11 +600,51 @@
     </div>
   </section>
 
-  <section class="external-grid">
-    <div class="card">
-      <h3 class="section-title"><i class="fa-solid fa-cloud-sun-rain"></i> Weather and External Factors</h3>
-      <p class="hero-subtext">Update the live environmental conditions that affect the final risk score: weather, government alerts, and nearby infections.</p>
+  <section class="insights-grid">
+    <div class="card insight-card">
+      <div class="insight-top">
+        <div>
+          <div class="insight-kicker">Analytics and Trends</div>
+          <h3 class="insight-title">Farm Risk Trend Activity</h3>
+          <p class="insight-copy">Track the latest risk pattern from overall score movement, animal monitoring, and open issue pressure.</p>
+        </div>
+        <span class="insight-pill analytics" id="analyticsBadge">Live trend</span>
+      </div>
+      <div class="analytics-stats">
+        <div class="analytics-stat">
+          <strong id="analyticsRiskScore">0</strong>
+          <span>Current overall farm risk score.</span>
+        </div>
+        <div class="analytics-stat">
+          <strong id="analyticsMonitoringUnits">0</strong>
+          <span>Units currently under monitoring.</span>
+        </div>
+        <div class="analytics-stat">
+          <strong id="analyticsOpenIssues">0</strong>
+          <span>Open complaints and active alerts.</span>
+        </div>
+      </div>
+      <div class="chart-shell">
+        <canvas id="riskTrendChart" height="90"></canvas>
+      </div>
+      <p class="insight-footer">Use this view to quickly judge whether farm conditions are stabilizing or trending toward intervention.</p>
+    </div>
 
+    <div class="card insight-card">
+      <div class="insight-top">
+        <div>
+          <div class="insight-kicker">Factor Breakdown</div>
+          <h3 class="insight-title">Multi-Factor Score Status</h3>
+          <p class="insight-copy">This section shows the exact components pushing the final alert level right now.</p>
+        </div>
+        <span class="insight-pill breakdown" id="breakdownBadge">Loading...</span>
+      </div>
+      <div class="factor-list" id="factorBreakdownList"></div>
+      <p class="insight-footer">Each factor updates from the same dashboard intelligence used in the main risk score above.</p>
+    </div>
+  </section>
+
+  <div style="display:none;">
       <form id="externalFactorsForm" class="external-form" style="margin-top:18px;">
         <div class="external-form-grid">
           <div class="external-field">
@@ -508,16 +698,6 @@
       </form>
     </div>
 
-    <div class="card">
-      <h3 class="section-title"><i class="fa-solid fa-scale-balanced"></i> Factor Breakdown</h3>
-      <p class="hero-subtext">This is the exact multi-factor intelligence behind the alert score.</p>
-      <div class="factor-list" id="factorBreakdownList"></div>
-    </div>
-  </section>
-
-  <h3 class="section-title"><i class="fa-solid fa-chart-line"></i> Analytics and Trends</h3>
-  <div class="card chart-card">
-    <canvas id="riskTrendChart" height="90"></canvas>
   </div>
 </div>
 
@@ -530,9 +710,355 @@
 
 <script src="risk_engine.js"></script>
 <script>
+  const API_BASE_URL = 'http://localhost:5000/api/v1';
+  let latestBiosecurityChecklist = null;
+  let riskTrendChart = null;
   const btn = document.getElementById('profileMenuButton');
   const dropdown = document.getElementById('profileDropdown');
-  const externalFactorsForm = document.getElementById('externalFactorsForm');
+  const weatherCard = document.getElementById('weatherCardHost');
+  const fallbackLocation = getUserLocationParts();
+const dummyWeatherData = {
+    temperature: 28,
+    humidity: 70,
+    weatherCondition: 'Clear',
+    governmentAlertLevel: 'Low',
+    nearbyInfections: 0,
+    notes: `Typical Mumbai weather used as reliable fallback.`,
+    cityName: fallbackLocation.cityName || 'Mumbai',
+    minTemp: 26,
+    maxTemp: 32,
+    windSpeed: 12,
+    forecast: [
+      { label: 'DAY 1', weatherCondition: 'Clear' },
+      { label: 'DAY 2', weatherCondition: 'Humid' },
+      { label: 'DAY 3', weatherCondition: 'Rainy' },
+      { label: 'DAY 4', weatherCondition: 'Clear' },
+      { label: 'DAY 5', weatherCondition: 'Cloudy' },
+      { label: 'DAY 6', weatherCondition: 'Clear' }
+    ]
+  };
+
+  function normalizeTemperature(value, fallback = 0) {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? Math.round(numeric) : fallback;
+  }
+
+  function normalizeWeatherCondition(condition) {
+    const value = String(condition || '').toLowerCase();
+
+    if (value.includes('rain') || value.includes('drizzle') || value.includes('thunder')) return 'Rainy';
+    if (value.includes('clear')) return 'Clear';
+    if (value.includes('snow') || value.includes('cold')) return 'Cold Stress';
+    if (value.includes('mist') || value.includes('cloud') || value.includes('humid') || value.includes('haze')) return 'Humid';
+    if (value.includes('heat') || value.includes('hot')) return 'Heat Stress';
+    return 'Clear';
+  }
+
+  function mapOpenMeteoWeatherCode(code) {
+    const weatherCode = Number(code);
+
+    if ([95, 96, 99].includes(weatherCode)) return 'Thunderstorm';
+    if ([80, 81, 82, 61, 63, 65, 66, 67, 51, 53, 55, 56, 57].includes(weatherCode)) return 'Rainy';
+    if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) return 'Cold Stress';
+    if ([45, 48].includes(weatherCode)) return 'Humid';
+    if ([1, 2, 3].includes(weatherCode)) return 'Cloudy';
+    if (weatherCode === 0) return 'Clear';
+    return 'Clear';
+  }
+
+  function getWeatherIconClass(condition) {
+    const value = String(condition || '').toLowerCase();
+
+    if (value.includes('rain') || value.includes('drizzle')) return 'fa-solid fa-cloud-rain';
+    if (value.includes('thunder') || value.includes('storm') || value.includes('alert')) return 'fa-solid fa-cloud-bolt';
+    if (value.includes('wind')) return 'fa-solid fa-wind';
+    if (value.includes('cloud') || value.includes('mist') || value.includes('humid') || value.includes('haze')) return 'fa-solid fa-cloud-sun';
+    if (value.includes('cold') || value.includes('snow') || value.includes('cool')) return 'fa-regular fa-snowflake';
+    if (value.includes('heat') || value.includes('hot')) return 'fa-solid fa-temperature-high';
+    return 'fa-solid fa-sun';
+  }
+
+  function buildWeatherForecastMarkup(external) {
+    const condition = normalizeWeatherCondition(external.weatherCondition);
+    const city = external.cityName || fallbackLocation.cityName;
+    const humidity = Number(external.humidity ?? 0);
+    const windSpeed = Number(external.windSpeed ?? 0);
+    const minTemp = Number(external.minTemp ?? external.temperature ?? 0);
+    const maxTemp = Number(external.maxTemp ?? external.temperature ?? 0);
+
+    return [
+      { label: 'NOW', icon: getWeatherIconClass(condition), value: condition },
+      { label: 'MIN', icon: 'fa-solid fa-arrow-down', value: `${minTemp}°` },
+      { label: 'MAX', icon: 'fa-solid fa-arrow-up', value: `${maxTemp}°` },
+      { label: 'WIND', icon: 'fa-solid fa-wind', value: `${windSpeed} km/h` },
+      { label: 'HUM', icon: 'fa-solid fa-droplet', value: `${humidity}%` },
+      { label: 'ZONE', icon: 'fa-solid fa-location-dot', value: city }
+    ];
+  }
+
+function buildWeatherForecastMarkup(external) {
+    const fallbackForecast = dummyWeatherData.forecast;
+
+    const forecastItems = Array.isArray(external.forecast) && external.forecast.length
+      ? external.forecast
+      : fallbackForecast;
+
+    return forecastItems.slice(0, 6).map((item) => {
+      const label = String(item.label || 'DAY').toUpperCase();
+      const rawCondition = item.weatherCondition || item.condition || 'Clear';
+      const condition = normalizeWeatherCondition(rawCondition);
+
+      return `
+        <div class="weather-forecast-item">
+          <strong>${label}</strong>
+          <i class="${getWeatherIconClass(condition)}"></i>
+          <span>${condition}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function renderWeatherData(weather) {
+    console.log('Rendering weather:', weather);
+    const today = new Date();
+    document.getElementById('weatherCityName').textContent = weather.cityName;
+    fitWeatherCityName();
+    document.getElementById('weatherDayLabel').textContent = today.toLocaleDateString(undefined, { weekday: 'long' });
+    document.getElementById('weatherDateLabel').textContent = today.toLocaleDateString('en-GB');
+    document.getElementById('weatherConditionLabel').textContent = weather.weatherCondition;
+    document.getElementById('weatherWindSpeed').textContent = Number.isFinite(weather.windSpeed) ? `${weather.windSpeed} km/h` : `${dummyWeatherData.windSpeed} km/h`;
+    document.getElementById('weatherHumidityLabel').textContent = Number.isFinite(weather.humidity) ? `${weather.humidity}%` : `${dummyWeatherData.humidity}%`;
+    document.getElementById('weatherRangeLabel').textContent = Number.isFinite(weather.minTemp) && Number.isFinite(weather.maxTemp) ? `↓${weather.minTemp} ↑${weather.maxTemp}` : `↓${dummyWeatherData.minTemp} ↑${dummyWeatherData.maxTemp}`;
+    document.getElementById('weatherCurrentTemp').textContent = Number.isFinite(weather.temperature) ? weather.temperature : dummyWeatherData.temperature;
+    document.getElementById('weatherAlertLabel').textContent = weather.governmentAlertLevel || 'Low';
+    document.getElementById('weatherNearbyLabel').textContent = `${weather.nearbyInfections || 0} cases`;
+    document.getElementById('weatherMoodLabel').textContent = weather.weatherCondition;
+    document.getElementById('weatherZoneLabel').textContent = weather.cityName;
+    document.getElementById('weatherRiskLabel').textContent = weather.notes.includes('fallback') ? 'Low' : 'Live';
+    document.getElementById('weatherForecastStrip').innerHTML = buildWeatherForecastMarkup(weather);
+  }
+
+  function getToken() {
+    return localStorage.getItem('token');
+  }
+
+  function fitWeatherCityName() {
+    const cityNameEl = document.getElementById('weatherCityName');
+    if (!cityNameEl) return;
+
+    const defaultSize = 30;
+    const minSize = 14;
+    cityNameEl.style.fontSize = `${defaultSize}px`;
+
+    let currentSize = defaultSize;
+    while (cityNameEl.scrollWidth > cityNameEl.clientWidth && currentSize > minSize) {
+      currentSize -= 1;
+      cityNameEl.style.fontSize = `${currentSize}px`;
+    }
+  }
+
+  function getStoredUser() {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch (error) {
+      console.error('Failed to parse user', error);
+      return null;
+    }
+  }
+
+  function getBrowserPosition() {
+    if (!navigator.geolocation) {
+      return Promise.reject(new Error('Browser geolocation is not supported'));
+    }
+
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => resolve(position.coords),
+        (error) => reject(error),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+      );
+    });
+  }
+
+  function getUserLocationParts(user = getStoredUser()) {
+    if (!user) {
+      return {
+        cityName: 'Farmer Location',
+        addressLabel: 'location unavailable'
+      };
+    }
+
+    const village = String(user.village || '').trim();
+    const district = String(user.district || '').trim();
+    const state = String(user.state || '').trim();
+    const address = String(user.address || '').trim();
+
+    return {
+      cityName: village || district || state || address || 'Farmer Location',
+      addressLabel: [village, district, state].filter(Boolean).join(', ') || address || 'location unavailable'
+    };
+  }
+
+  async function reverseGeocodeOpenMeteo(latitude, longitude) {
+    const response = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&language=en&format=json`);
+    const result = await response.json();
+    const first = Array.isArray(result.results) ? result.results[0] : null;
+
+    return {
+      cityName: first?.name || first?.admin3 || first?.admin2 || first?.admin1 || fallbackLocation.cityName,
+      addressLabel: [first?.name, first?.admin2, first?.admin1, first?.country].filter(Boolean).join(', ') || fallbackLocation.addressLabel
+    };
+  }
+
+  async function geocodeProfileLocationOpenMeteo() {
+    const searchText = fallbackLocation.addressLabel && fallbackLocation.addressLabel !== 'location unavailable'
+      ? fallbackLocation.addressLabel
+      : fallbackLocation.cityName;
+
+    if (!searchText || searchText === 'Farmer Location') {
+      throw new Error('Farmer profile location is unavailable');
+    }
+
+    const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchText)}&count=1&language=en&format=json`);
+    const result = await response.json();
+    const first = Array.isArray(result.results) ? result.results[0] : null;
+
+    if (!first) {
+      throw new Error('Unable to geocode farmer profile location');
+    }
+
+    return {
+      latitude: first.latitude,
+      longitude: first.longitude,
+      cityName: first.name || fallbackLocation.cityName,
+      addressLabel: [first.name, first.admin2, first.admin1, first.country].filter(Boolean).join(', ') || fallbackLocation.addressLabel
+    };
+  }
+
+  async function fetchOpenMeteoWeather(latitude, longitude, locationMeta = {}) {
+    const response = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${encodeURIComponent(latitude)}&longitude=${encodeURIComponent(longitude)}&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=6&timezone=auto`
+    );
+    const result = await response.json();
+
+    if (!response.ok || !result?.current) {
+      throw new Error('Failed to fetch live weather from Open-Meteo');
+    }
+
+    const daily = result.daily || {};
+    const times = Array.isArray(daily.time) ? daily.time : [];
+    const weatherCodes = Array.isArray(daily.weather_code) ? daily.weather_code : [];
+    const maxTemps = Array.isArray(daily.temperature_2m_max) ? daily.temperature_2m_max : [];
+    const minTemps = Array.isArray(daily.temperature_2m_min) ? daily.temperature_2m_min : [];
+
+    return {
+      ...dummyWeatherData,
+      cityName: locationMeta.cityName || fallbackLocation.cityName,
+      addressLabel: locationMeta.addressLabel || fallbackLocation.addressLabel,
+      temperature: normalizeTemperature(result.current.temperature_2m, dummyWeatherData.temperature),
+      humidity: normalizeTemperature(result.current.relative_humidity_2m, dummyWeatherData.humidity),
+      weatherCondition: normalizeWeatherCondition(mapOpenMeteoWeatherCode(result.current.weather_code)),
+      windSpeed: normalizeTemperature(result.current.wind_speed_10m, dummyWeatherData.windSpeed),
+      minTemp: normalizeTemperature(minTemps[0], dummyWeatherData.minTemp),
+      maxTemp: normalizeTemperature(maxTemps[0], dummyWeatherData.maxTemp),
+      notes: `Live weather fetched at login for ${locationMeta.addressLabel || locationMeta.cityName || fallbackLocation.cityName}.`,
+      forecast: times.slice(0, 6).map((time, index) => ({
+        label: new Date(time).toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
+        weatherCondition: mapOpenMeteoWeatherCode(weatherCodes[index]),
+        temperature: normalizeTemperature(maxTemps[index], normalizeTemperature(result.current.temperature_2m, 0))
+      })),
+      fetchedAt: new Date().toISOString()
+    };
+  }
+
+  async function fetchWeatherFromBrowserLocation() {
+    const coords = await getBrowserPosition();
+    const locationMeta = await reverseGeocodeOpenMeteo(coords.latitude, coords.longitude).catch(() => ({
+      cityName: fallbackLocation.cityName,
+      addressLabel: fallbackLocation.addressLabel
+    }));
+
+    return fetchOpenMeteoWeather(coords.latitude, coords.longitude, locationMeta);
+  }
+
+  async function fetchWeatherFromProfileLocation() {
+    const profileLocation = await geocodeProfileLocationOpenMeteo();
+    return fetchOpenMeteoWeather(profileLocation.latitude, profileLocation.longitude, profileLocation);
+  }
+
+  function setProfileHeader() {
+    const user = getStoredUser();
+    if (!user) return;
+
+    const displayName = user.name || user.full_name || user.email || 'Farmer';
+    const firstName = displayName.split(' ')[0];
+    const initial = displayName.trim().charAt(0).toUpperCase() || 'F';
+    const avatarEl = document.querySelector('.profile-avatar');
+
+    document.querySelector('.profile-name').textContent = `Hello, ${firstName}!`;
+    if (avatarEl) {
+      if (user.avatar_url) {
+        avatarEl.textContent = '';
+        avatarEl.style.backgroundImage = `url('${user.avatar_url}')`;
+        avatarEl.style.backgroundSize = 'cover';
+        avatarEl.style.backgroundPosition = 'center';
+        avatarEl.style.backgroundRepeat = 'no-repeat';
+        avatarEl.style.color = 'transparent';
+      } else {
+        avatarEl.textContent = initial;
+        avatarEl.style.backgroundImage = '';
+        avatarEl.style.color = '';
+      }
+    }
+  }
+
+  function initWeatherTemplate() {
+    weatherCard.classList.add('weather-card');
+    weatherCard.innerHTML = `
+      <div class="weather-heading">Live Weather</div>
+      <div class="weather-static-card">
+        <div class="weather-panel">
+          <div class="weather-city">
+            <div class="weather-city-name" id="weatherCityName">${fallbackLocation.cityName}</div>
+            <div>
+              <div class="weather-city-day" id="weatherDayLabel">Sunday</div>
+              <div class="weather-city-date" id="weatherDateLabel">03/04/2026</div>
+            </div>
+          </div>
+          <div class="weather-main">
+            <div class="weather-main-copy">
+              <div class="weather-icon-wrap">
+                <div class="weather-sun"></div>
+                <div class="weather-cloud"></div>
+                <div class="weather-line"></div>
+              </div>
+              <div class="weather-condition-text" id="weatherConditionLabel">Unavailable</div>
+              <div class="weather-metrics">
+                <span class="weather-metric"><i class="fa-solid fa-wind"></i> <span id="weatherWindSpeed">--</span></span>
+                <span class="weather-metric"><i class="fa-solid fa-droplet"></i> <span id="weatherHumidityLabel">--</span></span>
+              </div>
+            </div>
+            <div class="weather-temp-block">
+              <div class="weather-range" id="weatherRangeLabel">Unavailable</div>
+              <div class="weather-current"><span><i class="fa-solid fa-temperature-half"></i></span><strong id="weatherCurrentTemp">--</strong><span>°</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="weather-forecast-strip" id="weatherForecastStrip"></div>
+        <div class="weather-meta-strip">
+          <div class="weather-meta-item"><i class="fa-solid fa-bell"></i><strong>ALERT</strong><span id="weatherAlertLabel">Low</span></div>
+          <div class="weather-meta-item"><i class="fa-solid fa-virus"></i><strong>NEARBY</strong><span id="weatherNearbyLabel">0 cases</span></div>
+          <div class="weather-meta-item"><i class="fa-solid fa-weight-scale"></i><strong>WEIGHT</strong><span>External</span></div>
+          <div class="weather-meta-item"><i class="fa-solid fa-cloud-showers-heavy"></i><strong>MOOD</strong><span id="weatherMoodLabel">Unavailable</span></div>
+          <div class="weather-meta-item"><i class="fa-solid fa-location-dot"></i><strong>ZONE</strong><span id="weatherZoneLabel">${fallbackLocation.cityName}</span></div>
+          <div class="weather-meta-item"><i class="fa-solid fa-shield-heart"></i><strong>RISK</strong><span id="weatherRiskLabel">Unavailable</span></div>
+        </div>
+      </div>
+    `;
+    fitWeatherCityName();
+  }
+
+  window.addEventListener('resize', fitWeatherCityName);
 
   btn.addEventListener('click', function (event) {
     event.stopPropagation();
@@ -545,15 +1071,449 @@
     }
   });
 
-  function renderRiskDashboard() {
+  function populateExternalForm(external) {
+    if (!document.getElementById('temperatureInput')) {
+      return;
+    }
+
+    document.getElementById('temperatureInput').value = external.temperature ?? '';
+    document.getElementById('humidityInput').value = external.humidity ?? '';
+    document.getElementById('weatherConditionInput').value = normalizeWeatherCondition(external.weatherCondition);
+    document.getElementById('governmentAlertInput').value = external.governmentAlertLevel || 'Low';
+    document.getElementById('nearbyInfectionsInput').value = external.nearbyInfections ?? 0;
+    document.getElementById('externalNotesInput').value = external.notes || '';
+  }
+
+  function buildExternalDataFromForm(previous = {}) {
+    if (!document.getElementById('temperatureInput')) {
+      return {
+        ...dummyWeatherData,
+        ...previous
+      };
+    }
+
+    return {
+      ...previous,
+      temperature: Number(document.getElementById('temperatureInput').value || previous.temperature || 0),
+      humidity: Number(document.getElementById('humidityInput').value || previous.humidity || 0),
+      weatherCondition: document.getElementById('weatherConditionInput').value || previous.weatherCondition || 'Clear',
+      governmentAlertLevel: document.getElementById('governmentAlertInput').value || previous.governmentAlertLevel || 'Low',
+      nearbyInfections: Number(document.getElementById('nearbyInfectionsInput').value || previous.nearbyInfections || 0),
+      notes: document.getElementById('externalNotesInput').value.trim() || previous.notes || '',
+      cityName: previous.cityName || dummyWeatherData.cityName,
+      windSpeed: previous.windSpeed ?? 0,
+      minTemp: previous.minTemp ?? previous.temperature ?? 0,
+      maxTemp: previous.maxTemp ?? previous.temperature ?? 0
+    };
+  }
+
+  function normalizeRiskScore(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 0;
+    if (numeric <= 1) return Math.round(numeric * 100);
+    if (numeric <= 100) return Math.round(numeric);
+    return 100;
+  }
+
+  function getArrayPayload(data, preferredKey) {
+    if (Array.isArray(data)) return data;
+    if (!data || typeof data !== 'object') return [];
+    if (preferredKey && Array.isArray(data[preferredKey])) return data[preferredKey];
+
+    const firstArray = Object.values(data).find((value) => Array.isArray(value));
+    return Array.isArray(firstArray) ? firstArray : [];
+  }
+
+  async function fetchApiData(endpoint, options = {}) {
+    const token = getToken();
+
+    if (!token) {
+      throw new Error('Authentication required');
+    }
+
+      const requestHeaders = {
+        Authorization: `Bearer ${token}`,
+        ...(options.headers || {})
+      };
+
+      if (options.body && !(options.body instanceof FormData) && !requestHeaders['Content-Type']) {
+        requestHeaders['Content-Type'] = 'application/json';
+      }
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: options.method || 'GET',
+        headers: requestHeaders,
+        body: options.body
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.message || `Failed to load ${endpoint}`);
+    }
+
+    return result.data;
+  }
+
+  async function fetchGeminiRiskSummary(payload) {
+    const data = await fetchApiData('/ai/risk-summary', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    return data && data.summary ? data.summary : null;
+  }
+
+  async function fetchBiosecurityChecklist() {
+    const payload = await fetchApiData('/biosecurity/checklist');
+    return payload && typeof payload === 'object' ? payload : null;
+  }
+
+  function syncBiosecurityAuditStore(checklist) {
+    const hasChecklistResponses = Boolean(checklist && checklist.responses && typeof checklist.responses === 'object');
+
+    if (!hasChecklistResponses) {
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.biosecurity, null);
+      return;
+    }
+
+    window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.biosecurity, {
+      ...checklist,
+      updatedAt: checklist.updated_at || checklist.created_at || new Date().toISOString(),
+      statusText: `${String(checklist.risk_level || 'Medium')} risk`
+    });
+  }
+
+  function mapPopulationRecord(item) {
+    return {
+      id: item.id,
+      animalType: item.animal_type || 'Unknown',
+      breedName: item.breed_name || 'Unknown',
+      farmUnit: item.farm_unit || 'Unknown',
+      totalAnimals: Number(item.total_animals || 0),
+      mortalityCount: Number(item.mortality_count || 0),
+      currentHealthState: item.current_health_state || 'Healthy',
+      createdAt: item.created_at
+    };
+  }
+
+  function getCurrentPopulationSnapshot(population) {
+    const latestByGroup = new Map();
+
+    population.forEach((record) => {
+      const groupKey = [
+        String(record.animalType || '').trim().toLowerCase(),
+        String(record.farmUnit || '').trim().toLowerCase(),
+        String(record.breedName || '').trim().toLowerCase()
+      ].join('::');
+      const existing = latestByGroup.get(groupKey);
+      const recordTime = toSafeTimestamp(record.createdAt);
+      const existingTime = existing ? toSafeTimestamp(existing.createdAt) : -1;
+
+      if (!existing || recordTime >= existingTime) {
+        latestByGroup.set(groupKey, record);
+      }
+    });
+
+    return Array.from(latestByGroup.values());
+  }
+
+  function mapVaccinationRecord(item) {
+    return {
+      id: item.id,
+      animalType: item.animal_type || 'Unknown',
+      diseaseName: item.disease_name || '',
+      nextDueDate: item.next_due_date || null,
+      dateAdministered: item.date_administered || null,
+      createdAt: item.created_at
+    };
+  }
+
+  function mapComplaintRecord(item) {
+    const status = String(item.status || '').toLowerCase();
+    const isResolved = ['resolved', 'closed', 'done'].includes(status);
+
+    return {
+      id: item.id,
+      incidentType: item.incident_type || item.title || 'Complaint',
+      location: item.location || 'Unknown location',
+      affectedCount: Number(item.affected_count || 0),
+      urgencyShort: String(item.urgency_level || 'Low').split('-')[0].trim(),
+      syncedToFarmer: isResolved,
+      createdAt: item.created_at
+    };
+  }
+
+  function mapAiRecord(item) {
+    return {
+      id: item.id,
+      disease: item.predicted_disease || 'Unknown',
+      animalType: item.animal_type || item.animalType || '',
+      symptoms: item.symptoms || '-',
+      risk: normalizeRiskScore(item.confidence),
+      date: item.created_at,
+      dateISO: item.created_at
+    };
+  }
+
+  function toSafeTimestamp(value) {
+    const timestamp = new Date(value || 0).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  }
+
+  function clampNumber(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function daysUntilFromDate(dateValue, referenceTimestamp) {
+    if (!dateValue) return Infinity;
+    const target = new Date(dateValue);
+    const reference = new Date(referenceTimestamp);
+    if (!Number.isFinite(target.getTime()) || !Number.isFinite(reference.getTime())) return Infinity;
+
+    target.setHours(0, 0, 0, 0);
+    reference.setHours(0, 0, 0, 0);
+    const millisPerDay = 24 * 60 * 60 * 1000;
+    return Math.round((target.getTime() - reference.getTime()) / millisPerDay);
+  }
+
+  function buildLiveRiskTrendData({ summary, complaints, aiHistory, population, vaccinations, biosecurityScore, latestChecklist }) {
+    const toStartOfDay = (timestamp) => {
+      const date = new Date(timestamp);
+      date.setHours(0, 0, 0, 0);
+      return date.getTime();
+    };
+
+    const rawTimestamps = [
+      ...complaints.map((item) => toSafeTimestamp(item.createdAt)),
+      ...aiHistory.map((item) => toSafeTimestamp(item.dateISO || item.date)),
+      ...population.map((item) => toSafeTimestamp(item.createdAt)),
+      ...vaccinations.map((item) => toSafeTimestamp(item.createdAt || item.dateAdministered)),
+      toSafeTimestamp(latestChecklist?.created_at)
+    ].filter((value) => value > 0);
+
+    const dayPoints = Array.from(new Set(rawTimestamps.map((timestamp) => toStartOfDay(timestamp))));
+    const todayStart = toStartOfDay(Date.now());
+    if (!dayPoints.includes(todayStart)) {
+      dayPoints.push(todayStart);
+    }
+
+    const checkpoints = dayPoints.sort((first, second) => first - second).slice(-6);
+
+    if (!checkpoints.length) {
+      return {
+        labels: [summary.updatedLabel],
+        values: [summary.score]
+      };
+    }
+
+    const labels = checkpoints.map((timestamp) => (
+      new Date(timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
+    ));
+
+    const values = checkpoints.map((dayStart, index) => {
+      const dayEnd = dayStart + (24 * 60 * 60 * 1000) - 1;
+
+      const openComplaints = complaints.filter((item) => toSafeTimestamp(item.createdAt) <= dayEnd && !item.syncedToFarmer).length;
+      const highPriorityComplaints = complaints.filter((item) => (
+        toSafeTimestamp(item.createdAt) <= dayEnd &&
+        String(item.urgencyShort || '').toLowerCase() === 'high'
+      )).length;
+
+      const aiMaxRisk = aiHistory
+        .filter((item) => toSafeTimestamp(item.dateISO || item.date) <= dayEnd)
+        .reduce((max, item) => Math.max(max, Number(item.risk || 0)), 0);
+
+      const mortalityCount = population
+        .filter((item) => toSafeTimestamp(item.createdAt) <= dayEnd)
+        .reduce((sum, item) => sum + Number(item.mortalityCount || 0), 0);
+
+      const overdueVaccinations = vaccinations.filter((item) => (
+        toSafeTimestamp(item.createdAt || item.dateAdministered) <= dayEnd &&
+        daysUntilFromDate(item.nextDueDate, dayEnd) <= 0
+      )).length;
+
+      const checklistTimestamp = toSafeTimestamp(latestChecklist?.created_at);
+      const checklistActive = checklistTimestamp > 0 && checklistTimestamp <= dayEnd;
+
+      const complaintPressure = Math.min(30, (openComplaints * 4) + (highPriorityComplaints * 5));
+      const mortalityPressure = Math.min(20, mortalityCount * 2);
+      const vaccinationPressure = Math.min(15, overdueVaccinations * 3);
+      const aiPressure = Math.min(25, Math.round(aiMaxRisk * 0.25));
+      const bioPressure = checklistActive ? Math.round(Number(biosecurityScore || 0) * 0.3) : 0;
+      const externalPressure = index === checkpoints.length - 1 ? Number(summary.factors.external.score || 0) : 0;
+
+      return clampNumber(
+        complaintPressure + mortalityPressure + vaccinationPressure + aiPressure + bioPressure + externalPressure,
+        0,
+        100
+      );
+    });
+
+    values[values.length - 1] = summary.score;
+
+    return { labels, values };
+  }
+
+  function renderRiskTrendChart(trendData) {
+    const chartElement = document.getElementById('riskTrendChart');
+    if (!chartElement) return;
+
+    if (riskTrendChart) {
+      riskTrendChart.destroy();
+    }
+
+    riskTrendChart = new Chart(chartElement, {
+      type: 'line',
+      data: {
+        labels: trendData.labels,
+        datasets: [{
+          label: 'Farm Risk',
+          data: trendData.values,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.10)',
+          fill: true,
+          tension: 0.35
+        }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            grid: { color: '#e2e8f0' }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  function getStatusMeta(status) {
+    const normalized = String(status || '').toUpperCase();
+
+    if (normalized === 'SAFE') {
+      return {
+        badgeText: 'Safe Status',
+        badgeBg: '#dcfce7',
+        badgeColor: '#15803d',
+        iconColor: '#15803d',
+      };
+    }
+
+    if (normalized === 'WATCH') {
+      return {
+        badgeText: 'Watch Status',
+        badgeBg: '#fef3c7',
+        badgeColor: '#b45309',
+        iconColor: '#b45309',
+      };
+    }
+
+    if (normalized === 'RISK') {
+      return {
+        badgeText: 'Risk Status',
+        badgeBg: '#fed7aa',
+        badgeColor: '#c2410c',
+        iconColor: '#c2410c',
+      };
+    }
+
+    return {
+      badgeText: 'Critical Status',
+      badgeBg: '#fee2e2',
+      badgeColor: '#b91c1c',
+      iconColor: '#b91c1c',
+    };
+  }
+
+  function applyGeminiRiskNarrative(summary, narrative) {
+    if (!narrative) return;
+
+    const statusMeta = getStatusMeta(narrative.status || summary.level);
+    const badgeElement = document.getElementById('overallRiskBadge');
+    const reasonsElement = document.getElementById('overallRiskReasons');
+    const iconElement = document.getElementById('riskHeroIcon');
+
+    badgeElement.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> ${statusMeta.badgeText}: ${narrative.headline || summary.badge.uiLabel}`;
+    badgeElement.style.background = statusMeta.badgeBg;
+    badgeElement.style.color = statusMeta.badgeColor;
+    iconElement.style.color = statusMeta.iconColor;
+
+    const lines = [
+      narrative.summary,
+      ...(Array.isArray(narrative.bullets) ? narrative.bullets : []),
+      ...(Array.isArray(narrative.advice) ? narrative.advice : []).map((item) => `Action: ${item}`)
+    ].filter(Boolean).slice(0, 5);
+
+    if (lines.length) {
+      reasonsElement.innerHTML = lines.map((line) => `<p>${line}</p>`).join('');
+    }
+  }
+
+  async function syncRiskEngineStoresFromApi() {
+    const results = await Promise.allSettled([
+      fetchApiData('/animals'),
+      fetchApiData('/vaccinations'),
+      fetchApiData('/complaints'),
+      fetchApiData('/ai/history')
+    ]);
+
+    const [animalsResult, vaccinationsResult, complaintsResult, aiResult] = results;
+
+    if (animalsResult.status === 'fulfilled') {
+      const records = getArrayPayload(animalsResult.value, 'animals').map(mapPopulationRecord);
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.population, records);
+    } else {
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.population, []);
+    }
+
+    if (vaccinationsResult.status === 'fulfilled') {
+      const records = getArrayPayload(vaccinationsResult.value, 'vaccinations').map(mapVaccinationRecord);
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.vaccination, records);
+    } else {
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.vaccination, []);
+    }
+
+    if (complaintsResult.status === 'fulfilled') {
+      const records = getArrayPayload(complaintsResult.value, 'complaints').map(mapComplaintRecord);
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.complaints, records);
+    } else {
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.complaints, []);
+    }
+
+    if (aiResult.status === 'fulfilled') {
+      const records = getArrayPayload(aiResult.value, 'history').map(mapAiRecord);
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.aiHistory, records);
+    } else {
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.aiHistory, []);
+    }
+  }
+
+  async function renderRiskDashboard() {
     const summary = window.DigitalFarmRisk.syncOverallRisk();
     const population = window.DigitalFarmRisk.readStore(window.DigitalFarmRisk.STORAGE_KEYS.population, []);
+    const currentPopulationSnapshot = getCurrentPopulationSnapshot(population);
+    const vaccinations = window.DigitalFarmRisk.readStore(window.DigitalFarmRisk.STORAGE_KEYS.vaccination, []);
     const complaints = window.DigitalFarmRisk.readStore(window.DigitalFarmRisk.STORAGE_KEYS.complaints, []);
     const aiHistory = window.DigitalFarmRisk.readStore(window.DigitalFarmRisk.STORAGE_KEYS.aiHistory, []);
-    const external = window.DigitalFarmRisk.ensureExternalFactors();
+    const external = window.DigitalFarmRisk.readStore(window.DigitalFarmRisk.STORAGE_KEYS.external, dummyWeatherData);
     const recordsSummary = summary.factors.records.summary;
-    const latestAi = summary.factors.ai.latest;
+    const currentTotalAnimals = currentPopulationSnapshot.reduce((sum, record) => sum + Number(record.totalAnimals || 0), 0);
+    const currentMonitoringPopulation = currentPopulationSnapshot.filter((record) =>
+      String(record.currentHealthState || '').toLowerCase().includes('monitor')
+    ).length;
+    const aiFeed = [...aiHistory].sort((first, second) => {
+      const firstTs = new Date(first.dateISO || first.date || 0).getTime();
+      const secondTs = new Date(second.dateISO || second.date || 0).getTime();
+      return secondTs - firstTs;
+    });
+    const latestAi = aiFeed[0] || summary.factors.ai.latest;
     const bioAudit = summary.factors.biosecurity.raw;
+    const today = new Date();
 
     document.getElementById('overallRiskScore').textContent = summary.score;
     document.getElementById('overallRiskUpdated').textContent = summary.updatedLabel;
@@ -563,14 +1523,23 @@
     document.getElementById('overallRiskBar').style.width = `${summary.score}%`;
     document.getElementById('riskHeroIcon').style.color = summary.badge.color;
     document.getElementById('overallRiskReasons').innerHTML = summary.reasons.map((reason) => `<p>${reason}</p>`).join('');
+    document.getElementById('analyticsRiskScore').textContent = summary.score;
+    document.getElementById('analyticsMonitoringUnits').textContent = currentMonitoringPopulation + (latestAi && latestAi.risk >= 50 ? 1 : 0);
+    document.getElementById('analyticsOpenIssues').textContent = complaints.filter((item) => !item.syncedToFarmer).length;
+    document.getElementById('analyticsBadge').textContent = `${summary.level} trend`;
+    document.getElementById('breakdownBadge').textContent = `${Object.keys(summary.factors).length} factors`;
 
-    document.getElementById('totalAnimalsCount').textContent = recordsSummary.totalAnimals || 0;
-    document.getElementById('monitoringCount').textContent = (recordsSummary.monitoringPopulation || 0) + (latestAi && latestAi.risk >= 50 ? 1 : 0);
+    document.getElementById('totalAnimalsCount').textContent = currentTotalAnimals || 0;
+    document.getElementById('monitoringCount').textContent = currentMonitoringPopulation + (latestAi && latestAi.risk >= 50 ? 1 : 0);
     document.getElementById('mortalityCountSummary').textContent = recordsSummary.totalMortality || 0;
     document.getElementById('vaccinationDueCount').textContent = recordsSummary.overdueVaccinations || 0;
     document.getElementById('openComplaintCount').textContent = complaints.filter((item) => !item.syncedToFarmer).length;
-    document.getElementById('activeUnitsCount').textContent = new Set(population.map((item) => item.farmUnit).filter(Boolean)).size || 0;
-    document.getElementById('animalTypeCount').textContent = new Set(population.map((item) => item.animalType).filter(Boolean)).size || 0;
+    
+    document.getElementById('topTotalAnimalsCount').textContent = currentTotalAnimals || 0;
+
+    if (window.farmData) {
+  document.getElementById('animalTypeCount').textContent = window.farmData.animalTypes;
+}
 
     const openComplaints = complaints.filter((item) => !item.syncedToFarmer);
     const highComplaints = complaints.filter((item) => String(item.urgencyShort || '').toLowerCase() === 'high');
@@ -590,11 +1559,12 @@
       </div>
     `;
 
-    document.getElementById('aiBadge').textContent = latestAi ? `${latestAi.risk}/100 top score` : 'No scan yet';
-    document.getElementById('aiOpsList').innerHTML = (aiHistory.slice().reverse().slice(0, 3).map((item) => `
+    const topAiRisk = aiFeed.length ? Math.max(...aiFeed.map((item) => Number(item.risk || 0))) : 0;
+    document.getElementById('aiBadge').textContent = aiFeed.length ? `${topAiRisk}/100 top score` : 'No scan yet';
+    document.getElementById('aiOpsList').innerHTML = (aiFeed.slice(0, 3).map((item) => `
       <div class="ops-item ${item.risk >= 80 ? 'danger' : item.risk >= 50 ? 'warning' : 'safe'}">
         <strong>${item.disease} scan recorded</strong>
-        <p>${(item.animalType || 'Animal').toString().toUpperCase()} check reported ${item.risk}/100 risk with symptoms: ${item.symptoms}</p>
+        <p>${(item.animalType ? item.animalType.toString().toUpperCase() : 'AI')} check reported ${item.risk}/100 risk with symptoms: ${item.symptoms}</p>
       </div>
     `).join('')) || `
       <div class="ops-item warning">
@@ -603,24 +1573,87 @@
       </div>
     `;
 
-    document.getElementById('biosecurityBadge').textContent = summary.factors.biosecurity.label || 'No audit';
-    document.getElementById('biosecurityOpsList').innerHTML = (summary.factors.biosecurity.reasons.slice(0, 3).map((reason) => `
-      <div class="ops-item ${summary.level === 'Critical' ? 'danger' : summary.level === 'High' ? 'warning' : 'safe'}">
-        <strong>${bioAudit ? 'Audit finding' : 'Biosecurity status'}</strong>
-        <p>${reason}</p>
-      </div>
-    `).join('')) || `
-      <div class="ops-item info">
-        <strong>No biosecurity audit submitted</strong>
-        <p>Complete the audit checklist so preventive risk becomes part of the shared intelligence score.</p>
-      </div>
-    `;
+    const biosecurityBadge = document.getElementById('biosecurityBadge');
+    const biosecuritySubtitle = document.getElementById('biosecuritySubtitle');
+    const biosecurityOpsList = document.getElementById('biosecurityOpsList');
+    const liveChecklist = latestBiosecurityChecklist;
+    const hasLiveChecklist = Boolean(liveChecklist && (liveChecklist.created_at || liveChecklist.risk_level || liveChecklist.overall_score !== undefined));
+
+    if (hasLiveChecklist) {
+      const riskText = String(liveChecklist.risk_level || 'MEDIUM').toUpperCase();
+      const normalizedRisk = riskText.includes('CRITICAL')
+        ? 'CRITICAL'
+        : riskText.includes('HIGH')
+          ? 'HIGH'
+          : riskText.includes('LOW')
+            ? 'LOW'
+            : 'MEDIUM';
+
+      const badgeClass = normalizedRisk === 'CRITICAL'
+        ? 'danger'
+        : normalizedRisk === 'HIGH'
+          ? 'warning'
+          : 'safe';
+      const itemClass = normalizedRisk === 'CRITICAL'
+        ? 'danger'
+        : normalizedRisk === 'HIGH'
+          ? 'warning'
+          : 'safe';
+
+      const overallScore = Number.isFinite(Number(liveChecklist.overall_score))
+        ? Number(liveChecklist.overall_score)
+        : summary.factors.biosecurity.score;
+      const sanitationScore = Number.isFinite(Number(liveChecklist.sanitation_score))
+        ? Number(liveChecklist.sanitation_score)
+        : null;
+      const submittedOn = liveChecklist.created_at
+        ? new Date(liveChecklist.created_at).toLocaleString('en-IN')
+        : 'recently';
+      const remainingToday = Number.isFinite(Number(liveChecklist.remainingToday))
+        ? Number(liveChecklist.remainingToday)
+        : null;
+
+      biosecurityBadge.className = `ops-badge ${badgeClass}`;
+      biosecurityBadge.textContent = `${normalizedRisk.toLowerCase()} risk`;
+      biosecuritySubtitle.textContent = `Latest biosecurity checklist is synced from live audit submissions.`;
+      biosecurityOpsList.innerHTML = `
+        <div class="ops-item ${itemClass}">
+          <strong>Latest audit score: ${overallScore}/100</strong>
+          <p>Risk level is ${normalizedRisk.toLowerCase()} based on your most recent checklist submitted on ${submittedOn}.</p>
+        </div>
+        <div class="ops-item ${sanitationScore !== null && sanitationScore < 70 ? 'warning' : 'info'}">
+          <strong>Sanitation score: ${sanitationScore !== null ? `${sanitationScore}/100` : 'N/A'}</strong>
+          <p>Sanitation combines cleaning, tools disinfection, vehicle hygiene, and footbath discipline.</p>
+        </div>
+        <div class="ops-item ${remainingToday === 0 ? 'warning' : 'safe'}">
+          <strong>Daily checklist remaining: ${remainingToday !== null ? remainingToday : 'N/A'}</strong>
+          <p>${remainingToday === 0 ? 'Daily submission limit reached for today.' : 'You can still submit additional checklists today if conditions change.'}</p>
+        </div>
+      `;
+    } else {
+      biosecurityBadge.className = 'ops-badge info';
+      biosecurityBadge.textContent = 'No audit yet';
+      biosecuritySubtitle.textContent = 'No live checklist record was found for this farmer account yet.';
+      biosecurityOpsList.innerHTML = `
+        <div class="ops-item info">
+          <strong>No biosecurity audit submitted</strong>
+          <p>Complete the checklist to generate live risk-level scoring for this section.</p>
+        </div>
+      `;
+    }
+
+    const biosecurityScoreForBreakdown = hasLiveChecklist && Number.isFinite(Number(liveChecklist.overall_score))
+      ? Number(liveChecklist.overall_score)
+      : summary.factors.biosecurity.score;
+    const biosecurityReasonForBreakdown = hasLiveChecklist
+      ? `Latest checklist risk is ${String(liveChecklist.risk_level || 'MEDIUM').toLowerCase()} (${biosecurityScoreForBreakdown}/100).`
+      : (summary.factors.biosecurity.reasons[0] || 'No biosecurity issue logged.');
 
     document.getElementById('recordsBadge').textContent = `${population.length} livestock logs`;
     document.getElementById('recordsOpsList').innerHTML = `
       <div class="ops-item safe">
         <strong>${population.length} population records synced</strong>
-        <p>${recordsSummary.totalAnimals || 0} animals are currently tracked through the records center.</p>
+        <p>${currentTotalAnimals || 0} animals are currently tracked through the records center.</p>
       </div>
       <div class="ops-item ${recordsSummary.overdueVaccinations ? 'warning' : 'info'}">
         <strong>${recordsSummary.overdueVaccinations || 0} overdue vaccinations</strong>
@@ -632,17 +1665,46 @@
       </div>
     `;
 
-    document.getElementById('temperatureInput').value = external.temperature;
-    document.getElementById('humidityInput').value = external.humidity;
-    document.getElementById('weatherConditionInput').value = external.weatherCondition;
-    document.getElementById('governmentAlertInput').value = external.governmentAlertLevel;
-    document.getElementById('nearbyInfectionsInput').value = external.nearbyInfections;
-    document.getElementById('externalNotesInput').value = external.notes || '';
+    const cityName = external.cityName || fallbackLocation.cityName;
+    const lowerTemp = Number.isFinite(Number(external.minTemp)) ? Number(external.minTemp) : null;
+    const upperTemp = Number.isFinite(Number(external.maxTemp)) ? Number(external.maxTemp) : null;
+    const nearbyLabel = `${external.nearbyInfections} ${Number(external.nearbyInfections) === 1 ? 'case' : 'cases'}`;
+    const dayLabel = today.toLocaleDateString(undefined, { weekday: 'long' });
+    const dateLabel = today.toLocaleDateString('en-GB');
+    const hasTemperature = Number.isFinite(Number(external.temperature));
+    const weatherRisk = hasTemperature
+      ? (summary.factors.external.score >= 20 ? 'High' : summary.factors.external.score >= 10 ? 'Watch' : 'Low')
+      : 'Unavailable';
+
+    document.getElementById('weatherCityName').textContent = cityName;
+    fitWeatherCityName();
+    document.getElementById('weatherDayLabel').textContent = dayLabel;
+    document.getElementById('weatherDateLabel').textContent = dateLabel;
+    document.getElementById('weatherConditionLabel').textContent = external.weatherCondition || 'Unavailable';
+    document.getElementById('weatherWindSpeed').textContent =
+  Number.isFinite(Number(external.windSpeed)) ? `${external.windSpeed} km/h` : '--';
+
+document.getElementById('weatherRangeLabel').textContent =
+  `↓${external.minTemp} ↑${external.maxTemp}`;
+    document.getElementById('weatherHumidityLabel').textContent = Number.isFinite(Number(external.humidity)) ? `${external.humidity}%` : '--';
+    document.getElementById('weatherRangeLabel').textContent = Number.isFinite(Number(lowerTemp)) && Number.isFinite(Number(upperTemp)) ? `↓${lowerTemp} ↑${upperTemp}` : 'Unavailable';
+    document.getElementById('weatherCurrentTemp').textContent = hasTemperature ? external.temperature : '--';
+    document.getElementById('weatherAlertLabel').textContent = external.governmentAlertLevel || 'Low';
+    document.getElementById('weatherNearbyLabel').textContent = nearbyLabel;
+    document.getElementById('weatherMoodLabel').textContent = external.weatherCondition || 'Unavailable';
+    document.getElementById('weatherZoneLabel').textContent = cityName;
+    document.getElementById('weatherRiskLabel').textContent = weatherRisk;
+    document.getElementById('weatherForecastStrip').innerHTML = buildWeatherForecastMarkup(external);
+    const weatherNotes = document.getElementById('weatherDummyNotes');
+    if (weatherNotes) {
+      weatherNotes.textContent = external.notes || 'Weather AI notes will appear here.';
+    }
+    populateExternalForm(external);
 
     document.getElementById('factorBreakdownList').innerHTML = `
       <div class="factor-item">
-        <strong>Biosecurity Score: ${summary.factors.biosecurity.score}</strong>
-        <p>${summary.factors.biosecurity.reasons[0] || 'No biosecurity issue logged.'}</p>
+        <strong>Biosecurity Score: ${biosecurityScoreForBreakdown}</strong>
+        <p>${biosecurityReasonForBreakdown}</p>
       </div>
       <div class="factor-item">
         <strong>Animal Health Records: ${summary.factors.records.score}</strong>
@@ -662,53 +1724,179 @@
       </div>
     `;
 
-    return summary;
-  }
+    const geminiPayload = {
+      score: summary.score,
+      level: summary.level,
+      updatedLabel: summary.updatedLabel,
+      reasons: summary.reasons,
+      metrics: {
+        totalAnimals: currentTotalAnimals || 0,
+        totalMortality: recordsSummary.totalMortality || 0,
+        monitoringPopulation: currentMonitoringPopulation || 0,
+        overdueVaccinations: recordsSummary.overdueVaccinations || 0,
+        openComplaints: openComplaints.length,
+        highPriorityComplaints: highComplaints.length,
+        topAiRisk: topAiRisk,
+        biosecurityScore: biosecurityScoreForBreakdown,
+        externalScore: summary.factors.external.score || 0,
+      },
+      latestChecklist: latestBiosecurityChecklist
+        ? {
+            risk_level: latestBiosecurityChecklist.risk_level,
+            overall_score: latestBiosecurityChecklist.overall_score,
+            sanitation_score: latestBiosecurityChecklist.sanitation_score,
+            created_at: latestBiosecurityChecklist.created_at,
+          }
+        : null
+    };
 
-  const dashboardSummary = renderRiskDashboard();
-
-  externalFactorsForm.addEventListener('submit', function(event) {
-    event.preventDefault();
-    window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.external, {
-      temperature: Number(document.getElementById('temperatureInput').value || 0),
-      humidity: Number(document.getElementById('humidityInput').value || 0),
-      weatherCondition: document.getElementById('weatherConditionInput').value,
-      governmentAlertLevel: document.getElementById('governmentAlertInput').value,
-      nearbyInfections: Number(document.getElementById('nearbyInfectionsInput').value || 0),
-      notes: document.getElementById('externalNotesInput').value.trim()
+    const geminiNarrative = await fetchGeminiRiskSummary(geminiPayload).catch((error) => {
+      console.error('Gemini risk summary fetch failed:', error);
+      return null;
     });
 
-    renderRiskDashboard();
-    alert('External factors updated successfully. Final risk score recalculated.');
-  });
+    applyGeminiRiskNarrative(summary, geminiNarrative);
 
-  new Chart(document.getElementById('riskTrendChart'), {
-    type: 'line',
-    data: {
-      labels: ['Mar 8', 'Mar 15', 'Mar 22', 'Mar 29', 'Apr 1', dashboardSummary.updatedLabel],
-      datasets: [{
-        label: 'Farm Risk',
-        data: [32, 41, 48, 54, 59, dashboardSummary.score],
-        borderColor: '#ef4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.10)',
-        fill: true,
-        tension: 0.35
-      }]
-    },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100,
-          grid: { color: '#e2e8f0' }
-        },
-        x: {
-          grid: { display: false }
-        }
-      }
+    const trendData = buildLiveRiskTrendData({
+      summary,
+      complaints,
+      aiHistory,
+      population,
+      vaccinations,
+      biosecurityScore: biosecurityScoreForBreakdown,
+      latestChecklist: latestBiosecurityChecklist
+    });
+
+    return { summary, trendData };
+  }
+
+  initWeatherTemplate();
+  fetchWeather().then(renderWeatherData).catch(console.error);
+async function fetchWeather() {
+    console.log('Fetching live weather via Open-Meteo (direct, no backend deps)...');
+    try {
+      // Priority 1: Browser geolocation -> Open-Meteo
+      const coords = await getBrowserPosition();
+      console.log('Using browser GPS:', coords.latitude, coords.longitude);
+      const locationMeta = await reverseGeocodeOpenMeteo(coords.latitude, coords.longitude).catch(() => fallbackLocation);
+      const weather = await fetchOpenMeteoWeather(coords.latitude, coords.longitude, locationMeta);
+      console.log('Live weather loaded:', weather.weatherCondition, weather.temperature + '°C');
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.external, weather);
+      return weather;
+    } catch (geoError) {
+      console.log('Browser geo failed, using Mumbai fallback:', geoError.message);
+      // Fallback 2: Mumbai (reliable India central)
+      const mumbaiLat = 19.0760;
+      const mumbaiLon = 72.8777;
+      const weather = await fetchOpenMeteoWeather(mumbaiLat, mumbaiLon, {
+        cityName: 'Mumbai',
+        addressLabel: 'Maharashtra, India'
+      });
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.external, weather);
+      return weather;
     }
-  });
+  }
+
+  const externalFactorsForm = document.getElementById('externalFactorsForm');
+  if (externalFactorsForm) {
+    externalFactorsForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const current = window.DigitalFarmRisk.readStore(window.DigitalFarmRisk.STORAGE_KEYS.external, dummyWeatherData);
+      const updated = buildExternalDataFromForm(current);
+
+      window.DigitalFarmRisk.writeStore(window.DigitalFarmRisk.STORAGE_KEYS.external, updated);
+      const dashboardData = await renderRiskDashboard();
+      renderRiskTrendChart(dashboardData.trendData);
+      alert('External factors updated');
+    });
+  }
+
+async function initializeDashboard() {
+    setProfileHeader();
+    // Weather now auto-fetches on template init
+    await syncRiskEngineStoresFromApi().catch((error) => {
+      console.error('Dashboard data sync failed:', error);
+    });
+    latestBiosecurityChecklist = await fetchBiosecurityChecklist().catch((error) => {
+      console.error('Biosecurity checklist fetch failed:', error);
+      return null;
+    });
+    syncBiosecurityAuditStore(latestBiosecurityChecklist);
+    await fetchFarmProfile();
+    const dashboardData = await renderRiskDashboard();
+    renderRiskTrendChart(dashboardData.trendData);
+    
+    // Sync the risk engine health status directly back to the database for admin visibility
+    const summary = window.DigitalFarmRisk.syncOverallRisk();
+    if (summary && summary.level) {
+      try {
+        const token = localStorage.getItem('token');
+        await fetch(`${API_BASE_URL}/farmers/profile`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ health: `${summary.level} Risk` })
+        });
+      } catch(err) { console.error('Failed to sync health status to server:', err); }
+    }
+  }
+
+  initializeDashboard();
+
+  async function fetchFarmProfile() {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      window.location.href = 'farmer_login.html';
+      return null;
+    }
+
+    let farmData = null;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/farmers/profile`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        throw new Error(result.message || 'Failed to load farm profile');
+      }
+
+      const p = result.data || {};
+      farmData = {
+        farmName: p.farm_name || 'Farm Profile Pending',
+        farmType: p.farm_type || 'New Farm Setup',
+        location: [p.state, p.district, p.village].filter(Boolean).join(', ') || 'Location Not Set',
+        activeUnits: 0,
+        animalTypes: 0
+      };
+    } catch (err) {
+      console.error('Farm profile error:', err);
+      farmData = {
+        farmName: 'Farm Profile Pending',
+        farmType: 'New Farm Setup',
+        location: 'Location Not Set',
+        activeUnits: 0,
+        animalTypes: 0
+      };
+    }
+
+    document.getElementById('farmName').textContent = farmData.farmName;
+    document.getElementById('farmType').textContent = farmData.farmType;
+    document.getElementById('farmLocation').textContent = farmData.location;
+
+    const populationStore = window.DigitalFarmRisk.readStore(window.DigitalFarmRisk.STORAGE_KEYS.population, []);
+    const uniqueAnimalTypes = new Set(populationStore.map(item => item.species || item.animal_type)).size;
+    document.getElementById('animalTypeCount').textContent = uniqueAnimalTypes;
+    farmData.animalTypes = uniqueAnimalTypes;
+
+    window.farmData = farmData;
+    return farmData;
+  }
 </script>
 
 </body>

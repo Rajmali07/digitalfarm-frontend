@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin Command Console | Digital Farm</title>
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="api_cache.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
@@ -148,6 +150,44 @@ body {
   text-transform: uppercase;
   letter-spacing: 1.5px;
   font-weight: 800;
+}
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin: 35px 0 15px;
+}
+
+.section-title-row .section-title {
+  margin: 0;
+}
+
+.risk-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.risk-filter-bar select {
+  background: rgba(2, 6, 23, 0.8);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 8px 10px;
+  border-radius: 8px;
+  min-width: 140px;
+}
+
+.risk-filter-btn {
+  background: rgba(8, 145, 178, 0.15);
+  color: #7dd3fc;
+  border: 1px solid rgba(8, 145, 178, 0.35);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .grid {
@@ -399,13 +439,27 @@ th {
 <div class="main">
   <h3 class="section-title">Global Statistics</h3>
   <div class="grid grid-4">
-    <div class="card"><h3>Total Farmers</h3><div class="value" id="totalFarmers">2,500</div></div>
-    <div class="card"><h3>Registered Farms</h3><div class="value" id="registeredFarms">1,800</div></div>
-    <div class="card"><h3>Open Complaints</h3><div class="value red" id="openComplaints">0</div></div>
-    <div class="card"><h3>Pending Feedback</h3><div class="value cyan" id="pendingFeedback">0</div></div>
+    <div class="card"><h3>Total Animals</h3><div class="value" id="totalAnimals">0</div></div>
+    <div class="card"><h3>Registered Farms</h3><div class="value" id="registeredFarms">0</div></div>
+    <div class="card"><h3>Total Complaints</h3><div class="value red" id="openComplaints">0</div></div>
+    <div class="card"><h3>Dead Animals</h3><div class="value red" id="deadAnimals">0</div></div>
   </div>
 
-  <h3 class="section-title">Biosecurity Risk Distribution</h3>
+  <div class="section-title-row">
+    <h3 class="section-title">Biosecurity Risk Distribution</h3>
+    <div class="risk-filter-bar">
+      <select id="riskStateFilter">
+        <option value="">All States</option>
+      </select>
+      <select id="riskDistrictFilter">
+        <option value="">All Districts</option>
+      </select>
+      <select id="riskVillageFilter">
+        <option value="">All Villages</option>
+      </select>
+      <button id="applyRiskFilterBtn" type="button" class="risk-filter-btn">Apply Risk Filter</button>
+    </div>
+  </div>
   <div class="grid grid-3">
     <div class="card"><h3>High Risk Zones</h3><div class="value red" id="highRiskZones">2 Units</div></div>
     <div class="card"><h3>Under Review Cases</h3><div class="value orange" id="underReviewCases">0 Cases</div></div>
@@ -416,8 +470,7 @@ th {
     <div class="card">
       <h3>Live Outbreak Monitor</h3>
       <div id="outbreakMonitor">
-        <div class="alert">Critical: Avian Flu detected in Sector 7G (MP)</div>
-        <div class="alert warning">Warning: Swine Fever quarantine active in UP</div>
+        <div class="alert info">Loading live outbreak signals...</div>
       </div>
     </div>
 
@@ -438,25 +491,19 @@ th {
         <div class="input-group-admin">
           <label>State / Province</label>
           <select id="stateSelect">
-            <option>Chhattisgarh</option>
-            <option>Madhya Pradesh</option>
-            <option>Uttar Pradesh</option>
+            <option value="">Loading...</option>
           </select>
         </div>
         <div class="input-group-admin">
           <label>District</label>
           <select id="districtSelect">
-            <option>Raipur</option>
-            <option>Durg</option>
-            <option>Bilaspur</option>
+            <option value="">Loading...</option>
           </select>
         </div>
         <div class="input-group-admin">
           <label>Village / Block</label>
           <select id="villageSelect">
-            <option>Charoda</option>
-            <option>Bhilai</option>
-            <option>Kumhari</option>
+            <option value="">Loading...</option>
           </select>
         </div>
         <button class="admin-action-btn" type="button">Generate Zone Report</button>
@@ -465,7 +512,7 @@ th {
 
     <div class="card" style="grid-column: span 2;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h3 style="margin:0;">Active Zone Data: <span id="currentZoneText" class="cyan">Chhattisgarh > Raipur > Charoda</span></h3>
+        <h3 style="margin:0;">Active Zone Data: <span id="currentZoneText" class="cyan">Waiting for live data</span></h3>
         <span class="status-pill">System Synced</span>
       </div>
       <table>
@@ -479,23 +526,23 @@ th {
         <tbody>
           <tr>
             <td>Total Registered Farms</td>
-            <td id="zoneFarms">142</td>
+            <td id="zoneFarms">0</td>
             <td>--</td>
           </tr>
           <tr>
             <td>Livestock Population</td>
-            <td id="zoneLivestock">12,400</td>
+            <td id="zoneLivestock">0</td>
             <td><span class="green-text">STABLE</span></td>
           </tr>
           <tr>
             <td>Active Outbreaks</td>
-            <td id="zoneOutbreaks">01</td>
-            <td><span class="red-text" id="zoneOutbreakStatus">CRITICAL</span></td>
+            <td id="zoneOutbreaks">00</td>
+            <td><span class="green-text" id="zoneOutbreakStatus">STABLE</span></td>
           </tr>
           <tr>
             <td>Pending Local Complaints</td>
-            <td id="zoneComplaints">03</td>
-            <td><span class="orange-text" id="zoneComplaintStatus">WATCH</span></td>
+            <td id="zoneComplaints">00</td>
+            <td><span class="green-text" id="zoneComplaintStatus">LOW</span></td>
           </tr>
         </tbody>
       </table>
@@ -525,10 +572,10 @@ th {
     <div id="recentActivityLog">
       <div class="activity-item">
         <div class="activity-copy">
-          <strong>Admin console ready</strong>
-          <span>The dashboard will show complaint and feedback updates here.</span>
+          <strong>Loading recent activity...</strong>
+          <span>Fetching live complaint and feedback events.</span>
         </div>
-        <div class="activity-time">Just now</div>
+        <div class="activity-time">Live</div>
       </div>
     </div>
   </div>
@@ -538,19 +585,263 @@ th {
 <script>
 lucide.createIcons();
 
-const zoneMetrics = {
-  'Chhattisgarh|Raipur|Charoda': { farms: 142, livestock: '12,400', outbreaks: 1, complaints: 3 },
-  'Chhattisgarh|Durg|Bhilai': { farms: 118, livestock: '10,850', outbreaks: 0, complaints: 1 },
-  'Chhattisgarh|Bilaspur|Kumhari': { farms: 96, livestock: '8,300', outbreaks: 1, complaints: 2 },
-  'Madhya Pradesh|Raipur|Charoda': { farms: 88, livestock: '9,900', outbreaks: 2, complaints: 4 },
-  'Uttar Pradesh|Durg|Bhilai': { farms: 104, livestock: '11,200', outbreaks: 1, complaints: 5 }
+const SUPABASE_URL = 'https://ppksvtcjyvtbcrdncvsm.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Mz-YMegdeHu08iMHfaIMwQ_61VvS1XE';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const regionalDataCache = {
+  farmers: [],
+  complaints: [],
+  animals: []
+};
+const riskSourceCache = {
+  complaints: [],
+  feedback: [],
+  farmers: [],
+  animals: [],
+  deadAnimals: 0,
+  vaccinations: [],
+  aiHistory: [],
+  audits: []
 };
 
-function readStore(key) {
-  try {
-    return JSON.parse(localStorage.getItem(key) || '[]');
-  } catch (error) {
+function getToken() {
+  return localStorage.getItem('token');
+}
+
+function getAuthHeaders() {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function fetchApiList(endpoint, preferredKey) {
+  const response = await fetch(`http://localhost:5000/api/v1${endpoint}`, {
+    headers: {
+      ...getAuthHeaders()
+    }
+  });
+
+  const payload = await response.json();
+  if (!response.ok || payload?.success === false) {
+    throw new Error(payload?.message || `Failed to fetch ${endpoint}`);
+  }
+
+  const data = payload?.data;
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (preferredKey && Array.isArray(data?.[preferredKey])) {
+    return data[preferredKey];
+  }
+
+  const firstArray = data && typeof data === 'object'
+    ? Object.values(data).find((value) => Array.isArray(value))
+    : null;
+
+  return Array.isArray(firstArray) ? firstArray : [];
+}
+
+async function fetchApiData(endpoint, options = {}) {
+  const token = getToken();
+  if (!token) throw new Error('Authentication required');
+
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    ...(options.headers || {})
+  };
+
+  if (options.body && !(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const response = await fetch(`http://localhost:5000/api/v1${endpoint}`, {
+    method: options.method || 'GET',
+    headers,
+    body: options.body
+  });
+
+  const payload = await response.json();
+  if (!response.ok || payload?.success === false) {
+    throw new Error(payload?.message || `Failed to fetch ${endpoint}`);
+  }
+
+  return payload?.data;
+}
+
+async function fetchSupabaseRows(tableName, columns) {
+  const { data, error } = await supabaseClient
+    .from(tableName)
+    .select(columns);
+
+  if (error) {
     return [];
+  }
+
+  return Array.isArray(data) ? data : [];
+}
+
+async function fetchGeminiRiskSummary(payload) {
+  try {
+    const data = await fetchApiData('/ai/risk-summary', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    return data?.summary || null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function buildFallbackRiskSummary(scoreSignals = {}, scope = {}) {
+  const highRiskZones = Number(scoreSignals.highRiskZones || 0);
+  const deadAnimals = Number(scoreSignals.deadAnimals || 0);
+  const openComplaints = Number(scoreSignals.openComplaints || 0);
+  const riskyAudits = Number(scoreSignals.riskyAudits || 0);
+  const highAiFlags = Number(scoreSignals.highAiFlags || 0);
+
+  const fallbackScore =
+    Math.min(100, (highRiskZones * 20) + (deadAnimals > 0 ? 20 : 0) + (openComplaints * 5) + (riskyAudits * 7) + (highAiFlags * 4));
+
+  const status = fallbackScore >= 75
+    ? 'CRITICAL'
+    : fallbackScore >= 55
+      ? 'RISK'
+      : fallbackScore >= 30
+        ? 'WATCH'
+        : 'SAFE';
+
+  const scopeLabel = [scope.state, scope.district, scope.village].filter((value) => value && value !== 'ALL').join(' > ');
+
+  return {
+    status,
+    headline: scopeLabel ? `Scoped risk for ${scopeLabel}` : 'Overall live risk summary',
+    summary: `${deadAnimals} dead animals, ${openComplaints} open complaints, ${highRiskZones} high-risk zones, ${riskyAudits} risky biosecurity audits.`
+  };
+}
+
+function sanitizeGeminiRiskSummary(summary, fallback) {
+  if (!summary || typeof summary !== 'object') {
+    return fallback;
+  }
+
+  const text = [summary.summary, summary.headline, ...(Array.isArray(summary.bullets) ? summary.bullets : [])]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  const hasProviderError =
+    text.includes('googlegenerativeaierror') ||
+    text.includes('503') ||
+    text.includes('service unavailable') ||
+    text.includes('temporarily') ||
+    text.includes('v1beta/models');
+
+  if (hasProviderError) {
+    return fallback;
+  }
+
+  return {
+    status: summary.status || fallback.status,
+    headline: summary.headline || fallback.headline,
+    summary: summary.summary || fallback.summary
+  };
+}
+
+function normalizeComplaint(item) {
+  return {
+    id: item.id || item._id || 'Complaint',
+    farmer_id: item.farmer_id || item.farmerId || null,
+    incidentType: item.incident_type || item.incidentType || 'Incident',
+    location: item.location || 'farm unit',
+    animalType: item.animal_type || item.animalType || 'livestock',
+    urgency: item.urgency_level || item.urgency || item.priority || '',
+    status: item.status || '',
+    incidentDate: item.incident_date || item.incidentDate || item.created_at || 'Recent',
+    farmerName: item.farmerName || item.sender || 'farmer'
+  };
+}
+
+function normalizeFeedback(item) {
+  return {
+    id: item.id || 'Feedback',
+    sender: item.sender || 'visitor',
+    subject: item.subject || 'Feedback message',
+    status: item.status || 'Unreviewed',
+    dateLabel: item.created_at || item.dateLabel || 'Recent'
+  };
+}
+
+function buildLatestAnimalSnapshots(animals = []) {
+  const latestByUnit = new Map();
+  animals
+    .slice()
+    .sort((first, second) => new Date(second.created_at || 0) - new Date(first.created_at || 0))
+    .forEach((item) => {
+      const key = [
+        item.farmer_id || 'unknown-farmer',
+        item.animal_type || 'unknown-animal',
+        item.farm_unit || 'unknown-unit'
+      ].join('|');
+
+      if (!latestByUnit.has(key)) {
+        latestByUnit.set(key, item);
+      }
+    });
+
+  return Array.from(latestByUnit.values());
+}
+
+async function fetchTotalAnimals() {
+  const { data, error } = await supabaseClient
+    .from('animals')
+    .select('farmer_id, animal_type, farm_unit, total_animals, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  const latestByUnit = new Map();
+  (data || []).forEach((item) => {
+    const key = [
+      item.farmer_id || 'unknown-farmer',
+      item.animal_type || 'unknown-animal',
+      item.farm_unit || 'unknown-unit'
+    ].join('|');
+
+    if (!latestByUnit.has(key)) {
+      latestByUnit.set(key, Number(item.total_animals || 0));
+    }
+  });
+
+  return Array.from(latestByUnit.values()).reduce((sum, value) => sum + value, 0);
+}
+
+async function fetchDeadAnimals() {
+  try {
+    const { data, error } = await supabaseClient
+      .from('animals')
+      .select('farmer_id, animal_type, farm_unit, mortality_count, created_at')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    const latestByUnit = new Map();
+    (data || []).forEach((item) => {
+      const key = [
+        item.farmer_id || 'unknown-farmer',
+        item.animal_type || 'unknown-animal',
+        item.farm_unit || 'unknown-unit'
+      ].join('|');
+
+      if (!latestByUnit.has(key)) {
+        latestByUnit.set(key, Number(item.mortality_count || 0));
+      }
+    });
+
+    return Array.from(latestByUnit.values()).reduce((sum, value) => sum + value, 0);
+  } catch (error) {
+    return 0;
   }
 }
 
@@ -558,16 +849,347 @@ function formatCount(value) {
   return new Intl.NumberFormat('en-IN').format(value);
 }
 
+function normalizeFarmer(item) {
+  return {
+    id: item.id,
+    state: item.state || '',
+    district: item.district || '',
+    village: item.village || '',
+    farmName: item.farm_name || item.farmName || ''
+  };
+}
+
+function getUniqueSorted(values) {
+  return Array.from(new Set(values.filter(Boolean))).sort((first, second) => first.localeCompare(second));
+}
+
+function fillSelectOptions(selectElement, options) {
+  if (!selectElement) return;
+
+  const current = selectElement.value;
+  selectElement.innerHTML = options.length
+    ? options.map((option) => `<option value="${option}">${option}</option>`).join('')
+    : '<option value="">N/A</option>';
+
+  if (options.includes(current)) {
+    selectElement.value = current;
+  }
+}
+
+function hydrateRegionalSelectors() {
+  const stateSelect = document.getElementById('stateSelect');
+  const districtSelect = document.getElementById('districtSelect');
+  const villageSelect = document.getElementById('villageSelect');
+
+  const allFarmers = regionalDataCache.farmers;
+  const states = getUniqueSorted(allFarmers.map((item) => item.state));
+  fillSelectOptions(stateSelect, states);
+
+  const selectedState = stateSelect.value;
+  const districts = getUniqueSorted(
+    allFarmers
+      .filter((item) => item.state === selectedState)
+      .map((item) => item.district)
+  );
+  fillSelectOptions(districtSelect, districts);
+
+  const selectedDistrict = districtSelect.value;
+  const villages = getUniqueSorted(
+    allFarmers
+      .filter((item) => item.state === selectedState && item.district === selectedDistrict)
+      .map((item) => item.village)
+  );
+  fillSelectOptions(villageSelect, villages);
+}
+
+function computeZoneMetricsFromData(selectedState, selectedDistrict, selectedVillage) {
+  const selectedFarmers = regionalDataCache.farmers.filter((item) => (
+    item.state === selectedState &&
+    item.district === selectedDistrict &&
+    item.village === selectedVillage
+  ));
+
+  const farmerIds = new Set(selectedFarmers.map((item) => item.id));
+  const uniqueFarmNames = new Set(selectedFarmers.map((item) => item.farmName).filter(Boolean));
+
+  const animalsInZone = regionalDataCache.animals.filter((item) => farmerIds.has(item.farmer_id));
+  const latestAnimalsByUnit = new Map();
+  animalsInZone.forEach((item) => {
+    const key = [
+      item.farmer_id || 'unknown-farmer',
+      item.animal_type || 'unknown-animal',
+      item.farm_unit || 'unknown-unit'
+    ].join('|');
+
+    if (!latestAnimalsByUnit.has(key)) {
+      latestAnimalsByUnit.set(key, Number(item.total_animals || 0));
+    }
+  });
+
+  const livestockPopulation = Array.from(latestAnimalsByUnit.values())
+    .reduce((sum, count) => sum + count, 0);
+
+  const complaintsInZone = regionalDataCache.complaints.filter((item) => farmerIds.has(item.farmer_id));
+  const activeOutbreaks = complaintsInZone.filter((item) => {
+    const urgency = String(item.urgency_level || item.priority || '').toUpperCase();
+    const status = String(item.status || '').toUpperCase();
+    return urgency.includes('HIGH') || status.includes('UNDER REVIEW');
+  }).length;
+
+  const pendingLocalComplaints = complaintsInZone.filter((item) => {
+    const status = String(item.status || '').toUpperCase();
+    return !status.includes('SYNCED') && !status.includes('RESOLVED') && !status.includes('CLOSED');
+  }).length;
+
+  return {
+    farms: uniqueFarmNames.size || selectedFarmers.length,
+    livestock: livestockPopulation,
+    outbreaks: activeOutbreaks,
+    complaints: pendingLocalComplaints
+  };
+}
+
+function computeAdminRiskFromData({ farmers, complaints, animals, vaccinations, aiHistory, audits }) {
+  const zoneMap = new Map();
+
+  farmers.forEach((farmer) => {
+    const zoneKey = `${farmer.state || 'N/A'}|${farmer.district || 'N/A'}|${farmer.village || 'N/A'}`;
+    if (!zoneMap.has(zoneKey)) {
+      zoneMap.set(zoneKey, {
+        farmerIds: new Set(),
+        complaints: [],
+        animals: [],
+        vaccinations: [],
+        aiHistory: [],
+        audits: []
+      });
+    }
+    zoneMap.get(zoneKey).farmerIds.add(farmer.id);
+  });
+
+  const latestAnimals = buildLatestAnimalSnapshots(animals);
+
+  zoneMap.forEach((zone) => {
+    const inZone = (row) => zone.farmerIds.has(row.farmer_id);
+    zone.complaints = complaints.filter(inZone);
+    zone.animals = latestAnimals.filter(inZone);
+    zone.vaccinations = vaccinations.filter(inZone);
+    zone.aiHistory = aiHistory.filter(inZone);
+    zone.audits = audits.filter(inZone);
+  });
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let highRiskZones = 0;
+  let underReviewCases = 0;
+  let resolvedCases = 0;
+
+  zoneMap.forEach((zone) => {
+    const totalAnimals = zone.animals.reduce((sum, item) => sum + Number(item.total_animals || 0), 0);
+    const totalDeaths = zone.animals.reduce((sum, item) => sum + Number(item.mortality_count || 0), 0);
+    const mortalityRate = totalAnimals > 0 ? (totalDeaths / totalAnimals) * 100 : 0;
+
+    const highComplaints = zone.complaints.filter((item) => String(item.urgency_level || item.urgency || item.priority || '').toUpperCase().includes('HIGH')).length;
+    const pendingComplaints = zone.complaints.filter((item) => {
+      const status = String(item.status || '').toUpperCase();
+      return status.includes('UNDER REVIEW') || status.includes('PENDING');
+    }).length;
+    const syncedComplaints = zone.complaints.filter((item) => {
+      const status = String(item.status || '').toUpperCase();
+      return status.includes('SYNCED') || status.includes('RESOLVED') || status.includes('CLOSED');
+    }).length;
+
+    const overdueVaccinations = zone.vaccinations.filter((item) => {
+      if (!item.next_due_date) return false;
+      const dueDate = new Date(item.next_due_date);
+      dueDate.setHours(0, 0, 0, 0);
+      return dueDate <= today;
+    }).length;
+
+    const highAiFlags = zone.aiHistory.filter((item) => Number(item.confidence || 0) >= 70).length;
+    const riskyAudits = zone.audits.filter((item) => {
+      const riskLevel = String(item.risk_level || '').toUpperCase();
+      return riskLevel.includes('HIGH') || riskLevel.includes('CRITICAL');
+    }).length;
+    const stableAudits = zone.audits.filter((item) => {
+      const riskLevel = String(item.risk_level || '').toUpperCase();
+      return riskLevel.includes('LOW');
+    }).length;
+
+    let zoneScore = 0;
+    if (totalDeaths > 5) zoneScore += 25;
+    if (mortalityRate > 5) zoneScore += 20;
+    zoneScore += highComplaints * 10;
+    if (highComplaints >= 3) zoneScore += 15;
+    zoneScore += overdueVaccinations * 4;
+    zoneScore += highAiFlags * 5;
+    zoneScore += riskyAudits * 6;
+
+    if (zoneScore >= 60) highRiskZones += 1;
+
+    underReviewCases += pendingComplaints + riskyAudits;
+    resolvedCases += syncedComplaints + stableAudits;
+  });
+
+  return {
+    highRiskZones,
+    underReviewCases,
+    resolvedCases,
+    zoneCount: zoneMap.size
+  };
+}
+
+function fillRiskFilterSelect(selectElement, options, selectedValue, allLabel) {
+  if (!selectElement) return;
+
+  const sorted = Array.from(new Set(options.filter(Boolean))).sort((first, second) => first.localeCompare(second));
+  selectElement.innerHTML = [`<option value="">${allLabel}</option>`, ...sorted.map((value) => `<option value="${value}">${value}</option>`)].join('');
+  if (selectedValue && sorted.includes(selectedValue)) {
+    selectElement.value = selectedValue;
+  }
+}
+
+function refreshRiskFilterOptions() {
+  const stateSelect = document.getElementById('riskStateFilter');
+  const districtSelect = document.getElementById('riskDistrictFilter');
+  const villageSelect = document.getElementById('riskVillageFilter');
+  if (!stateSelect || !districtSelect || !villageSelect) return;
+
+  const selectedState = stateSelect.value;
+  const selectedDistrict = districtSelect.value;
+  const selectedVillage = villageSelect.value;
+  const farmers = riskSourceCache.farmers;
+
+  fillRiskFilterSelect(stateSelect, farmers.map((item) => item.state), selectedState, 'All States');
+
+  const scopedByState = stateSelect.value
+    ? farmers.filter((item) => item.state === stateSelect.value)
+    : farmers;
+  fillRiskFilterSelect(districtSelect, scopedByState.map((item) => item.district), selectedDistrict, 'All Districts');
+
+  const scopedByDistrict = districtSelect.value
+    ? scopedByState.filter((item) => item.district === districtSelect.value)
+    : scopedByState;
+  fillRiskFilterSelect(villageSelect, scopedByDistrict.map((item) => item.village), selectedVillage, 'All Villages');
+}
+
+async function applyRiskScopeAnalysis() {
+  const state = document.getElementById('riskStateFilter')?.value || '';
+  const district = document.getElementById('riskDistrictFilter')?.value || '';
+  const village = document.getElementById('riskVillageFilter')?.value || '';
+
+  const scopedFarmers = riskSourceCache.farmers.filter((item) => {
+    if (state && item.state !== state) return false;
+    if (district && item.district !== district) return false;
+    if (village && item.village !== village) return false;
+    return true;
+  });
+  const scopedFarmerIds = new Set(scopedFarmers.map((item) => item.id));
+
+  const scopedComplaints = riskSourceCache.complaints.filter((item) => scopedFarmerIds.has(item.farmer_id));
+  const scopedAnimals = riskSourceCache.animals.filter((item) => scopedFarmerIds.has(item.farmer_id));
+  const scopedVaccinations = riskSourceCache.vaccinations.filter((item) => scopedFarmerIds.has(item.farmer_id));
+  const scopedAiHistory = riskSourceCache.aiHistory.filter((item) => scopedFarmerIds.has(item.farmer_id));
+  const scopedAudits = riskSourceCache.audits.filter((item) => scopedFarmerIds.has(item.farmer_id));
+
+  const riskSnapshot = computeAdminRiskFromData({
+    farmers: scopedFarmers,
+    complaints: scopedComplaints,
+    animals: scopedAnimals,
+    vaccinations: scopedVaccinations,
+    aiHistory: scopedAiHistory,
+    audits: scopedAudits
+  });
+
+  const underReviewComplaints = scopedComplaints.filter((item) => {
+    const statusText = String(item.status || '').toUpperCase();
+    const urgencyText = String(item.urgency || '').toUpperCase();
+    return statusText.includes('UNDER REVIEW') || statusText.includes('PENDING') || urgencyText.includes('HIGH');
+  }).length;
+  const syncedComplaints = scopedComplaints.filter((item) => {
+    const statusText = String(item.status || '').toUpperCase();
+    return statusText.includes('SYNCED') || statusText.includes('RESOLVED') || statusText.includes('CLOSED');
+  }).length;
+  const openComplaints = scopedComplaints.filter((item) => !String(item.status || '').toUpperCase().includes('SYNCED')).length;
+  const incidentMix = new Set(scopedComplaints.map((item) => item.incidentType).filter(Boolean)).size;
+
+  document.getElementById('highRiskZones').textContent = `${riskSnapshot.highRiskZones} Units`;
+  document.getElementById('underReviewCases').textContent = `${Math.max(underReviewComplaints, riskSnapshot.underReviewCases)} Cases`;
+  document.getElementById('resolvedCases').textContent = `${Math.max(syncedComplaints, riskSnapshot.resolvedCases)} Cases`;
+  document.getElementById('freshComplaints').textContent = openComplaints;
+  document.getElementById('syncedGuidance').textContent = syncedComplaints;
+  document.getElementById('incidentMix').textContent = incidentMix;
+  document.getElementById('complaintAlertCount').textContent = openComplaints;
+
+  const scoreSignals = {
+    totalAnimals: scopedAnimals.reduce((sum, item) => sum + Number(item.total_animals || 0), 0),
+    deadAnimals: scopedAnimals.reduce((sum, item) => sum + Number(item.mortality_count || 0), 0),
+    totalComplaints: scopedComplaints.length,
+    openComplaints,
+    syncedComplaints,
+    highRiskZones: riskSnapshot.highRiskZones,
+    underReviewCases: Math.max(underReviewComplaints, riskSnapshot.underReviewCases),
+    resolvedCases: Math.max(syncedComplaints, riskSnapshot.resolvedCases),
+    overdueVaccinations: scopedVaccinations.filter((item) => {
+      if (!item.next_due_date) return false;
+      const due = new Date(item.next_due_date);
+      const now = new Date();
+      due.setHours(0, 0, 0, 0);
+      now.setHours(0, 0, 0, 0);
+      return due <= now;
+    }).length,
+    highAiFlags: scopedAiHistory.filter((item) => Number(item.confidence || 0) >= 70).length,
+    riskyAudits: scopedAudits.filter((item) => {
+      const riskLevel = String(item.risk_level || '').toUpperCase();
+      return riskLevel.includes('HIGH') || riskLevel.includes('CRITICAL');
+    }).length
+  };
+
+  const fallbackSummary = buildFallbackRiskSummary(scoreSignals, {
+    state: state || 'ALL',
+    district: district || 'ALL',
+    village: village || 'ALL'
+  });
+
+  const geminiRiskSummaryRaw = await fetchGeminiRiskSummary({
+    scope: {
+      state: state || 'ALL',
+      district: district || 'ALL',
+      village: village || 'ALL'
+    },
+    scoreSignals,
+    reasons: [
+      `${scopedAnimals.reduce((sum, item) => sum + Number(item.mortality_count || 0), 0)} dead animals from latest records`,
+      `${openComplaints} unresolved complaints`,
+      `${riskSnapshot.highRiskZones} high-risk zones in selected scope`,
+      `${scopedVaccinations.length} vaccination logs`,
+      `${scopedAiHistory.length} AI diagnosis records`,
+      `${scopedAudits.length} biosecurity audits`
+    ],
+    level: riskSnapshot.highRiskZones > 2 ? 'High' : riskSnapshot.highRiskZones > 0 ? 'Medium' : 'Low'
+  });
+
+  const geminiRiskSummary = sanitizeGeminiRiskSummary(geminiRiskSummaryRaw, fallbackSummary);
+
+  renderOutbreakMonitor(scopedComplaints, riskSourceCache.feedback, geminiRiskSummary);
+  renderRecentActivity(scopedComplaints, riskSourceCache.feedback);
+}
+
 function updateZoneTable() {
   const state = document.getElementById('stateSelect').value;
   const district = document.getElementById('districtSelect').value;
   const village = document.getElementById('villageSelect').value;
-  const selectedKey = `${state}|${district}|${village}`;
-  const zoneData = zoneMetrics[selectedKey] || { farms: 72, livestock: '6,800', outbreaks: 0, complaints: 1 };
+  const hasSelection = Boolean(state && district && village);
+  const zoneData = hasSelection
+    ? computeZoneMetricsFromData(state, district, village)
+    : { farms: 0, livestock: 0, outbreaks: 0, complaints: 0 };
 
-  document.getElementById('currentZoneText').textContent = `${state} > ${district} > ${village}`;
+  document.getElementById('currentZoneText').textContent = hasSelection
+    ? `${state} > ${district} > ${village}`
+    : 'No zone selected';
   document.getElementById('zoneFarms').textContent = formatCount(zoneData.farms);
-  document.getElementById('zoneLivestock').textContent = zoneData.livestock;
+  document.getElementById('zoneLivestock').textContent = formatCount(zoneData.livestock);
   document.getElementById('zoneOutbreaks').textContent = String(zoneData.outbreaks).padStart(2, '0');
   document.getElementById('zoneOutbreakStatus').textContent = zoneData.outbreaks > 0 ? 'CRITICAL' : 'STABLE';
   document.getElementById('zoneOutbreakStatus').className = zoneData.outbreaks > 0 ? 'red-text' : 'green-text';
@@ -576,7 +1198,28 @@ function updateZoneTable() {
   document.getElementById('zoneComplaintStatus').className = zoneData.complaints > 2 ? 'orange-text' : 'green-text';
 }
 
-function renderOutbreakMonitor(complaints, feedback) {
+async function loadRegionalCommandData() {
+  const [farmersRes, complaintsRes, animalsRes] = await Promise.allSettled([
+    fetchApiList('/admin/farmers').then((rows) => rows.map(normalizeFarmer)),
+    fetchApiList('/complaints'),
+    supabaseClient
+      .from('animals')
+      .select('farmer_id, animal_type, farm_unit, total_animals, created_at')
+      .order('created_at', { ascending: false })
+  ]);
+
+  regionalDataCache.farmers = farmersRes.status === 'fulfilled' ? farmersRes.value : [];
+  regionalDataCache.complaints = complaintsRes.status === 'fulfilled' ? complaintsRes.value : [];
+  regionalDataCache.animals = (animalsRes.status === 'fulfilled' && !animalsRes.value.error)
+    ? (animalsRes.value.data || [])
+    : [];
+
+  if (regionalDataCache.farmers.length) {
+    hydrateRegionalSelectors();
+  }
+}
+
+function renderOutbreakMonitor(complaints, feedback, overallRiskSummary) {
   const outbreakMonitor = document.getElementById('outbreakMonitor');
   const urgentComplaints = complaints
     .filter((item) => String(item.urgency || '').toLowerCase().includes('high'))
@@ -597,6 +1240,13 @@ function renderOutbreakMonitor(complaints, feedback) {
 
   if (!markup.length) {
     markup.push('<div class="alert info">No urgent field escalations right now. Complaint and feedback queues are stable.</div>');
+  }
+
+  if (overallRiskSummary) {
+    const status = String(overallRiskSummary.status || 'WATCH').toUpperCase();
+    const line = overallRiskSummary.summary || overallRiskSummary.headline || 'Live risk summary generated from multi-source data.';
+    const alertClass = status === 'SAFE' ? 'alert info' : status === 'WATCH' ? 'alert warning' : 'alert';
+    markup.unshift(`<div class="${alertClass}">Overall Risk (${status}): ${line}</div>`);
   }
 
   outbreakMonitor.innerHTML = markup.join('');
@@ -624,9 +1274,9 @@ function renderRecentActivity(complaints, feedback) {
 
   if (!entries.length) {
     entries.push({
-      title: 'Admin console ready',
-      copy: 'Complaint and feedback updates will appear here once records are submitted.',
-      time: 'Just now'
+      title: 'No recent live activity',
+      copy: 'No complaint or feedback records were returned from live sources.',
+      time: 'Live'
     });
   }
 
@@ -641,48 +1291,95 @@ function renderRecentActivity(complaints, feedback) {
   `).join('');
 }
 
-function renderDashboardMetrics() {
-  const complaints = readStore('farmerComplaints');
-  const feedback = readStore('siteFeedback');
-  const overallRisk = window.DigitalFarmRisk.syncOverallRisk();
-  const openComplaints = complaints.filter((item) => !String(item.status || '').includes('SYNCED')).length;
-  const syncedComplaints = complaints.filter((item) => String(item.status || '').includes('SYNCED')).length;
-  const underReviewComplaints = complaints.filter((item) => String(item.status || '').includes('UNDER REVIEW') || String(item.status || '').includes('HIGH')).length;
+async function renderDashboardMetrics() {
+  const [
+    complaintsRes,
+    feedbackRes,
+    farmersRes,
+    animalsRes,
+    deadAnimalsRes,
+    vaccinationsRes,
+    aiHistoryRes,
+    auditsRes
+  ] = await Promise.allSettled([
+    fetchApiList('/complaints').then((list) => list.map(normalizeComplaint)),
+    fetchApiList('/feedback').then((list) => list.map(normalizeFeedback)),
+    fetchApiList('/admin/farmers').then((list) => (list || []).map(normalizeFarmer)),
+    fetchTotalAnimals(),
+    fetchDeadAnimals(),
+    fetchSupabaseRows('vaccinations', 'farmer_id, next_due_date, created_at'),
+    fetchSupabaseRows('ai_diagnosis', 'farmer_id, confidence, predicted_disease, created_at'),
+    fetchSupabaseRows('biosecurity_audits', 'farmer_id, risk_level, overall_score, created_at')
+  ]);
+
+  const complaints = complaintsRes.status === 'fulfilled' ? complaintsRes.value : [];
+  const feedback = feedbackRes.status === 'fulfilled' ? feedbackRes.value : [];
+  const farmers = farmersRes.status === 'fulfilled' ? farmersRes.value : [];
+  const totalAnimals = animalsRes.status === 'fulfilled' ? animalsRes.value : 0;
+  const deadAnimals = deadAnimalsRes.status === 'fulfilled' ? deadAnimalsRes.value : 0;
+  const vaccinations = vaccinationsRes.status === 'fulfilled' ? vaccinationsRes.value : [];
+  const aiHistory = aiHistoryRes.status === 'fulfilled' ? aiHistoryRes.value : [];
+  const audits = auditsRes.status === 'fulfilled' ? auditsRes.value : [];
+
+  const animalsForRisk = await fetchSupabaseRows('animals', 'farmer_id, animal_type, farm_unit, total_animals, mortality_count, created_at');
+  riskSourceCache.complaints = complaints;
+  riskSourceCache.feedback = feedback;
+  riskSourceCache.farmers = farmers;
+  riskSourceCache.animals = animalsForRisk;
+  riskSourceCache.deadAnimals = deadAnimals;
+  riskSourceCache.vaccinations = vaccinations;
+  riskSourceCache.aiHistory = aiHistory;
+  riskSourceCache.audits = audits;
+
+  const uniqueFarmNames = new Set(
+    farmers
+      .map((item) => String(item.farm_name || item.farmName || '').trim())
+      .filter(Boolean)
+  );
+
+  const totalComplaints = complaints.length;
   const pendingFeedback = feedback.filter((item) => item.status === 'Unreviewed').length;
   const reviewedFeedback = feedback.filter((item) => item.status === 'Reviewed').length;
-  const highRiskZones = overallRisk.level === 'Critical' ? 3 : overallRisk.level === 'High' ? 2 : 1;
-  const incidentMix = new Set(complaints.map((item) => item.incidentType).filter(Boolean)).size;
   const feedbackProgress = feedback.length ? Math.round((reviewedFeedback / feedback.length) * 100) : 0;
 
-  document.getElementById('totalFarmers').textContent = formatCount(2500);
-  document.getElementById('registeredFarms').textContent = formatCount(1800);
-  document.getElementById('openComplaints').textContent = openComplaints;
-  document.getElementById('pendingFeedback').textContent = pendingFeedback;
-  document.getElementById('highRiskZones').textContent = `${highRiskZones} Units`;
-  document.getElementById('underReviewCases').textContent = `${underReviewComplaints} Cases`;
-  document.getElementById('resolvedCases').textContent = `${syncedComplaints + reviewedFeedback} Cases`;
-  document.getElementById('freshComplaints').textContent = openComplaints;
+  document.getElementById('totalAnimals').textContent = formatCount(totalAnimals);
+  document.getElementById('registeredFarms').textContent = formatCount(uniqueFarmNames.size || farmers.length || 0);
+  document.getElementById('openComplaints').textContent = totalComplaints;
+  document.getElementById('deadAnimals').textContent = formatCount(deadAnimals);
+  document.getElementById('freshComplaints').textContent = 0;
   document.getElementById('awaitingFeedback').textContent = pendingFeedback;
-  document.getElementById('syncedGuidance').textContent = syncedComplaints;
-  document.getElementById('incidentMix').textContent = incidentMix;
-  document.getElementById('complaintAlertCount').textContent = openComplaints;
+  document.getElementById('syncedGuidance').textContent = 0;
+  document.getElementById('incidentMix').textContent = 0;
+  document.getElementById('complaintAlertCount').textContent = 0;
   document.getElementById('feedbackFollowupCount').textContent = pendingFeedback;
   document.getElementById('reviewedFeedbackCount').textContent = reviewedFeedback;
   document.getElementById('feedbackProgressBar').style.width = `${feedbackProgress}%`;
 
-  renderOutbreakMonitor(complaints, feedback);
-  renderRecentActivity(complaints, feedback);
-
-  const currentMonitor = document.getElementById('outbreakMonitor');
-  currentMonitor.insertAdjacentHTML('afterbegin', `<div class="alert info">Shared farm risk is currently <strong>${overallRisk.level}</strong> at score ${overallRisk.score}/100.</div>`);
+  refreshRiskFilterOptions();
+  await applyRiskScopeAnalysis();
 }
 
 document.querySelectorAll('.input-group-admin select').forEach((select) => {
   select.addEventListener('change', updateZoneTable);
 });
 
+document.getElementById('riskStateFilter')?.addEventListener('change', refreshRiskFilterOptions);
+document.getElementById('riskDistrictFilter')?.addEventListener('change', refreshRiskFilterOptions);
+document.getElementById('applyRiskFilterBtn')?.addEventListener('click', () => {
+  applyRiskScopeAnalysis().catch((error) => {
+    console.error('Failed to apply risk scope filter:', error);
+  });
+});
+
 updateZoneTable();
-renderDashboardMetrics();
+loadRegionalCommandData()
+  .then(() => updateZoneTable())
+  .catch((error) => {
+    console.error('Failed to load regional command data:', error);
+  });
+renderDashboardMetrics().catch((error) => {
+  console.error('Failed to render admin dashboard metrics:', error);
+});
 </script>
 
 </body>

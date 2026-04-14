@@ -6,6 +6,7 @@
   <title>Farmer Profile | Digital Farm</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="api_cache.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -160,18 +161,18 @@
   <div class="container">
     <div class="header-flex">
       <h1 class="page-title">My Profile</h1>
-      <button class="btn-edit"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
+      <button class="btn-edit" type="button"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
     </div>
 
     <div class="profile-card">
       <div class="user-info-section">
         <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300" class="profile-avatar" alt="Farmer Avatar">
         <div class="user-meta">
-          <h2>Rajesh Kumar</h2>
-          <p>Farmer ID: <span class="farmer-id-tag">FMR-7782-990-2026</span></p>
-          <p>Member Since: 11/07/2025</p>
+          <h2 id="name">Loading...</h2>
+          <p>Farmer ID: <span id="farmerId" class="farmer-id-tag"></span></p>
+          <p id="memberSince"></p>
           <div style="margin-top: 10px;">
-            <span class="risk-indicator"><i class="fa-solid fa-shield-virus"></i> Risk Status: Moderate</span>
+            <span class="risk-indicator"><i class="fa-solid fa-shield-virus"></i> <span id="riskStatus">Health Status: N/A</span></span>
           </div>
         </div>
       </div>
@@ -179,21 +180,25 @@
       <div class="info-grid">
         <div class="field-group">
           <label>Email Address</label>
-          <div class="data-box">raj@gmail.com</div>
+          <div class="data-box" id="email"></div>
         </div>
         <div class="field-group">
           <label>Phone Number</label>
-          <div class="data-box">+91 70671 74287</div>
+          <div class="data-box" id="phone"></div>
         </div>
 
         <div class="field-group full-width">
           <label>Farm Address</label>
-          <div class="data-box">Village Charoda, Raipur, Chhattisgarh</div>
+          <div class="data-box" id="address"></div>
         </div>
 
         <div class="field-group">
+          <label>Farm Name</label>
+          <div class="data-box" id="farmName"></div>
+        </div>
+        <div class="field-group">
           <label>Livestock Category</label>
-          <div class="data-box"><i class="fa-solid fa-paw"></i> Multi-Livestock (Cow, Buffalo, Poultry, Goat, Pig)</div>
+          <div class="data-box" id="farmType"></div>
         </div>
         <div class="field-group">
           <label>Verification Status</label>
@@ -204,11 +209,23 @@
 
         <div class="field-group">
           <label>Total Farm Area (Acre)</label>
-          <div class="data-box">4.5 Acres</div>
+          <div class="data-box" id="farmArea"></div>
         </div>
         <div class="field-group">
-          <label>Compliance Points</label>
-          <div class="data-box" style="color: #6366f1;">850 Points</div>
+          <label>State</label>
+          <div class="data-box" id="state"></div>
+        </div>
+        <div class="field-group">
+          <label>District</label>
+          <div class="data-box" id="district"></div>
+        </div>
+        <div class="field-group">
+          <label>Village</label>
+          <div class="data-box" id="village"></div>
+        </div>
+        <div class="field-group">
+          <label>Role</label>
+          <div class="data-box" id="role"></div>
         </div>
       </div>
     </div>
@@ -221,9 +238,12 @@
   <p style="text-align:center; padding-top:20px; font-size:12px;">&copy; 2026 Digital Farm | Built for Farmers</p>
 </footer>
 
+  <script src="risk_engine.js"></script>
   <script>
     const profileMenuButton = document.getElementById('profileMenuButton');
     const profileDropdown = document.getElementById('profileDropdown');
+    const profileImage = document.querySelector('.profile-avatar');
+    const profileAvatarSmall = document.querySelector('.profile-avatar-small');
 
     profileMenuButton.addEventListener('click', function (event) {
       event.stopPropagation();
@@ -239,6 +259,124 @@
     document.querySelector('.btn-edit').addEventListener('click', function () {
       window.location.href = 'farmer_edit_profile.html';
     });
+    const API_BASE_URL = 'http://localhost:5000/api/v1';
+    const getStoredProfilePhotoKey = (profileId) => `profile_photo_${profileId}`;
+
+    const applyStoredPhoto = (profileId) => {
+      const storedPhoto = localStorage.getItem(getStoredProfilePhotoKey(profileId));
+      if (!storedPhoto) return;
+
+      profileImage.src = storedPhoto;
+      profileAvatarSmall.innerText = '';
+      profileAvatarSmall.style.backgroundImage = `url('${storedPhoto}')`;
+      profileAvatarSmall.style.backgroundSize = 'cover';
+      profileAvatarSmall.style.backgroundPosition = 'center';
+      profileAvatarSmall.style.backgroundRepeat = 'no-repeat';
+      profileAvatarSmall.style.color = 'transparent';
+    };
+
+    const applyProfilePhotoUrl = (photoUrl) => {
+      if (!photoUrl) return;
+      profileImage.src = photoUrl;
+      profileAvatarSmall.innerText = '';
+      profileAvatarSmall.style.backgroundImage = `url('${photoUrl}')`;
+      profileAvatarSmall.style.backgroundSize = 'cover';
+      profileAvatarSmall.style.backgroundPosition = 'center';
+      profileAvatarSmall.style.backgroundRepeat = 'no-repeat';
+      profileAvatarSmall.style.color = 'transparent';
+    };
+
+    const setText = (id, value) => {
+      document.getElementById(id).innerText = value || 'N/A';
+    };
+
+    const formatDate = (value) => {
+      if (!value) return 'N/A';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString();
+    };
+
+    const buildAddress = (profile) => {
+      const detailedAddress = [
+        profile.address,
+        profile.village,
+        profile.district,
+        profile.state
+      ].filter(Boolean);
+
+      return detailedAddress.length ? detailedAddress.join(', ') : 'N/A';
+    };
+
+    async function fetchProfile() {
+      const token = localStorage.getItem('token');
+
+      if (!token) {
+        window.location.href = 'farmer_login.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/farmers/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const result = await res.json();
+
+        if (!res.ok || !result.success) {
+          throw new Error(result.message || 'Failed to fetch profile');
+        }
+
+        const p = result.data;
+        const displayName = p.name || 'Farmer';
+        const initials = displayName.trim().charAt(0).toUpperCase() || 'F';
+
+        document.querySelector('.profile-name').innerText = `Hello, ${displayName.split(' ')[0]}!`;
+        profileAvatarSmall.innerText = initials;
+        profileAvatarSmall.style.backgroundImage = '';
+        profileAvatarSmall.style.color = '';
+        setText('name', displayName);
+        setText('farmerId', p.id ? p.id.slice(0, 8).toUpperCase() : null);
+        document.getElementById('memberSince').innerText = `Member Since: ${formatDate(p.created_at)}`;
+        setText('email', p.email);
+        setText('phone', p.phone);
+        setText('address', buildAddress(p));
+        setText('farmName', p.farm_name);
+        setText('farmType', p.farm_type);
+        setText('farmArea', p.farm_area);
+        setText('state', p.state);
+        setText('district', p.district);
+        setText('village', p.village);
+        setText('role', p.role);
+        
+        const riskIndicator = document.querySelector('.risk-indicator');
+        if (window.DigitalFarmRisk) {
+          const summary = window.DigitalFarmRisk.syncOverallRisk();
+          if (summary && summary.badge) {
+            document.getElementById('riskStatus').innerText = `Health Status: ${summary.level} Risk`;
+            riskIndicator.style.background = summary.badge.bg;
+            riskIndicator.style.color = summary.badge.color;
+            riskIndicator.style.borderColor = summary.badge.color;
+          } else {
+            document.getElementById('riskStatus').innerText = `Health Status: ${p.health || 'N/A'}`;
+          }
+        } else {
+          document.getElementById('riskStatus').innerText = `Health Status: ${p.health || 'N/A'}`;
+        }
+
+        if (p.avatar_url) {
+          applyProfilePhotoUrl(p.avatar_url);
+        } else if (p.id) {
+          applyStoredPhoto(p.id);
+        }
+      } catch (err) {
+        console.error('Profile fetch error:', err);
+        alert('Unable to load profile data. Please log in again.');
+      }
+    }
+
+    fetchProfile();
   </script>
 
 </body>

@@ -6,6 +6,7 @@
   <title>Feedback Review | Digital Farm Admin</title>
 
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="api_cache.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -185,7 +186,6 @@
     .status-unreviewed { color: var(--danger); font-weight: 700; }
     .impact-score { font-weight: 800; color: var(--admin-primary); }
     .btn-view { color: var(--admin-primary); text-decoration: none; font-weight: 700; cursor: pointer; }
-    .hidden { display: none; }
     .review-layout {
       display: grid;
       grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.9fr);
@@ -335,9 +335,9 @@
 <div class="main">
   <h3 class="section-title">Feedback Analytics</h3>
   <div class="stats-row">
-    <div class="stat-card"><i data-lucide="inbox"></i><h2 id="statTotal">4</h2><p>Total Feedback</p></div>
-    <div class="stat-card"><i data-lucide="clock-3"></i><h2 id="statUnreviewed" style="color: var(--danger);">2</h2><p>Pending Review</p></div>
-    <div class="stat-card"><i data-lucide="badge-check"></i><h2 id="statReviewed">2</h2><p>Processed</p></div>
+    <div class="stat-card"><i data-lucide="inbox"></i><h2 id="statTotal">0</h2><p>Total Feedback</p></div>
+    <div class="stat-card"><i data-lucide="clock-3"></i><h2 id="statUnreviewed" style="color: var(--danger);">0</h2><p>Pending Review</p></div>
+    <div class="stat-card"><i data-lucide="badge-check"></i><h2 id="statReviewed">0</h2><p>Processed</p></div>
     <div class="stat-card"><i data-lucide="star"></i><h2 id="statAverage">0.0</h2><p>Avg Impact Score</p></div>
   </div>
 
@@ -379,77 +379,12 @@
 <script>
   lucide.createIcons();
 
-  const defaultFeedbackData = [
-    {
-      id: 'FDB-9001',
-      status: 'Reviewed',
-      sender: 'Raj Mali',
-      email: 'raj@example.com',
-      subject: 'Cleaning protocol suggestion',
-      message: 'Please add a clearer cleaning checklist for large mixed-animal sheds and show it in the help area.',
-      impactScore: 9,
-      adminNotes: 'High-value suggestion. Keep for next process update.',
-      submittedAt: '2026-03-15T10:20:00',
-      dateLabel: '15/03/2026'
-    },
-    {
-      id: 'FDB-9002',
-      status: 'Reviewed',
-      sender: 'Asha Gupta',
-      email: 'asha@example.com',
-      subject: 'Alert response feedback',
-      message: 'The alert color coding is good, but I need more guidance on what to do after seeing a yellow warning.',
-      impactScore: 6,
-      adminNotes: 'Add practical next-step guidance to alert cards.',
-      submittedAt: '2026-03-15T12:10:00',
-      dateLabel: '15/03/2026'
-    },
-    {
-      id: 'FDB-9003',
-      status: 'Unreviewed',
-      sender: 'Raj Mali',
-      email: 'raj@example.com',
-      subject: 'Visitor control issue',
-      message: 'The visitor control section should be easier to find from the dashboard.',
-      impactScore: 4,
-      adminNotes: '',
-      submittedAt: '2026-03-15T13:45:00',
-      dateLabel: '15/03/2026'
-    },
-    {
-      id: 'FDB-9004',
-      status: 'Unreviewed',
-      sender: 'Vikas Rao',
-      email: 'vikas@example.com',
-      subject: 'Vaccination reminder request',
-      message: 'Please send clearer reminder prompts for vaccines that are due in the next 7 days.',
-      impactScore: 8,
-      adminNotes: '',
-      submittedAt: '2026-03-15T16:00:00',
-      dateLabel: '15/03/2026'
-    }
-  ];
-
+  const API_URL = "http://localhost:5000/api/v1/feedback";
+  let feedbackData = [];
   let activeFilter = 'all';
   let activeFeedbackId = null;
-  let feedbackData = loadFeedbackData();
-
-  function loadFeedbackData() {
-    try {
-      const stored = JSON.parse(localStorage.getItem('siteFeedback') || '[]');
-      if (stored.length) {
-        return stored.map(normalizeFeedbackRecord);
-      }
-    } catch (error) {
-      console.warn('Unable to read saved feedback records.', error);
-    }
-
-    localStorage.setItem('siteFeedback', JSON.stringify(defaultFeedbackData));
-    return defaultFeedbackData.map(normalizeFeedbackRecord);
-  }
 
   function normalizeFeedbackRecord(item) {
-    const submittedAt = item.submittedAt || new Date().toISOString();
     return {
       id: item.id,
       status: item.status || 'Unreviewed',
@@ -457,15 +392,11 @@
       email: item.email || 'Not provided',
       subject: item.subject || 'Untitled feedback',
       message: item.message || 'No detailed message provided.',
-      impactScore: Number(item.impactScore || item.score || 5),
-      adminNotes: item.adminNotes || '',
-      submittedAt,
-      dateLabel: item.dateLabel || item.date || new Date(submittedAt).toLocaleDateString('en-GB')
+      impact_score: Number(item.impact_score ?? 0),
+      admin_notes: item.admin_notes || '',
+      created_at: item.created_at || new Date().toISOString(),
+      dateLabel: new Date(item.created_at || Date.now()).toLocaleDateString('en-GB')
     };
-  }
-
-  function persistFeedbackData() {
-    localStorage.setItem('siteFeedback', JSON.stringify(feedbackData));
   }
 
   function updateStats() {
@@ -473,7 +404,7 @@
     const pending = feedbackData.filter((item) => item.status === 'Unreviewed').length;
     const reviewed = feedbackData.filter((item) => item.status === 'Reviewed').length;
     const average = total
-      ? (feedbackData.reduce((sum, item) => sum + Number(item.impactScore || 0), 0) / total).toFixed(1)
+      ? (feedbackData.reduce((sum, item) => sum + Number(item.impact_score || 0), 0) / total).toFixed(1)
       : '0.0';
 
     document.getElementById('statTotal').textContent = total;
@@ -485,6 +416,7 @@
   function renderTable(data) {
     const tableBody = document.getElementById('tableBody');
     tableBody.innerHTML = '';
+
     if (!data.length) {
       tableBody.innerHTML = `
         <tr>
@@ -497,27 +429,16 @@
     data.forEach((item) => {
       const statusClass = item.status === 'Reviewed' ? 'status-reviewed' : 'status-unreviewed';
       tableBody.innerHTML += `
-        <tr class="feedback-row" data-status="${item.status}">
+        <tr>
           <td class="${statusClass}">${item.status}</td>
           <td style="font-weight:700;">${item.sender}</td>
           <td style="color:var(--text-dim)">${item.subject}</td>
-          <td class="impact-score">${item.impactScore}</td>
-          <td>${item.dateLabel}</td>
+          <td class="impact-score">${item.impact_score}</td>
+          <td>${new Date(item.created_at).toLocaleDateString()}</td>
           <td><span class="btn-view" onclick="viewDetails('${item.id}')">View</span></td>
         </tr>
       `;
     });
-  }
-
-  function filterTable(status, btn) {
-    activeFilter = status;
-    document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    applyFilters();
-  }
-
-  function searchTable() {
-    applyFilters();
   }
 
   function applyFilters() {
@@ -534,6 +455,17 @@
     renderTable(filtered);
   }
 
+  function filterTable(status, btn) {
+    activeFilter = status;
+    document.querySelectorAll('.tab-btn').forEach((tabBtn) => tabBtn.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilters();
+  }
+
+  function searchTable() {
+    applyFilters();
+  }
+
   function viewDetails(id) {
     const item = feedbackData.find((entry) => entry.id === id);
     if (!item) {
@@ -541,7 +473,6 @@
     }
 
     activeFeedbackId = id;
-    localStorage.setItem('activeFeedbackId', id);
 
     document.getElementById('detailContent').innerHTML = `
       <div class="detail-grid">
@@ -576,47 +507,90 @@
       </div>
       <label for="impactScore">Impact Score</label>
       <select id="impactScore">
-        <option value="2" ${item.impactScore === 2 ? 'selected' : ''}>2 - Low impact</option>
-        <option value="4" ${item.impactScore === 4 ? 'selected' : ''}>4 - Minor improvement</option>
-        <option value="6" ${item.impactScore === 6 ? 'selected' : ''}>6 - Useful recommendation</option>
-        <option value="8" ${item.impactScore === 8 ? 'selected' : ''}>8 - High-value issue</option>
-        <option value="10" ${item.impactScore === 10 ? 'selected' : ''}>10 - Critical feedback</option>
+        <option value="2" ${item.impact_score === 2 ? 'selected' : ''}>2 - Low impact</option>
+        <option value="4" ${item.impact_score === 4 ? 'selected' : ''}>4 - Minor improvement</option>
+        <option value="6" ${item.impact_score === 6 ? 'selected' : ''}>6 - Useful recommendation</option>
+        <option value="8" ${item.impact_score === 8 ? 'selected' : ''}>8 - High-value issue</option>
+        <option value="10" ${item.impact_score === 10 ? 'selected' : ''}>10 - Critical feedback</option>
       </select>
       <label for="adminNotes">Admin Notes</label>
-      <textarea id="adminNotes" placeholder="Add follow-up notes or action items...">${item.adminNotes}</textarea>
+      <textarea id="adminNotes" placeholder="Add follow-up notes or action items...">${item.admin_notes}</textarea>
       <button type="button" onclick="saveFeedbackReview()">Mark Reviewed & Save</button>
     `;
   }
 
-  function saveFeedbackReview() {
+  async function saveFeedbackReview() {
     if (!activeFeedbackId) {
       return;
     }
 
-    const feedbackIndex = feedbackData.findIndex((item) => item.id === activeFeedbackId);
-    if (feedbackIndex === -1) {
-      return;
+    const impactScore = Number(document.getElementById('impactScore').value);
+    const adminNotes = document.getElementById('adminNotes').value.trim();
+
+    try {
+      const response = await fetch(`${API_URL}/${activeFeedbackId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          status: 'Reviewed',
+          impact_score: impactScore,
+          admin_notes: adminNotes
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Unable to save feedback review.');
+      }
+
+      const index = feedbackData.findIndex((item) => item.id === activeFeedbackId);
+      if (index !== -1) {
+        feedbackData[index] = normalizeFeedbackRecord(result.data);
+      }
+
+      updateStats();
+      applyFilters();
+      viewDetails(activeFeedbackId);
+      alert('Feedback review saved successfully.');
+    } catch (error) {
+      console.error(error);
+      alert(error.message || 'Unable to save feedback review.');
     }
-
-    feedbackData[feedbackIndex].impactScore = Number(document.getElementById('impactScore').value);
-    feedbackData[feedbackIndex].adminNotes = document.getElementById('adminNotes').value.trim();
-    feedbackData[feedbackIndex].status = 'Reviewed';
-
-    persistFeedbackData();
-    updateStats();
-    applyFilters();
-    viewDetails(activeFeedbackId);
-    alert('Feedback review saved successfully.');
   }
 
-  updateStats();
-  applyFilters();
+  async function fetchFeedback() {
+    try {
+      const response = await fetch(API_URL);
+      const result = await response.json();
 
-  const savedFeedbackId = localStorage.getItem('activeFeedbackId');
-  const initialFeedback = feedbackData.find((item) => item.id === savedFeedbackId) || feedbackData[0];
-  if (initialFeedback) {
-    viewDetails(initialFeedback.id);
+      if (!response.ok) {
+        throw new Error(result.message || 'Unable to load feedback.');
+      }
+
+      feedbackData = (result.data || []).map(normalizeFeedbackRecord);
+      updateStats();
+      applyFilters();
+
+      const initialFeedback = feedbackData[0];
+      if (initialFeedback) {
+        viewDetails(initialFeedback.id);
+      }
+    } catch (error) {
+      console.error(error);
+      feedbackData = [];
+      updateStats();
+      applyFilters();
+    }
   }
+
+  window.filterTable = filterTable;
+  window.searchTable = searchTable;
+  window.viewDetails = viewDetails;
+  window.saveFeedbackReview = saveFeedbackReview;
+  window.addEventListener('load', fetchFeedback);
 </script>
 
 </body>

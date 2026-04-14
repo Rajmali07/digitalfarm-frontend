@@ -6,6 +6,7 @@
   <title>Edit Profile | Digital Farm</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="api_cache.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
@@ -291,42 +292,61 @@
       <div class="info-grid">
         <div class="field-group">
           <label>Full Name</label>
-          <input type="text" class="form-input" value="Rajesh Kumar" required>
+          <input type="text" class="form-input" id="name" required>
         </div>
         <div class="field-group">
           <label>Phone Number</label>
-          <input type="tel" class="form-input" value="+91 70671 74287" required>
+          <input type="tel" class="form-input" id="phone" required>
         </div>
         <div class="field-group full-width">
           <label>Email Address (Primary)</label>
-          <input type="email" class="form-input" value="raj@gmail.com" required>
+          <input type="email" class="form-input" id="email" required>
         </div>
         <div class="field-group full-width">
           <label>Farm Address / Location</label>
-          <input type="text" class="form-input" value="Village Charoda, Raipur, Chhattisgarh" required>
+          <input type="text" class="form-input" id="address">
+        </div>
+        <div class="field-group">
+          <label>Farm Name</label>
+          <input type="text" class="form-input" id="farmName">
         </div>
         <div class="field-group">
           <label>Livestock Category</label>
-          <select class="form-input">
-            <option value="multi" selected>Multi-Livestock Farm</option>
-            <option value="cattle">Cattle (Cow/Buffalo)</option>
-            <option value="poultry">Poultry (Chicken/Duck)</option>
-            <option value="goat-sheep">Goat/Sheep Farm</option>
-            <option value="swine">Swine (Pig Farm)</option>
-            <option value="other">Other</option>
+          <select class="form-input" id="farmType">
+            <option value="">Select livestock category</option>
+            <option value="Poultry">Poultry</option>
+            <option value="Dairy">Dairy</option>
+            <option value="Goat Farming">Goat Farming</option>
+            <option value="Mixed Livestock">Mixed Livestock</option>
           </select>
         </div>
         <div class="field-group">
           <label>Total Farm Area (Acres)</label>
-          <input type="number" class="form-input" value="4.5" step="0.1">
+          <input type="number" class="form-input" id="farmArea" min="0" step="0.1">
+        </div>
+        <div class="field-group">
+          <label>State</label>
+          <input type="text" class="form-input" id="state">
+        </div>
+        <div class="field-group">
+          <label>District</label>
+          <input type="text" class="form-input" id="district">
+        </div>
+        <div class="field-group">
+          <label>Village</label>
+          <input type="text" class="form-input" id="village">
+        </div>
+        <div class="field-group">
+          <label>Health Status</label>
+          <input type="text" class="form-input" id="health">
         </div>
         <div class="field-group">
           <label>Farmer ID (Fixed)</label>
-          <input type="text" class="form-input" value="FMR-7782-990-2026" disabled>
+          <input type="text" class="form-input" id="farmerId" disabled>
         </div>
         <div class="field-group">
           <label>Registration Date</label>
-          <input type="text" class="form-input" value="11/07/2025" disabled>
+          <input type="text" class="form-input" id="registrationDate" disabled>
         </div>
       </div>
 
@@ -349,6 +369,8 @@
     const profileDropdown = document.getElementById('profileDropdown');
     const imageInput = document.getElementById('imageInput');
     const previewImg = document.getElementById('previewImg');
+    let selectedPhotoDataUrl = '';
+    let currentAvatarUrl = '';
 
     profileMenuButton.addEventListener('click', function (event) {
       event.stopPropagation();
@@ -361,22 +383,171 @@
       }
     });
 
+    const getStoredProfilePhotoKey = (profileId) => `profile_photo_${profileId}`;
+
+    const applyProfilePhoto = (photoUrl) => {
+      if (!photoUrl) return;
+      previewImg.setAttribute('src', photoUrl);
+
+      const navbarAvatar = document.querySelector('.profile-avatar');
+      navbarAvatar.innerText = '';
+      navbarAvatar.style.backgroundImage = `url('${photoUrl}')`;
+      navbarAvatar.style.backgroundSize = 'cover';
+      navbarAvatar.style.backgroundPosition = 'center';
+      navbarAvatar.style.backgroundRepeat = 'no-repeat';
+      navbarAvatar.style.color = 'transparent';
+    };
+
     imageInput.addEventListener('change', function () {
       const file = this.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = function (e) {
-          previewImg.setAttribute('src', e.target.result);
+          selectedPhotoDataUrl = e.target.result;
+          applyProfilePhoto(selectedPhotoDataUrl);
         };
         reader.readAsDataURL(file);
       }
     });
 
-    document.getElementById('editProfileForm').addEventListener('submit', function (e) {
+    const API_BASE_URL = 'http://localhost:5000/api/v1';
+    const editProfileForm = document.getElementById('editProfileForm');
+    const saveButton = editProfileForm.querySelector('.btn-save');
+
+    const formFields = {
+      name: document.getElementById('name'),
+      phone: document.getElementById('phone'),
+      email: document.getElementById('email'),
+      address: document.getElementById('address'),
+      farm_name: document.getElementById('farmName'),
+      farm_type: document.getElementById('farmType'),
+      farm_area: document.getElementById('farmArea'),
+      state: document.getElementById('state'),
+      district: document.getElementById('district'),
+      village: document.getElementById('village'),
+      health: document.getElementById('health')
+    };
+
+    const formatDate = (value) => {
+      if (!value) return '';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString();
+    };
+
+    const fillForm = (profile) => {
+      formFields.name.value = profile.name || '';
+      formFields.phone.value = profile.phone || '';
+      formFields.email.value = profile.email || '';
+      formFields.address.value = profile.address || '';
+      formFields.farm_name.value = profile.farm_name || '';
+      formFields.farm_type.value = profile.farm_type || '';
+      formFields.farm_area.value = profile.farm_area || '';
+      formFields.state.value = profile.state || '';
+      formFields.district.value = profile.district || '';
+      formFields.village.value = profile.village || '';
+      formFields.health.value = profile.health || '';
+
+      const displayName = profile.name || 'Farmer';
+      const initials = displayName.trim().charAt(0).toUpperCase() || 'F';
+      document.querySelector('.profile-name').innerText = `Hello, ${displayName.split(' ')[0]}!`;
+      const storedPhoto = localStorage.getItem(getStoredProfilePhotoKey(profile.id));
+      const navbarAvatar = document.querySelector('.profile-avatar');
+      navbarAvatar.innerText = initials;
+      navbarAvatar.style.backgroundImage = '';
+      navbarAvatar.style.color = '';
+      document.getElementById('farmerId').value = profile.id ? profile.id.slice(0, 8).toUpperCase() : '';
+      document.getElementById('registrationDate').value = formatDate(profile.created_at);
+
+      currentAvatarUrl = profile.avatar_url || '';
+      selectedPhotoDataUrl = currentAvatarUrl;
+
+      if (currentAvatarUrl) {
+        applyProfilePhoto(currentAvatarUrl);
+      } else if (storedPhoto) {
+        selectedPhotoDataUrl = storedPhoto;
+        applyProfilePhoto(storedPhoto);
+      }
+    };
+
+    const getToken = () => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'farmer_login.html';
+        return null;
+      }
+      return token;
+    };
+
+    async function loadProfile() {
+      const token = getToken();
+      if (!token) return;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/farmers/profile`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
+
+        const result = await res.json();
+
+        if (!res.ok || !result.success) {
+          throw new Error(result.message || 'Failed to fetch profile');
+        }
+
+        fillForm(result.data);
+      } catch (error) {
+        console.error('Profile load error:', error);
+        alert('Unable to load your profile for editing.');
+      }
+    }
+
+    editProfileForm.addEventListener('submit', async function (e) {
       e.preventDefault();
-      alert('Digital Farm Sync: Profile information has been updated successfully.');
-      window.location.href = 'farmer_profile.html';
+
+      const token = getToken();
+      if (!token) return;
+
+      const payload = Object.fromEntries(
+        Object.entries(formFields).map(([key, element]) => [key, element.value.trim()])
+      );
+      payload.avatar_url = selectedPhotoDataUrl || currentAvatarUrl || null;
+
+      saveButton.disabled = true;
+      saveButton.innerText = 'Saving...';
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/farmers/profile`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await res.json();
+
+        if (!res.ok || !result.success) {
+          throw new Error(result.message || 'Failed to update profile');
+        }
+
+        if (selectedPhotoDataUrl && result.data?.id) {
+          localStorage.setItem(getStoredProfilePhotoKey(result.data.id), selectedPhotoDataUrl);
+        }
+        localStorage.setItem('user', JSON.stringify(result.data));
+        alert('Profile updated successfully.');
+        window.location.href = 'farmer_profile.html';
+      } catch (error) {
+        console.error('Profile update error:', error);
+        alert(error.message || 'Unable to save profile changes.');
+      } finally {
+        saveButton.disabled = false;
+        saveButton.innerText = 'Save & Sync Profile';
+      }
     });
+
+    loadProfile();
   </script>
 
 </body>

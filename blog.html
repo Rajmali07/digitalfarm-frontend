@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Farm | Community & Blog</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="api_cache.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -21,15 +22,35 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
         .navbar {
-            position: sticky; top: 0; width: 100%;
+            position: sticky;
+            top: 0;
+            width: 100%;
             background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--glass-border);
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 18px 60px; z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 60px;
+            z-index: 1000;
         }
-        .logo { font-size: 24px; font-weight: 800; color: var(--primary); display: flex; align-items: center; gap: 10px; }
-        .nav-links { display: flex; gap: 12px; list-style: none; align-items: center; }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 12px;
+            list-style: none;
+            align-items: center;
+        }
+
         .nav-links li a {
             display: inline-flex;
             align-items: center;
@@ -44,14 +65,25 @@
             line-height: 1;
             transition: background-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
         }
-        .nav-links li a:hover { color: #dbeafe; background: rgba(255, 255, 255, 0.06); }
+
+        .nav-links li a:hover {
+            color: #dbeafe;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
         .nav-links li a.active {
             color: #ffffff;
             font-weight: 700;
             background: rgba(255, 255, 255, 0.1);
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
         }
-        .menu-toggle { display: none; font-size: 24px; color: white; cursor: pointer; }
+
+        .menu-toggle {
+            display: none;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+        }
 
         .story-wrapper {
             display: flex;
@@ -61,6 +93,7 @@
             cursor: pointer;
             transition: transform 0.2s;
         }
+
         .story-wrapper:hover { transform: scale(1.05); }
 
         .story-ring {
@@ -70,6 +103,7 @@
             padding: 3px;
             background: linear-gradient(45deg, #22c55e, #3b82f6, #f59e0b);
         }
+
         .story-inner {
             background: white;
             padding: 2px;
@@ -77,6 +111,7 @@
             width: 100%;
             height: 100%;
         }
+
         .story-inner img {
             width: 100%;
             height: 100%;
@@ -86,27 +121,90 @@
 
         .blog-card {
             background: white;
-            padding: 1.5rem;
+            overflow: hidden;
             border-radius: 1rem;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             transition: 0.3s;
             border: 1px solid #e2e8f0;
         }
-        .blog-card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
 
-        .footer { background: #020617; padding: 80px 60px 40px; border-top: 1px solid var(--glass-border); color: var(--text-dim); }
-        .footer-container { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 40px; }
-        .footer-logo { color: var(--primary); font-size: 24px; font-weight: 800; margin-bottom: 20px; }
-        .footer-section h3 { color: white; margin-bottom: 20px; font-size: 16px; text-transform: uppercase; }
+        .blog-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .blog-media {
+            width: 100%;
+            max-height: 280px;
+            object-fit: cover;
+            display: block;
+            background: #e2e8f0;
+        }
+
+        .blog-body {
+            padding: 1.5rem;
+        }
+
+        .empty-card {
+            background: white;
+            border: 1px dashed #cbd5e1;
+            border-radius: 1rem;
+            padding: 2rem;
+            color: #64748b;
+        }
+
+        .footer {
+            background: #020617;
+            padding: 80px 60px 40px;
+            border-top: 1px solid var(--glass-border);
+            color: var(--text-dim);
+        }
+
+        .footer-container {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            gap: 40px;
+        }
+
+        .footer-logo {
+            color: var(--primary);
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .footer-section h3 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 16px;
+            text-transform: uppercase;
+        }
+
         .footer-section ul { list-style: none; }
         .footer-section li { margin-bottom: 12px; }
-        .footer-section a { text-decoration: none; color: var(--text-dim); transition: 0.3s; }
+
+        .footer-section a {
+            text-decoration: none;
+            color: var(--text-dim);
+            transition: 0.3s;
+        }
+
         .footer-section a:hover { color: var(--primary); }
 
         @media (max-width: 900px) {
             .navbar { padding: 15px 30px; }
             .menu-toggle { display: block; }
-            .nav-links { position: fixed; top: 70px; right: -100%; flex-direction: column; background: #0f172a; width: 100%; height: 100vh; padding: 40px; transition: 0.4s ease; }
+            .nav-links {
+                position: fixed;
+                top: 70px;
+                right: -100%;
+                flex-direction: column;
+                background: #0f172a;
+                width: 100%;
+                height: 100vh;
+                padding: 40px;
+                transition: 0.4s ease;
+            }
             .nav-links.active { right: 0; }
             .footer { padding: 50px 30px 30px; }
             .footer-container { grid-template-columns: 1fr; }
@@ -153,7 +251,7 @@
                 <div class="space-y-2">
                     <div class="flex justify-between items-center p-2 bg-green-50 rounded-lg text-green-700 font-semibold">
                         <span>Community Story</span>
-                        <span id="cat-story-count">4</span>
+                        <span id="cat-story-count">0</span>
                     </div>
                     <div class="flex justify-between p-2 text-slate-600 text-sm">
                         <span>Disease Alerts</span>
@@ -197,87 +295,120 @@
 </footer>
 
 <script>
+    const API_URL = "http://localhost:5000/api/v1/blogs";
     const toggle = document.getElementById("menuToggle");
     const nav = document.getElementById("navLinks");
-    const BLOG_STORAGE_KEY = 'digitalFarmAdminPosts';
     toggle.addEventListener("click", () => nav.classList.toggle("active"));
 
-    const communityStories = [
-        { name: "My Farm", img: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=200", full: "https://images.unsplash.com/photo-1500382017468-9049fed747ef", cap: "Sunset over the wheat fields." },
-        { name: "Health Check", img: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=200", full: "https://images.unsplash.com/photo-1516467508483-a7212febe31a", cap: "All livestock vaccinated today." },
-        { name: "Automation", img: "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=200", full: "https://images.unsplash.com/photo-1560493676-04071c5f467b", cap: "Checking soil moisture via Python script." },
-        { name: "Market Day", img: "https://images.unsplash.com/photo-1488459711616-2c9303d8d67c?w=200", full: "https://images.unsplash.com/photo-1488459711616-2c9303d8d67c", cap: "Fresh produce ready for delivery!" }
-    ];
-
     const fallbackBlogs = [
-        { title: "Smart Irrigation Systems", category: "Farmer Tips", content: "Using automated sensors can save up to 30% of water usage in dry seasons.", created_at: new Date().toISOString() },
-        { title: "YOLO v8 in Poultry", category: "Expert Advice", content: "Our computer vision model now tracks individual bird movement for fever detection.", created_at: new Date().toISOString() }
+        { title: "Smart Irrigation Systems", category: "Farmer Tips", content: "Using automated sensors can save up to 30% of water usage in dry seasons.", created_at: new Date().toISOString(), status: "published", link: "", image_url: "" },
+        { title: "YOLO v8 in Poultry", category: "Expert Advice", content: "Our computer vision model now tracks individual bird movement for fever detection.", created_at: new Date().toISOString(), status: "published", link: "", image_url: "" }
     ];
 
-    function getAdminPosts() {
-        try {
-            return JSON.parse(localStorage.getItem(BLOG_STORAGE_KEY) || "[]");
-        } catch (error) {
-            return [];
-        }
+    function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char]));
     }
 
-    function normalizeAdminPosts(posts) {
-        return posts
-            .filter((post) => post.status === "published" || post.status === "link")
-            .map((post) => ({
-                title: post.title,
-                category: post.category,
-                content: post.summary || "No description provided.",
-                created_at: post.createdAt || new Date().toISOString(),
-                link: post.link || ""
-            }));
+    function isVideoSource(url) {
+        return typeof url === 'string' && (url.startsWith('data:video/') || /\.(mp4|webm|ogg|mov)$/i.test(url));
     }
 
-    function renderStories() {
+    function buildStoryFeed(blogs) {
+        const storyBlogs = blogs.filter((blog) => (
+            blog.category === 'Community Story' &&
+            blog.image_url &&
+            !isVideoSource(blog.image_url)
+        ));
+
+        return storyBlogs.map((blog, index) => ({
+            name: blog.title || `Story ${index + 1}`,
+            img: blog.image_url,
+            full: blog.image_url,
+            cap: blog.content || 'Community story update'
+        }));
+    }
+
+    function renderStories(stories) {
         const container = document.getElementById('story-container');
-        container.innerHTML = communityStories.map((story) => `
-            <div class="story-wrapper" onclick="openStory('${story.full}', '${story.cap}')">
+
+        if (!stories.length) {
+            container.innerHTML = '<div class="text-sm text-slate-400 font-medium">No community stories uploaded yet.</div>';
+            return;
+        }
+
+        container.innerHTML = stories.map((story) => `
+            <div class="story-wrapper" onclick="openStory('${story.full}', '${escapeHtml(story.cap)}')">
                 <div class="story-ring">
                     <div class="story-inner">
-                        <img src="${story.img}" alt="${story.name}">
+                        <img src="${story.img}" alt="${escapeHtml(story.name)}">
                     </div>
                 </div>
-                <span class="text-[11px] font-bold mt-2 text-slate-500 uppercase tracking-tighter">${story.name}</span>
+                <span class="text-[11px] font-bold mt-2 text-slate-500 uppercase tracking-tighter">${escapeHtml(story.name)}</span>
             </div>
         `).join('');
     }
 
     function renderBlogs(blogs) {
+        const publishedBlogs = blogs.filter((blog) => blog.status === 'published' || blog.status === 'link');
         const container = document.getElementById('blog-container');
-        container.innerHTML = "";
+
         let storyCount = 0;
         let c1 = 0;
         let c2 = 0;
         let c4 = 0;
 
-        blogs.forEach((blog) => {
+        if (!publishedBlogs.length) {
+            container.innerHTML = `
+                <div class="empty-card">
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">No blog posts yet</h3>
+                    <p>The public feed will appear here once the admin publishes the first post.</p>
+                </div>
+            `;
+            document.getElementById('cat-story-count').innerText = '0';
+            document.getElementById('cat1').innerText = '0';
+            document.getElementById('cat2').innerText = '0';
+            document.getElementById('cat4').innerText = '0';
+            return;
+        }
+
+        container.innerHTML = publishedBlogs.map((blog) => {
             if (blog.category === "Community Story") storyCount++;
             if (blog.category === "Disease Alerts") c1++;
             if (blog.category === "Farmer Tips") c2++;
             if (blog.category === "Expert Advice") c4++;
 
-            const div = document.createElement('div');
-            div.className = "blog-card";
-            div.innerHTML = `
-                <span class="text-[10px] font-black text-green-600 uppercase tracking-widest">${blog.category}</span>
-                <h3 class="text-xl font-bold mt-1 text-slate-800">${blog.title}</h3>
-                <p class="text-slate-600 mt-2 text-sm leading-relaxed">${blog.content.substring(0, 140)}...</p>
-                <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center">
-                    ${blog.link
-                        ? `<a class="text-green-600 font-bold text-sm" href="${blog.link}" target="_blank" rel="noopener noreferrer">Open Source</a>`
-                        : `<button class="text-green-600 font-bold text-sm" type="button">Read Full Story</button>`
-                    }
-                    <span class="text-[10px] text-slate-400 font-medium">${new Date(blog.created_at).toDateString()}</span>
-                </div>
+            const mediaBlock = blog.image_url
+                ? isVideoSource(blog.image_url)
+                    ? `<video class="blog-media" controls muted><source src="${blog.image_url}"></video>`
+                    : `<img class="blog-media" src="${blog.image_url}" alt="${escapeHtml(blog.title || 'Blog media')}">`
+                : '';
+
+            const excerpt = (blog.content || 'No details were added for this post yet.').slice(0, 180);
+
+            return `
+                <article class="blog-card">
+                    ${mediaBlock}
+                    <div class="blog-body">
+                        <span class="text-[10px] font-black text-green-600 uppercase tracking-widest">${escapeHtml(blog.category || 'General')}</span>
+                        <h3 class="text-xl font-bold mt-1 text-slate-800">${escapeHtml(blog.title || 'Untitled update')}</h3>
+                        <p class="text-slate-600 mt-2 text-sm leading-relaxed">${escapeHtml(excerpt)}${excerpt.length >= 180 ? '...' : ''}</p>
+                        <div class="mt-4 pt-4 border-t border-slate-100 flex justify-between items-center gap-4">
+                            ${blog.link
+                                ? `<a class="text-green-600 font-bold text-sm" href="${escapeHtml(blog.link)}" target="_blank" rel="noopener noreferrer">Open Source</a>`
+                                : `<span class="text-green-600 font-bold text-sm">Digital Farm Update</span>`
+                            }
+                            <span class="text-[10px] text-slate-400 font-medium">${new Date(blog.created_at || Date.now()).toDateString()}</span>
+                        </div>
+                    </div>
+                </article>
             `;
-            container.appendChild(div);
-        });
+        }).join('');
 
         document.getElementById('cat-story-count').innerText = storyCount;
         document.getElementById('cat1').innerText = c1;
@@ -300,18 +431,20 @@
     }
 
     async function init() {
-        renderStories();
-        const adminPosts = normalizeAdminPosts(getAdminPosts());
-        if (adminPosts.length) {
-            renderBlogs(adminPosts);
-            return;
-        }
-
         try {
-            const res = await fetch("https://novomesh-backend.onrender.com/api/blogs");
-            const data = await res.json();
-            renderBlogs(Array.isArray(data) ? data : fallbackBlogs);
-        } catch (e) {
+            const response = await fetch(API_URL);
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message || 'Unable to load blogs.');
+            }
+
+            const blogs = result.data || [];
+            renderStories(buildStoryFeed(blogs));
+            renderBlogs(blogs);
+        } catch (error) {
+            console.error(error);
+            renderStories([]);
             renderBlogs(fallbackBlogs);
         }
     }

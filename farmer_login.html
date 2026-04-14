@@ -6,6 +6,7 @@
   <title>Farmer Portal Login | Digital Farm</title>
   
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="api_cache.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -183,12 +184,12 @@
       <h2>Farmer Portal Login</h2>
       <p>Sign in to report health issues and monitor livestock.</p>
 
-      <form action="farmer_dashboard.html">
+      <form id="loginForm">
         <div class="input-group">
           <label>Email Address</label>
           <div class="input-wrapper">
             <i class="fa-solid fa-envelope main-icon"></i>
-            <input type="email" placeholder="raj@gmail.com" required>
+            <input type="email" id="email" placeholder="Enter your email address" autocomplete="email" required>
           </div>
         </div>
 
@@ -196,7 +197,7 @@
           <label>Password</label>
           <div class="input-wrapper">
             <i class="fa-solid fa-lock main-icon"></i>
-            <input type="password" id="passwordField" placeholder="Enter your password" required>
+            <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password" required>
             <i class="fa-solid fa-eye-slash" id="togglePassword" style="position: absolute; right: 15px; cursor: pointer; color: #64748b;"></i>
           </div>
         </div>
@@ -227,10 +228,11 @@
           <input type="email" placeholder="your-email@example.com" id="resetEmail">
         </div>
       </div>
+      <p id="resetStatus" style="display:none; margin:14px 0 0; font-size:13px; line-height:1.5;"></p>
 
       <div style="display: flex; gap: 10px; margin-top: 10px;">
         <button class="login-btn" style="background: transparent; border: 1px solid var(--glass-border); flex: 1;" onclick="closeForgotModal()">Cancel</button>
-        <button class="login-btn" style="flex: 2;" onclick="handleReset()">Send Link</button>
+        <button class="login-btn" id="resetSendButton" style="flex: 2;" onclick="handleReset()">Send Link</button>
       </div>
     </div>
   </div>
@@ -245,7 +247,7 @@
   <script>
     // --- Toggle Password Visibility ---
     const togglePassword = document.querySelector('#togglePassword');
-    const passwordField = document.querySelector('#passwordField');
+    const passwordField = document.querySelector('#password');
 
     togglePassword.addEventListener('click', function() {
       const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -260,6 +262,7 @@
     function openForgotModal() {
       modal.style.display = 'flex';
       document.body.style.overflow = 'hidden'; // Stop scrolling
+      document.getElementById('resetStatus').style.display = 'none';
     }
 
     function closeForgotModal() {
@@ -267,13 +270,52 @@
       document.body.style.overflow = 'auto';
     }
 
-    function handleReset() {
-      const email = document.getElementById('resetEmail').value;
-      if (email) {
-        alert("Success: Password reset link has been sent to " + email);
-        closeForgotModal();
-      } else {
-        alert("Please enter a valid email address.");
+    async function handleReset() {
+      const email = document.getElementById('resetEmail').value.trim();
+      const status = document.getElementById('resetStatus');
+      const sendButton = document.getElementById('resetSendButton');
+      const resetPageUrl = `${window.location.origin}${window.location.pathname.replace('farmer_login.html', 'reset_password.html')}`;
+
+      if (!email) {
+        status.style.display = 'block';
+        status.style.color = '#f87171';
+        status.textContent = 'Please enter a valid email address.';
+        return;
+      }
+
+      sendButton.disabled = true;
+      sendButton.textContent = 'Sending...';
+      status.style.display = 'block';
+      status.style.color = '#94a3b8';
+      status.textContent = 'Sending password reset email...';
+
+      try {
+        const response = await fetch('http://localhost:5000/api/v1/auth/forgot-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email,
+            redirectTo: resetPageUrl
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          throw new Error(result.message || 'Failed to generate reset link');
+        }
+
+        status.style.color = '#22c55e';
+        status.textContent = `Password reset email sent to ${email}. Check your inbox and spam folder.`;
+      } catch (error) {
+        console.error(error);
+        status.style.color = '#f87171';
+        status.textContent = error.message || 'Unable to send password reset email.';
+      } finally {
+        sendButton.disabled = false;
+        sendButton.textContent = 'Send Link';
       }
     }
 
@@ -284,6 +326,56 @@
       }
     }
   </script>
+  <script>
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const btn = document.querySelector(".login-btn");
+  btn.innerText = "Signing in...";
+  btn.disabled = true;
+
+  try {
+    const res = await fetch("http://localhost:5000/api/v1/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const result = await res.json();
+
+    if (res.ok) {
+      // ✅ store token + user
+      localStorage.setItem("token", result.data.token);
+      localStorage.setItem("user", JSON.stringify(result.data.user));
+
+      if (res.ok) {
+  // store token + user
+  localStorage.setItem("token", result.data.token);
+  localStorage.setItem("user", JSON.stringify(result.data.user));
+
+  btn.innerText = "Redirecting...";
+
+  setTimeout(() => {
+    window.location.href = "farmer_dashboard.html";
+  }, 500);
+}
+    } else {
+      alert(result.message || "Login failed ❌");
+    }
+
+  } catch (err) {
+    alert("Server error ❌");
+  }
+
+  btn.innerText = "Sign In";
+  btn.disabled = false;
+});
+</script>
 
 </body>
 </html>

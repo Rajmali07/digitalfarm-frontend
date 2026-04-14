@@ -7,6 +7,8 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="api_cache.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -220,16 +222,7 @@
     <script>
         lucide.createIcons();
 
-        const farmers = [
-            { name: 'Rajesh Kumar', farmerId: 'FMR-9901', type: 'Poultry', mobile: '+91 70671 88932', health: 'Excellent', healthClass: 'text-green-600 bg-green-50', state: 'Chhattisgarh', district: 'Raipur', village: 'Charoda' },
-            { name: 'Amit Mahto', farmerId: 'FMR-8842', type: 'Cattle', mobile: '+91 98221 11456', health: 'Risk Detected', healthClass: 'text-red-600 bg-red-50', state: 'Chhattisgarh', district: 'Raipur', village: 'Kumhari' },
-            { name: 'Sunita Verma', farmerId: 'FMR-7720', type: 'Poultry', mobile: '+91 88717 34012', health: 'Stable', healthClass: 'text-amber-600 bg-amber-50', state: 'Chhattisgarh', district: 'Durg', village: 'Bhilai-3' },
-            { name: 'Poonam Sahu', farmerId: 'FMR-6654', type: 'Goat Farm', mobile: '+91 79991 54760', health: 'Excellent', healthClass: 'text-green-600 bg-green-50', state: 'Chhattisgarh', district: 'Durg', village: 'Patan' },
-            { name: 'Ramesh Patel', farmerId: 'FMR-5518', type: 'Poultry', mobile: '+91 90395 11823', health: 'Risk Detected', healthClass: 'text-red-600 bg-red-50', state: 'Madhya Pradesh', district: 'Bhopal', village: 'Berasia' },
-            { name: 'Meena Tiwari', farmerId: 'FMR-4412', type: 'Layers', mobile: '+91 97530 42188', health: 'Stable', healthClass: 'text-amber-600 bg-amber-50', state: 'Madhya Pradesh', district: 'Bhopal', village: 'Phanda' },
-            { name: 'Kailash Yadav', farmerId: 'FMR-3387', type: 'Dairy', mobile: '+91 94258 18744', health: 'Excellent', healthClass: 'text-green-600 bg-green-50', state: 'Madhya Pradesh', district: 'Sehore', village: 'Ashta' },
-            { name: 'Geeta Chauhan', farmerId: 'FMR-2276', type: 'Poultry', mobile: '+91 88396 50124', health: 'Stable', healthClass: 'text-amber-600 bg-amber-50', state: 'Madhya Pradesh', district: 'Sehore', village: 'Ichhawar' }
-        ];
+        let farmers = [];
 
         const stateFilter = document.getElementById('stateFilter');
         const districtFilter = document.getElementById('districtFilter');
@@ -239,6 +232,121 @@
         const zoneLabel = document.getElementById('zoneLabel');
         const localCount = document.getElementById('localCount');
         const selectedLocationPill = document.getElementById('selectedLocationPill');
+
+        let user = null;
+        const token = localStorage.getItem("token");
+
+console.log("INITIAL TOKEN:", token); // 🔥 ADD
+
+if (!token) {
+  alert("No token found. Please login again.");
+  window.location.href = "admin_login.html";
+}
+
+        try {
+          user = JSON.parse(localStorage.getItem("user"));
+        } catch (error) {
+          user = null;
+        }
+
+        if (!user || user.role !== "ADMIN" || !token) {
+          alert("Unauthorized access");
+          window.location.href = "admin_login.html";
+        }
+
+        const SUPABASE_URL = 'https://ppksvtcjyvtbcrdncvsm.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_Mz-YMegdeHu08iMHfaIMwQ_61VvS1XE';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function fetchFarmers() {
+    try {
+        console.log("TOKEN FROM STORAGE:", token);
+        
+        // Fetch farmers, animals, and complaints in parallel
+        const [res, animalsRes, complaintsRes] = await Promise.all([
+            fetch(
+                `http://localhost:5000/api/v1/admin/farmers?state=${stateFilter.value}&district=${districtFilter.value}&village=${villageFilter.value}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`
+                    }
+                }
+            ),
+            supabaseClient.from('animals').select('*'),
+            fetch('http://localhost:5000/api/v1/complaints', {
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+            }).then(r => r.json())
+        ]);
+
+        const result = await res.json();
+        const animalsData = animalsRes.data || [];
+        const complaintsData = complaintsRes.success ? complaintsRes.data : [];
+        console.log("API RESPONSE:", result);
+
+        if (!result.success) {
+            farmerTable.innerHTML = `
+                <tr>
+                    <td colspan="7" class="directory-empty">Unable to load farmers: ${result.message || 'API error'}</td>
+                </tr>
+            `;
+            return;
+        }
+
+        farmers = result.data.map(f => {
+            const myAnimals = animalsData.filter(a => a.farmer_id === f.id);
+            const myComplaints = complaintsData.filter(c => c.farmer_id === f.id);
+            
+            let totalDeaths = myAnimals.reduce((sum, a) => sum + Number(a.mortality_count || 0), 0);
+            let highComplaints = myComplaints.filter(c => String(c.urgency_level || '').toLowerCase() === 'high').length;
+            let mediumComplaints = myComplaints.filter(c => String(c.urgency_level || '').toLowerCase() === 'medium').length;
+
+            let computedHealth = f.health || "Stable";
+            
+            if (totalDeaths > 5 || highComplaints > 0 || (myAnimals.length > 0 && (totalDeaths / myAnimals.reduce((sum, a) => sum + Number(a.total_animals || 0), 0)) * 100 > 5)) {
+                computedHealth = "Critical Risk";
+            } else if (totalDeaths > 0 || mediumComplaints > 0) {
+                computedHealth = "Warning Risk";
+            } else {
+                computedHealth = "Healthy";
+            }
+
+            let healthStatus = computedHealth;
+            let healthClass = "text-green-600 bg-green-50"; // default Green
+            
+            const lowerHealth = healthStatus.toLowerCase();
+            
+            if (lowerHealth.includes("critical") || lowerHealth.includes("severe") || lowerHealth.includes("danger") || lowerHealth.includes("risk detected")) {
+                healthClass = "text-red-700 bg-red-100 border border-red-200";
+            } else if (lowerHealth.includes("warning") || lowerHealth.includes("monitor") || lowerHealth.includes("elevated")) {
+                healthClass = "text-amber-700 bg-amber-100 border border-amber-200";
+            } else {
+                healthClass = "text-green-700 bg-green-100 border border-green-200";
+            }
+
+            return {
+                name: f.name,
+                farmerId: f.id.slice(0, 8),
+                type: f.farm_type || "N/A",
+                mobile: f.phone || "N/A",
+                health: healthStatus,
+                healthClass: healthClass,
+                state: f.state,
+                district: f.district,
+                village: f.village
+            };
+        });
+
+        syncLocationFilters();
+        renderDirectory();
+    } catch (err) {
+        console.error("Fetch error:", err);
+        farmerTable.innerHTML = `
+            <tr>
+                <td colspan="7" class="directory-empty">Unable to load farmers: ${err.message || 'Network error'}</td>
+            </tr>
+        `;
+    }
+}
 
         function getInitials(name) {
             return name.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
@@ -303,7 +411,7 @@
 
             document.getElementById('registeredCount').innerText = `${filteredFarmers.length} Accounts`;
             document.getElementById('poultryCount').innerText = filteredFarmers.filter((farmer) => farmer.type.toLowerCase().includes('poultry') || farmer.type.toLowerCase().includes('layers')).length;
-            document.getElementById('riskCount').innerText = filteredFarmers.filter((farmer) => farmer.health === 'Risk Detected').length;
+            document.getElementById('riskCount').innerText = filteredFarmers.filter((farmer) => farmer.healthClass.includes('red')).length;
             document.getElementById('villageCount').innerText = new Set(filteredFarmers.map((farmer) => farmer.village)).size;
 
             if (!filteredFarmers.length) {
@@ -337,12 +445,13 @@
         }
 
         function filterData() {
-            farmerTable.style.opacity = '0.3';
-            setTimeout(() => {
-                renderDirectory();
-                farmerTable.style.opacity = '1';
-            }, 500);
-        }
+    farmerTable.style.opacity = '0.3';
+
+    setTimeout(() => {
+        fetchFarmers();
+        farmerTable.style.opacity = '1';
+    }, 300);
+}
 
         const modal = document.getElementById('alertModal');
         function openModal(name) {
@@ -355,21 +464,12 @@
             closeModal();
         }
 
-        stateFilter.addEventListener('change', () => {
-            syncLocationFilters();
-            renderDirectory();
-        });
-
-        districtFilter.addEventListener('change', () => {
-            syncLocationFilters();
-            renderDirectory();
-        });
-
-        villageFilter.addEventListener('change', renderDirectory);
+        stateFilter.addEventListener('change', fetchFarmers);
+districtFilter.addEventListener('change', fetchFarmers);
+villageFilter.addEventListener('change', fetchFarmers);
         searchInput.addEventListener('input', renderDirectory);
 
-        syncLocationFilters();
-        renderDirectory();
+        fetchFarmers();
     </script>
 </body>
 </html>

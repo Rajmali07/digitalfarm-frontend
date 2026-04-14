@@ -6,6 +6,8 @@
   <title>Record Center | Digital Farm</title>
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="api_cache.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
@@ -209,9 +211,87 @@
     .status-critical { background: #fee2e2; color: #991b1b; }
     .status-info { background: #dbeafe; color: #1d4ed8; }
 
-    .action-set { display: flex; align-items: center; gap: 14px; }
-    .action-icon { color: var(--text-gray); cursor: pointer; transition: 0.2s; }
-    .action-icon:hover { color: var(--text-dark); }
+    .action-set { display: flex; align-items: center; gap: 10px; }
+    .action-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: white;
+      color: var(--text-gray);
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .action-icon:hover { color: var(--text-dark); border-color: #cbd5e1; background: #f8fafc; }
+
+    .record-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 2000;
+    }
+    .record-modal.open { display: flex; }
+    .record-modal-card {
+      width: min(720px, 100%);
+      max-height: 85vh;
+      overflow: auto;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 30px 70px rgba(15, 23, 42, 0.25);
+      border: 1px solid var(--border-color);
+      padding: 24px;
+    }
+    .record-modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .record-modal-head h3 { margin: 0; font-size: 22px; }
+    .record-modal-head p { color: var(--text-gray); margin-top: 6px; }
+    .record-modal-close {
+      border: 1px solid var(--border-color);
+      background: white;
+      color: var(--text-gray);
+      border-radius: 10px;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .record-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .record-detail-item {
+      border: 1px solid #eef2f7;
+      border-radius: 14px;
+      padding: 14px;
+      background: #fbfdff;
+    }
+    .record-detail-item span {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--text-gray);
+      margin-bottom: 6px;
+    }
+    .record-detail-item strong {
+      color: var(--text-dark);
+      font-size: 15px;
+      word-break: break-word;
+    }
 
     .table-footer {
       margin-top: 22px;
@@ -255,6 +335,7 @@
       .tab-btn { padding: 10px 14px; }
       .records-card { padding: 18px; }
       .footer { padding: 40px 20px 20px; }
+      .record-detail-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -295,22 +376,22 @@
     <div class="stats-grid">
       <div class="stat-card">
         <span style="background:#eff6ff; color:#2563eb;"><i class="fa-solid fa-paw"></i></span>
-        <h3>28</h3>
+        <h3>0</h3>
         <p>Livestock logs across cattle, buffalo, poultry, goats, and pigs</p>
       </div>
       <div class="stat-card">
         <span style="background:#f0fdf4; color:#16a34a;"><i class="fa-solid fa-syringe"></i></span>
-        <h3>19</h3>
+        <h3>0</h3>
         <p>Vaccination entries with scheduled follow-up and dose history</p>
       </div>
       <div class="stat-card">
         <span style="background:#fef2f2; color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i></span>
-        <h3>11</h3>
+        <h3>0</h3>
         <p>Mortality and complaint records requiring review or closure</p>
       </div>
       <div class="stat-card">
         <span style="background:#ede9fe; color:#7c3aed;"><i class="fa-solid fa-microchip"></i></span>
-        <h3>19</h3>
+        <h3>0</h3>
         <p>AI scan reports linked to farm risk monitoring and checks</p>
       </div>
     </div>
@@ -341,7 +422,7 @@
       </div>
 
       <div class="table-footer">
-        <p id="recordsSummary">Showing 5 of 28 livestock records</p>
+        <p id="recordsSummary">No records found</p>
         <div class="pager">
           <button type="button">Previous</button>
           <button type="button" class="active-page">Next</button>
@@ -357,8 +438,27 @@
     <p style="text-align:center; padding-top:20px; font-size:12px;">&copy; 2026 Digital Farm | Built for Farmers</p>
   </footer>
 
+  <div class="record-modal" id="recordModal" aria-hidden="true">
+    <div class="record-modal-card">
+      <div class="record-modal-head">
+        <div>
+          <h3 id="recordModalTitle">Record Details</h3>
+          <p id="recordModalSubtitle">Review the selected record information.</p>
+        </div>
+        <button type="button" class="record-modal-close" id="recordModalClose" aria-label="Close record details">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="record-detail-grid" id="recordModalBody"></div>
+    </div>
+  </div>
+
   <script src="risk_engine.js"></script>
   <script>
+    const API_BASE_URL = 'http://localhost:5000/api/v1';
+    const SUPABASE_URL = 'https://ppksvtcjyvtbcrdncvsm.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_Mz-YMegdeHu08iMHfaIMwQ_61VvS1XE';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const profileMenuButton = document.getElementById('profileMenuButton');
     const profileDropdown = document.getElementById('profileDropdown');
     const tabButtons = document.querySelectorAll('.tab-btn');
@@ -367,80 +467,37 @@
     const recordsSummary = document.getElementById('recordsSummary');
     const tableTitle = document.getElementById('tableTitle');
     const tableDescription = document.getElementById('tableDescription');
+    const recordModal = document.getElementById('recordModal');
+    const recordModalClose = document.getElementById('recordModalClose');
+    const recordModalTitle = document.getElementById('recordModalTitle');
+    const recordModalSubtitle = document.getElementById('recordModalSubtitle');
+    const recordModalBody = document.getElementById('recordModalBody');
 
-    const actionIcons = '<div class="action-set"><i class="fa-solid fa-eye action-icon"></i><i class="fa-solid fa-download action-icon"></i></div>';
-    const storageKeys = window.DigitalFarmRisk.STORAGE_KEYS;
-
-    const fallbackTabData = {
-      livestock: {
-        title: 'Livestock Logs',
-        description: 'Latest population records grouped by animal type, unit, and health state.',
-        summary: 'Showing 5 of 28 livestock records',
-        columns: ['Date', 'Record ID', 'Animal Type', 'Breed / Unit', 'Population', 'Health Status', 'Actions'],
-        rows: [
-          ['<strong>Apr 03, 2026</strong>', '#LIV-2108', 'Cow', 'Gir • Dairy Unit 1', '42 Animals', '<span class="status-pill status-completed">Healthy</span>', actionIcons],
-          ['<strong>Apr 02, 2026</strong>', '#LIV-2107', 'Buffalo', 'Murrah • Milk Block A', '18 Animals', '<span class="status-pill status-pending">Monitoring</span>', actionIcons],
-          ['<strong>Apr 02, 2026</strong>', '#LIV-2106', 'Poultry', 'Layer Shed A', '1,250 Birds', '<span class="status-pill status-completed">Excellent</span>', actionIcons],
-          ['<strong>Apr 01, 2026</strong>', '#LIV-2105', 'Goat', 'Sirohi • Pen 3', '36 Animals', '<span class="status-pill status-info">New Entry</span>', actionIcons],
-          ['<strong>Mar 30, 2026</strong>', '#LIV-2104', 'Pig', 'Grower Unit B', '22 Animals', '<span class="status-pill status-critical">Risk Detected</span>', actionIcons]
-        ]
-      },
-      vaccination: {
-        title: 'Vaccination History',
-        description: 'Cross-animal vaccine logs from poultry, cattle, buffalo, goats, sheep, and pigs.',
-        summary: 'Showing 5 of 19 vaccination records',
-        columns: ['Date', 'Animal Type', 'Vaccine / Disease', 'Target Group', 'Status', 'Actions'],
-        rows: [
-          ['<strong>Apr 03, 2026</strong>', 'Cow', 'Foot and Mouth Disease (FMD)', 'Dairy Unit 1', '<span class="status-pill status-completed">Completed</span>', actionIcons],
-          ['<strong>Apr 01, 2026</strong>', 'Poultry', 'Newcastle Disease (ND)', 'Layer Shed A', '<span class="status-pill status-completed">Completed</span>', actionIcons],
-          ['<strong>Mar 29, 2026</strong>', 'Buffalo', 'Hemorrhagic Septicemia (HS)', 'Milk Block A', '<span class="status-pill status-pending">Due Soon</span>', actionIcons],
-          ['<strong>Mar 27, 2026</strong>', 'Goat', 'PPR', 'Pen 3', '<span class="status-pill status-completed">Completed</span>', actionIcons],
-          ['<strong>Mar 24, 2026</strong>', 'Pig', 'Classical Swine Fever', 'Grower Unit B', '<span class="status-pill status-info">Scheduled</span>', actionIcons]
-        ]
-      },
-      mortality: {
-        title: 'Mortality Reports',
-        description: 'Loss records organised by species, unit, count, and suspected cause.',
-        summary: 'Showing 5 of 11 mortality reports',
-        columns: ['Date', 'Report ID', 'Animal Type', 'Affected Unit', 'Loss Count', 'Cause / Review', 'Actions'],
-        rows: [
-          ['<strong>Apr 02, 2026</strong>', '#MRT-3011', 'Poultry', 'Broiler Shed 1', '6 Birds', '<span class="status-pill status-critical">Suspected Infection</span>', actionIcons],
-          ['<strong>Mar 31, 2026</strong>', '#MRT-3010', 'Cow', 'Dairy Unit 2', '1 Animal', '<span class="status-pill status-pending">Under Vet Review</span>', actionIcons],
-          ['<strong>Mar 30, 2026</strong>', '#MRT-3009', 'Goat', 'Pen 5', '2 Animals', '<span class="status-pill status-info">Observation Ongoing</span>', actionIcons],
-          ['<strong>Mar 28, 2026</strong>', '#MRT-3008', 'Buffalo', 'Quarantine Yard', '1 Animal', '<span class="status-pill status-pending">Post Treatment</span>', actionIcons],
-          ['<strong>Mar 25, 2026</strong>', '#MRT-3007', 'Pig', 'Grower Unit A', '3 Animals', '<span class="status-pill status-critical">Feed Contamination</span>', actionIcons]
-        ]
-      },
-      complaints: {
-        title: 'Complaints and Incidents',
-        description: 'Farmer complaints submitted from the data entry page with urgency, symptoms, and location details.',
-        summary: 'Showing 5 of 14 complaint records',
-        columns: ['Date', 'Complaint ID', 'Animal Type', 'Incident Type', 'Urgency', 'Location', 'Actions'],
-        rows: [
-          ['<strong>Apr 03, 2026</strong>', '#CMP-1184', 'Cow', 'Unusual Symptoms Observed', '<span class="status-pill status-critical">High</span>', 'Dairy Unit 1', actionIcons],
-          ['<strong>Apr 02, 2026</strong>', '#CMP-1183', 'Poultry', 'Sudden Mortality Spike', '<span class="status-pill status-critical">High</span>', 'Broiler Shed 1', actionIcons],
-          ['<strong>Apr 01, 2026</strong>', '#CMP-1182', 'Buffalo', 'Vaccination Delay', '<span class="status-pill status-pending">Medium</span>', 'Milk Block A', actionIcons],
-          ['<strong>Mar 30, 2026</strong>', '#CMP-1181', 'Goat', 'Biosecurity Breach', '<span class="status-pill status-pending">Medium</span>', 'Pen 3', actionIcons],
-          ['<strong>Mar 27, 2026</strong>', '#CMP-1180', 'Pig', 'Feed / Water Contamination', '<span class="status-pill status-info">Logged</span>', 'Grower Unit B', actionIcons]
-        ]
-      },
-      'ai-scan': {
-        title: 'AI Scan History',
-        description: 'AI diagnostic outputs and risk scores for different farm areas and animal groups.',
-        summary: 'Showing 5 of 19 AI scan reports',
-        columns: ['Date', 'Scan ID', 'Animal / Area', 'Symptoms or Focus', 'Risk Score', 'Result', 'Actions'],
-        rows: [
-          ['<strong>Apr 03, 2026</strong>', '#SCAN-8132', 'Cow • Dairy Unit 1', 'Fever and mouth lesions', '82/100', '<span class="status-pill status-critical">High Risk</span>', actionIcons],
-          ['<strong>Apr 02, 2026</strong>', '#SCAN-8128', 'Poultry • Layer Shed A', 'Respiratory signs', '77/100', '<span class="status-pill status-critical">High Risk</span>', actionIcons],
-          ['<strong>Apr 01, 2026</strong>', '#SCAN-8120', 'Buffalo • Milk Block A', 'Low appetite', '41/100', '<span class="status-pill status-pending">Observe</span>', actionIcons],
-          ['<strong>Mar 29, 2026</strong>', '#SCAN-8112', 'Goat • Pen 3', 'Skin lesions', '34/100', '<span class="status-pill status-info">Needs Review</span>', actionIcons],
-          ['<strong>Mar 27, 2026</strong>', '#SCAN-8098', 'Entry Gate Camera', 'Biosecurity check', '18/100', '<span class="status-pill status-completed">Low Risk</span>', actionIcons]
-        ]
-      }
+    const recordsState = {
+      animals: [],
+      vaccinations: [],
+      complaints: [],
+      aiHistory: [],
+      prescriptionAlerts: []
     };
+    let currentTab = 'livestock';
+    let currentProfileId = null;
+
+    function getToken() {
+      return localStorage.getItem('token');
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
     function statusPill(label, tone) {
-      return `<span class="status-pill ${tone}">${label}</span>`;
+      return `<span class="status-pill ${tone}">${escapeHtml(label)}</span>`;
     }
 
     function formatDate(value) {
@@ -450,22 +507,382 @@
       return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     }
 
+    async function fetchJson(endpoint) {
+      const token = getToken();
+
+      if (!token) {
+        window.location.href = 'farmer_login.html';
+        throw new Error('Authentication required');
+      }
+
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to fetch records');
+      }
+
+      return result.data;
+    }
+
+    function pickArray(data, preferredKey) {
+      if (Array.isArray(data)) return data;
+      if (!data || typeof data !== 'object') return [];
+
+      if (preferredKey && Array.isArray(data[preferredKey])) {
+        return data[preferredKey];
+      }
+
+      const firstArray = Object.values(data).find((value) => Array.isArray(value));
+      return Array.isArray(firstArray) ? firstArray : [];
+    }
+
+    function emptyTabData(title, description, columns, message) {
+      return {
+        title,
+        description,
+        summary: 'No records found',
+        columns,
+        rows: [[`<strong>${escapeHtml(message)}</strong>`, ...new Array(columns.length - 1).fill('—')]]
+      };
+    }
+
+    function mapAnimalRecord(record) {
+      return {
+        id: record.id,
+        animalType: record.animal_type || '-',
+        breedName: record.breed_name || '-',
+        farmUnit: record.farm_unit || '-',
+        totalAnimals: Number(record.total_animals || 0),
+        newAdditions: Number(record.new_additions || 0),
+        mortalityCount: Number(record.mortality_count || 0),
+        currentHealthState: record.current_health_state || 'Healthy',
+        created_at: record.created_at
+      };
+    }
+
+    function mapVaccinationRecord(record) {
+      return {
+        id: record.id,
+        animalType: record.animal_type || '-',
+        diseaseName: record.disease_name || '-',
+        targetGroup: record.target_group || '-',
+        dateAdministered: record.date_administered,
+        nextDueDate: record.next_due_date,
+        created_at: record.created_at
+      };
+    }
+
+    function mapComplaintRecord(record) {
+      const urgencyShort = String(record.urgency_level || '').split('-')[0].trim();
+
+      return {
+        id: record.id,
+        animalType: record.animal_type || '-',
+        incidentType: record.incident_type || '-',
+        urgencyShort: urgencyShort || 'Low',
+        location: record.location || '-',
+        incidentDate: record.incident_date,
+        created_at: record.created_at,
+        adminPrescription: null,
+        internalDiagnosis: null,
+        prescriptionFileUrl: null
+      };
+    }
+
+    function mapAlertPrescription(record) {
+      if (!record) return null;
+
+      return {
+        complaintId: record.complaint_id,
+        adminPrescription: record.prescription_detail || null,
+        internalDiagnosis: record.internal_diagnosis || null,
+        prescriptionFileUrl: record.prescription_file_url || record.prescription_file_u || null,
+        message: record.message || null,
+        createdAt: record.created_at || null
+      };
+    }
+
+    function normalizeRiskScore(value) {
+      const numericValue = Number(value);
+      if (!Number.isFinite(numericValue)) return 0;
+      if (numericValue <= 1) return Math.round(numericValue * 100);
+      if (numericValue <= 100) return Math.round(numericValue);
+      return 100;
+    }
+
+    function mapAiRecord(record) {
+      return {
+        id: record.id,
+        animalType: record.animalType || record.animal_type || 'Livestock',
+        symptoms: record.symptoms || '-',
+        risk: normalizeRiskScore(record.confidence ?? record.risk),
+        confidence: normalizeRiskScore(record.confidence ?? record.risk),
+        predictedDisease: record.predicted_disease || record.predictedDisease || 'Not available',
+        severity: record.severity || 'Unknown',
+        recommendation: record.recommendation || 'No recommendation available.',
+        imageUrl: record.image_url || record.imageUrl || null,
+        created_at: record.created_at
+      };
+    }
+
+    function makeActionIcons(tabKey, recordId) {
+      return `
+        <div class="action-set">
+          <button type="button" class="action-icon" data-action="view" data-tab="${escapeHtml(tabKey)}" data-record-id="${escapeHtml(recordId)}" aria-label="View record">
+            <i class="fa-solid fa-eye"></i>
+          </button>
+          <button type="button" class="action-icon" data-action="download" data-tab="${escapeHtml(tabKey)}" data-record-id="${escapeHtml(recordId)}" aria-label="Download record">
+            <i class="fa-solid fa-download"></i>
+          </button>
+        </div>
+      `;
+    }
+
+    function getRecordCollection(tabKey) {
+      const collections = {
+        livestock: recordsState.animals,
+        vaccination: recordsState.vaccinations,
+        mortality: recordsState.animals.filter((record) => Number(record.mortalityCount || 0) > 0),
+        complaints: recordsState.complaints,
+        'ai-scan': recordsState.aiHistory
+      };
+
+      return collections[tabKey] || [];
+    }
+
+    function getRecordByTabAndId(tabKey, recordId) {
+      return getRecordCollection(tabKey).find((record) => String(record.id) === String(recordId)) || null;
+    }
+
+    function getRecordDetails(tabKey, record) {
+      if (!record) return [];
+
+      const common = [
+        ['Record ID', record.id],
+        ['Logged On', formatDate(record.created_at)]
+      ];
+
+      if (tabKey === 'livestock' || tabKey === 'mortality') {
+        return [
+          ...common,
+          ['Animal Type', record.animalType],
+          ['Breed Name', record.breedName],
+          ['New Additions', record.newAdditions],
+          ['Total Animals', record.totalAnimals],
+          ['Mortality Count', record.mortalityCount],
+          ['Health State', record.currentHealthState]
+        ];
+      }
+
+      if (tabKey === 'vaccination') {
+        return [
+          ...common,
+          ['Animal Type', record.animalType],
+          ['Disease Name', record.diseaseName],
+          ['Target Group', record.targetGroup],
+          ['Date Administered', formatDate(record.dateAdministered)],
+          ['Next Due Date', formatDate(record.nextDueDate)]
+        ];
+      }
+
+      if (tabKey === 'complaints') {
+        return [
+          ...common,
+          ['Animal Type', record.animalType],
+          ['Incident Type', record.incidentType],
+          ['Urgency', record.urgencyShort],
+          ['Location', record.location],
+          ['Incident Date', formatDate(record.incidentDate)],
+          ['Admin Prescription', record.adminPrescription || 'Not synced yet'],
+          ['Internal Diagnosis', record.internalDiagnosis || 'Not synced yet'],
+          ['Prescription Attachment', record.prescriptionFileUrl ? 'Available below' : 'Not uploaded']
+        ];
+      }
+
+      return [
+        ...common,
+        ['Animal Type', record.animalType],
+        ['Symptoms / Focus', record.symptoms],
+        ['Risk Score', `${record.risk}/100`]
+      ];
+    }
+
+    function openRecordModal(tabKey, record) {
+      const tabLabels = {
+        livestock: 'Livestock Record',
+        vaccination: 'Vaccination Record',
+        mortality: 'Mortality Record',
+        complaints: 'Complaint Record',
+        'ai-scan': 'Diagnosis Details'
+      };
+
+      recordModalTitle.textContent = tabLabels[tabKey] || 'Record Details';
+      recordModalSubtitle.textContent = tabKey === 'ai-scan'
+        ? 'Full AI analysis for this scan.'
+        : `Viewing details for ${record.id}.`;
+
+      if (tabKey === 'ai-scan') {
+        const recommendationLines = String(record.recommendation || '')
+          .split(/\n+/)
+          .map((line) => line.trim())
+          .filter(Boolean);
+
+        const recommendationHtml = recommendationLines.length
+          ? recommendationLines.map((line, index) => `<p style="margin:0 0 8px 0;">${escapeHtml(index + 1 + '. ' + line)}</p>`).join('')
+          : `<p style="margin:0;">No recommendation available.</p>`;
+
+        recordModalBody.innerHTML = `
+          <div class="record-detail-item"><span>Scan ID</span><strong>#${escapeHtml(String(record.id || '').slice(0, 6))}</strong></div>
+          <div class="record-detail-item"><span>Date</span><strong>${escapeHtml(new Date(record.created_at).toLocaleString('en-IN'))}</strong></div>
+          <div class="record-detail-item"><span>Predicted Disease</span><strong>${escapeHtml(record.predictedDisease)}</strong></div>
+          <div class="record-detail-item"><span>Confidence</span><strong>${escapeHtml(String(record.confidence || record.risk || 0))}%</strong></div>
+          <div class="record-detail-item" style="grid-column: 1 / -1;"><span>Symptoms</span><strong>${escapeHtml(record.symptoms || '-')}</strong></div>
+          <div class="record-detail-item" style="grid-column: 1 / -1;"><span>Severity / Assessment</span><strong>${escapeHtml(record.severity || 'Unknown')}</strong></div>
+          <div class="record-detail-item" style="grid-column: 1 / -1;"><span>Recommendation</span><strong style="display:block; font-weight:500; line-height:1.6;">${recommendationHtml}</strong></div>
+        `;
+
+        recordModal.classList.add('open');
+        recordModal.setAttribute('aria-hidden', 'false');
+        return;
+      }
+
+      const detailHtml = getRecordDetails(tabKey, record).map(([label, value]) => `
+        <div class="record-detail-item">
+          <span>${escapeHtml(label)}</span>
+          <strong>${escapeHtml(value ?? 'Not available')}</strong>
+        </div>
+      `).join('');
+
+      const attachmentHtml = tabKey === 'complaints'
+        ? `
+          <div class="record-detail-item" style="grid-column: 1 / -1;">
+            <span>Prescription File (From Admin Alert)</span>
+            <strong>
+              ${record.prescriptionFileUrl
+                ? `<a href="${escapeHtml(record.prescriptionFileUrl)}" target="_blank" rel="noopener noreferrer" style="color:#2563eb; text-decoration:none;">Open uploaded prescription</a>`
+                : 'No file uploaded by admin.'}
+            </strong>
+          </div>
+        `
+        : '';
+
+      recordModalBody.innerHTML = `${detailHtml}${attachmentHtml}`;
+
+      recordModal.classList.add('open');
+      recordModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeRecordModal() {
+      recordModal.classList.remove('open');
+      recordModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function downloadRecord(tabKey, record) {
+      const payload = {
+        recordType: tabKey,
+        exportedAt: new Date().toISOString(),
+        record
+      };
+      const fileName = `${tabKey}-${String(record.id).replace(/[^a-z0-9_-]/gi, '_')}.json`;
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function loadRecordsFromApi() {
+      const [animalsRes, vaccinationsRes, complaintsRes, aiRes] = await Promise.allSettled([
+        fetchJson('/animals'),
+        fetchJson('/vaccinations'),
+        fetchJson('/complaints'),
+        fetchJson('/ai/history')
+      ]);
+
+      const animalsData = animalsRes.status === 'fulfilled' ? animalsRes.value : [];
+      const vaccinationsData = vaccinationsRes.status === 'fulfilled' ? vaccinationsRes.value : [];
+      const complaintsData = complaintsRes.status === 'fulfilled' ? complaintsRes.value : [];
+      const aiData = aiRes.status === 'fulfilled' ? aiRes.value : [];
+      const complaintRecords = pickArray(complaintsData, 'complaints').map(mapComplaintRecord);
+      const complaintIds = complaintRecords.map((item) => String(item.id));
+      let alertsData = [];
+
+      if (currentProfileId && complaintIds.length) {
+        const { data: alertRows, error: alertError } = await supabaseClient
+          .from('alerts')
+          .select('*')
+          .eq('farmer_id', currentProfileId)
+          .eq('type', 'complaint_prescription')
+          .in('complaint_id', complaintIds)
+          .order('created_at', { ascending: false });
+
+        if (alertError) {
+          console.error('Failed to fetch alerts for prescriptions:', alertError);
+        } else {
+          alertsData = Array.isArray(alertRows)
+            ? alertRows.map(mapAlertPrescription).filter(Boolean)
+            : [];
+        }
+      }
+
+      const latestAlertByComplaint = new Map();
+      alertsData.forEach((alertRecord) => {
+        const key = String(alertRecord.complaintId || '');
+        if (!key || latestAlertByComplaint.has(key)) {
+          return;
+        }
+        latestAlertByComplaint.set(key, alertRecord);
+      });
+
+      recordsState.animals = pickArray(animalsData, 'animals').map(mapAnimalRecord);
+      recordsState.vaccinations = pickArray(vaccinationsData, 'vaccinations').map(mapVaccinationRecord);
+      recordsState.complaints = complaintRecords.map((record) => {
+        const alertRecord = latestAlertByComplaint.get(String(record.id));
+        return {
+          ...record,
+          adminPrescription: alertRecord?.adminPrescription || null,
+          internalDiagnosis: alertRecord?.internalDiagnosis || null,
+          prescriptionFileUrl: alertRecord?.prescriptionFileUrl || null
+        };
+      });
+      recordsState.aiHistory = pickArray(aiData, 'history').map(mapAiRecord);
+      recordsState.prescriptionAlerts = alertsData;
+
+      const failedSources = [animalsRes, vaccinationsRes, complaintsRes, aiRes]
+        .filter((result) => result.status === 'rejected')
+        .length;
+
+      if (failedSources > 0) {
+        recordsSummary.textContent = `Loaded with partial data (${failedSources} source${failedSources > 1 ? 's' : ''} unavailable).`;
+      }
+    }
+
     function getDynamicTabData() {
-      const population = window.DigitalFarmRisk.readStore(storageKeys.population, []);
-      const vaccinations = window.DigitalFarmRisk.readStore(storageKeys.vaccination, []);
-      const complaints = window.DigitalFarmRisk.readStore(storageKeys.complaints, []);
-      const aiHistory = window.DigitalFarmRisk.readStore(storageKeys.aiHistory, []);
+      const population = recordsState.animals;
+      const vaccinations = recordsState.vaccinations;
+      const complaints = recordsState.complaints;
+      const aiHistory = recordsState.aiHistory;
 
       const mortalityRows = population
         .filter((record) => Number(record.mortalityCount || 0) > 0)
         .map((record) => [
-          `<strong>${formatDate(record.date)}</strong>`,
-          `#MRT-${record.id.split('-').pop()}`,
-          record.animalType,
-          record.farmUnit,
+          `<strong>${formatDate(record.created_at)}</strong>`,
+          `#MRT-${String(record.id).slice(-6)}`,
+          escapeHtml(record.animalType),
+          `${record.newAdditions}`,
           `${record.mortalityCount} Animals`,
           Number(record.mortalityCount) >= 3 ? statusPill('Critical Review', 'status-critical') : statusPill('Under Review', 'status-pending'),
-          actionIcons
+          makeActionIcons('mortality', record.id)
         ]);
 
       return {
@@ -473,21 +890,26 @@
           title: 'Livestock Logs',
           description: 'Latest population records grouped by animal type, unit, and health state.',
           summary: `Showing ${Math.min(population.length, 5)} of ${population.length} livestock records`,
-          columns: ['Date', 'Record ID', 'Animal Type', 'Breed / Unit', 'Population', 'Health Status', 'Actions'],
+          columns: ['Date', 'Record ID', 'Animal Type', 'Breed / New Additions', 'Population', 'Health Status', 'Actions'],
           rows: population.slice(0, 5).map((record) => [
-            `<strong>${formatDate(record.date)}</strong>`,
+            `<strong>${formatDate(record.created_at)}</strong>`,
             `#${record.id}`,
-            record.animalType,
-            `${record.breedName} • ${record.farmUnit}`,
+            escapeHtml(record.animalType),
+            `${escapeHtml(record.breedName)} - ${record.newAdditions}`,
             `${record.totalAnimals} Animals`,
             String(record.currentHealthState || '').toLowerCase().includes('critical')
               ? statusPill(record.currentHealthState, 'status-critical')
               : String(record.currentHealthState || '').toLowerCase().includes('monitor')
                 ? statusPill(record.currentHealthState, 'status-pending')
                 : statusPill(record.currentHealthState || 'Healthy', 'status-completed'),
-            actionIcons
+            makeActionIcons('livestock', record.id)
           ])
-        } : fallbackTabData.livestock,
+        } : emptyTabData(
+          'Livestock Logs',
+          'Latest population records grouped by animal type, unit, and health state.',
+          ['Date', 'Record ID', 'Animal Type', 'Breed / New Additions', 'Population', 'Health Status', 'Actions'],
+          'No livestock logs have been submitted yet.'
+        ),
         vaccination: vaccinations.length ? {
           title: 'Vaccination History',
           description: 'Cross-animal vaccine logs from poultry, cattle, buffalo, goats, sheep, and pigs.',
@@ -498,59 +920,80 @@
             const status = dueInDays <= 0 ? statusPill('Overdue', 'status-critical') : dueInDays <= 7 ? statusPill('Due Soon', 'status-pending') : statusPill('Completed', 'status-completed');
             return [
               `<strong>${formatDate(record.dateAdministered)}</strong>`,
-              record.animalType,
-              record.diseaseName,
-              record.targetGroup,
+              escapeHtml(record.animalType),
+              escapeHtml(record.diseaseName),
+              escapeHtml(record.targetGroup),
               status,
-              actionIcons
+              makeActionIcons('vaccination', record.id)
             ];
           })
-        } : fallbackTabData.vaccination,
+        } : emptyTabData(
+          'Vaccination History',
+          'Cross-animal vaccine logs from poultry, cattle, buffalo, goats, sheep, and pigs.',
+          ['Date', 'Animal Type', 'Vaccine / Disease', 'Target Group', 'Status', 'Actions'],
+          'No vaccination history has been logged yet.'
+        ),
         mortality: mortalityRows.length ? {
           title: 'Mortality Reports',
           description: 'Loss records organised by species, unit, count, and suspected cause.',
           summary: `Showing ${Math.min(mortalityRows.length, 5)} of ${mortalityRows.length} mortality reports`,
-          columns: ['Date', 'Report ID', 'Animal Type', 'Affected Unit', 'Loss Count', 'Cause / Review', 'Actions'],
+          columns: ['Date', 'Report ID', 'Animal Type', 'New Additions', 'Loss Count', 'Cause / Review', 'Actions'],
           rows: mortalityRows.slice(0, 5)
-        } : fallbackTabData.mortality,
+        } : emptyTabData(
+          'Mortality Reports',
+          'Loss records organised by species, unit, count, and suspected cause.',
+          ['Date', 'Report ID', 'Animal Type', 'New Additions', 'Loss Count', 'Cause / Review', 'Actions'],
+          'No mortality reports are available right now.'
+        ),
         complaints: complaints.length ? {
           title: 'Complaints and Incidents',
           description: 'Farmer complaints submitted from the data entry page with urgency, symptoms, and location details.',
           summary: `Showing ${Math.min(complaints.length, 5)} of ${complaints.length} complaint records`,
           columns: ['Date', 'Complaint ID', 'Animal Type', 'Incident Type', 'Urgency', 'Location', 'Actions'],
           rows: complaints.slice(0, 5).map((record) => [
-            `<strong>${formatDate(record.incidentDate)}</strong>`,
+            `<strong>${formatDate(record.incidentDate || record.created_at)}</strong>`,
             `#${record.id}`,
-            record.animalType,
-            record.incidentType,
+            escapeHtml(record.animalType),
+            escapeHtml(record.incidentType),
             String(record.urgencyShort || '').toLowerCase() === 'high'
               ? statusPill(record.urgencyShort, 'status-critical')
               : String(record.urgencyShort || '').toLowerCase() === 'medium'
                 ? statusPill(record.urgencyShort, 'status-pending')
                 : statusPill(record.urgencyShort || 'Low', 'status-info'),
-            record.location,
-            actionIcons
+            escapeHtml(record.location),
+            makeActionIcons('complaints', record.id)
           ])
-        } : fallbackTabData.complaints,
+        } : emptyTabData(
+          'Complaints and Incidents',
+          'Farmer complaints submitted from the data entry page with urgency, symptoms, and location details.',
+          ['Date', 'Complaint ID', 'Animal Type', 'Incident Type', 'Urgency', 'Location', 'Actions'],
+          'No complaint records have been submitted yet.'
+        ),
         'ai-scan': aiHistory.length ? {
           title: 'AI Scan History',
           description: 'AI diagnostic outputs and risk scores for different farm areas and animal groups.',
           summary: `Showing ${Math.min(aiHistory.length, 5)} of ${aiHistory.length} AI scan reports`,
           columns: ['Date', 'Scan ID', 'Animal / Area', 'Symptoms or Focus', 'Risk Score', 'Result', 'Actions'],
-          rows: aiHistory.slice().reverse().slice(0, 5).map((record) => [
-            `<strong>${formatDate(record.dateISO || record.date)}</strong>`,
+          rows: aiHistory.slice(0, 5).map((record) => [
+            `<strong>${formatDate(record.created_at)}</strong>`,
             `#SCAN-${record.id}`,
-            `${(record.animalType || 'Animal').toString().toUpperCase()} • AI Check`,
-            record.symptoms,
+            `${escapeHtml((record.animalType || 'Animal').toString().toUpperCase())} - AI Check`,
+            escapeHtml(record.symptoms),
             `${record.risk}/100`,
             record.risk >= 80 ? statusPill('High Risk', 'status-critical') : record.risk >= 50 ? statusPill('Observe', 'status-pending') : statusPill('Low Risk', 'status-completed'),
-            actionIcons
+            makeActionIcons('ai-scan', record.id)
           ])
-        } : fallbackTabData['ai-scan']
+        } : emptyTabData(
+          'AI Scan History',
+          'AI diagnostic outputs and risk scores for different farm areas and animal groups.',
+          ['Date', 'Scan ID', 'Animal / Area', 'Symptoms or Focus', 'Risk Score', 'Result', 'Actions'],
+          'No AI scan history is available yet.'
+        )
       };
     }
 
     function renderTable(tabKey) {
+      currentTab = tabKey;
       const tabData = getDynamicTabData();
       const selected = tabData[tabKey];
 
@@ -563,6 +1006,17 @@
         </tr>
       `).join('');
       recordsSummary.textContent = selected.summary;
+    }
+
+    function renderStats() {
+      const statEls = document.querySelectorAll('.stat-card h3');
+      if (statEls.length < 4) return;
+
+      const mortalityAndComplaints = recordsState.animals.filter((item) => item.mortalityCount > 0).length + recordsState.complaints.length;
+      statEls[0].textContent = String(recordsState.animals.length);
+      statEls[1].textContent = String(recordsState.vaccinations.length);
+      statEls[2].textContent = String(mortalityAndComplaints);
+      statEls[3].textContent = String(recordsState.aiHistory.length);
     }
 
     profileMenuButton.addEventListener('click', () => {
@@ -590,7 +1044,79 @@
       });
     });
 
-    renderTable('livestock');
+    recordsTableBody.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+
+      const { action, tab, recordId } = button.dataset;
+      const record = getRecordByTabAndId(tab || currentTab, recordId);
+      if (!record) return;
+
+      if (action === 'view') {
+        openRecordModal(tab || currentTab, record);
+        return;
+      }
+
+      if (action === 'download') {
+        downloadRecord(tab || currentTab, record);
+      }
+    });
+
+    recordModalClose.addEventListener('click', closeRecordModal);
+    recordModal.addEventListener('click', (event) => {
+      if (event.target === recordModal) {
+        closeRecordModal();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && recordModal.classList.contains('open')) {
+        closeRecordModal();
+      }
+    });
+
+    async function initializeRecordsPage() {
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      if (user) {
+        currentProfileId = user.profileId || user.id || null;
+        const displayName = user.name || user.full_name || user.email || 'Farmer';
+        const firstName = displayName.split(' ')[0];
+        const initial = displayName.trim().charAt(0).toUpperCase() || 'F';
+        const avatarEl = document.querySelector('.profile-avatar');
+
+        document.querySelector('.profile-name').textContent = `Hello, ${firstName}!`;
+        if (avatarEl) {
+          if (user.avatar_url) {
+            avatarEl.textContent = '';
+            avatarEl.style.backgroundImage = `url('${user.avatar_url}')`;
+            avatarEl.style.backgroundSize = 'cover';
+            avatarEl.style.backgroundPosition = 'center';
+            avatarEl.style.backgroundRepeat = 'no-repeat';
+            avatarEl.style.color = 'transparent';
+          } else {
+            avatarEl.textContent = initial;
+            avatarEl.style.backgroundImage = '';
+            avatarEl.style.color = '';
+          }
+        }
+      }
+
+      try {
+        await loadRecordsFromApi();
+      } catch (error) {
+        console.error('Failed to load records', error);
+        recordsState.animals = [];
+        recordsState.vaccinations = [];
+        recordsState.complaints = [];
+        recordsState.aiHistory = [];
+        recordsSummary.textContent = 'Unable to load records. Please login and try again.';
+      }
+
+      renderStats();
+      renderTable('livestock');
+    }
+
+    initializeRecordsPage();
   </script>
 
 </body>
