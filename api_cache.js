@@ -10,6 +10,29 @@ const pendingRequests = new Map();
   const CACHE_PREFIX = 'digitalFarmFetchCache::';
   const API_HOSTS = new Set(['localhost', '127.0.0.1']);
   const WEATHER_HOSTS = new Set(['api.open-meteo.com', 'geocoding-api.open-meteo.com']);
+  const LOCAL_API_BASE = 'http://localhost:5000/api/v1';
+  const RENDER_API_BASE = 'https://digitalfarm-backend.onrender.com/api/v1';
+
+  function isLocalFrontend() {
+    const host = window.location.hostname;
+    return !host || host === 'localhost' || host === '127.0.0.1';
+  }
+
+  function rewriteLocalApiUrl(url) {
+    try {
+      const parsed = new URL(url, window.location.href);
+      if (parsed.origin === 'http://localhost:5000' && parsed.pathname.startsWith('/api/v1/')) {
+        if (isLocalFrontend()) {
+          return url;
+        }
+        return url.replace('http://localhost:5000/api/v1', RENDER_API_BASE);
+      }
+    } catch (error) {
+      // Ignore parse errors and keep original URL
+    }
+    return url;
+  }
+
   const originalFetch = window.fetch.bind(window);
 
   function normalizeHeaders(headersLike) {
@@ -144,8 +167,32 @@ const pendingRequests = new Map();
     keysToRemove.forEach((key) => localStorage.removeItem(key));
   }
 
+  async function fetchWithFallback(inputValue, initValue, requestedUrl) {
+    try {
+      return await originalFetch(inputValue, initValue);
+    } catch (error) {
+      if (typeof requestedUrl === 'string' && requestedUrl.startsWith(LOCAL_API_BASE)) {
+        const fallbackUrl = requestedUrl.replace(LOCAL_API_BASE, RENDER_API_BASE);
+        const fallbackInput = typeof inputValue === 'string'
+          ? fallbackUrl
+          : new Request(fallbackUrl, inputValue);
+        return await originalFetch(fallbackInput, initValue);
+      }
+      throw error;
+    }
+  }
+
   window.fetch = async (input, init = {}) => {
-    const requestUrl = typeof input === 'string' ? input : input.url;
+    let requestUrl = typeof input === 'string' ? input : input.url;
+    const effectiveUrl = rewriteLocalApiUrl(requestUrl);
+    let effectiveInput = input;
+
+    if (typeof input === 'string') {
+      effectiveInput = effectiveUrl;
+    } else if (effectiveUrl !== requestUrl) {
+      effectiveInput = new Request(effectiveUrl, input);
+    }
+
     const method = String(
       init.method || (typeof input !== 'string' ? input.method : 'GET') || 'GET'
     ).toUpperCase();
@@ -153,7 +200,7 @@ const pendingRequests = new Map();
       init.headers || (typeof input !== 'string' ? input.headers : undefined)
     );
 
-    if (isCacheableGet(requestUrl, method)) {
+    if (isCacheableGet(effectiveUrl, method)) {
       const absoluteUrl = new URL(requestUrl, window.location.href).toString();
       const cacheKey = buildCacheKey(absoluteUrl, authScope);
       const ttlMs = getTtlForUrl(absoluteUrl);
@@ -177,7 +224,7 @@ const pendingRequests = new Map();
         return pendingResponse.clone();
       }
 
-      const fetchPromise = originalFetch(input, init)
+      const fetchPromise = fetchWithFallback(effectiveInput, init, effectiveUrl)
         .then(async (response) => {
           if (response.ok) {
             await storeResponse(cacheKey, response);
@@ -193,11 +240,11 @@ const pendingRequests = new Map();
       return response.clone();
     }
 
-    const response = await originalFetch(input, init);
+    const response = await fetchWithFallback(effectiveInput, init, effectiveUrl);
 
     if (response.ok) {
       try {
-        const parsed = new URL(requestUrl, window.location.href);
+        const parsed = new URL(effectiveUrl, window.location.href);
         if (
           API_HOSTS.has(parsed.hostname) &&
           parsed.port === '5000' &&
