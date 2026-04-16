@@ -8,7 +8,7 @@ const AdminRiskEngine = (() => {
   async function fetchAllData(supabaseClient) {
     const [animals, complaints] = await Promise.all([
       supabaseClient.from('animals').select('*'),
-      fetch("http://localhost:5000/api/v1/complaints").then(res => res.json())
+      fetch("https://digitalfarm-backend.onrender.com/api/v1/complaints").then(res => res.json())
     ]);
 
     return {

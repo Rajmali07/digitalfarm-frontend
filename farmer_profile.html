@@ -259,7 +259,7 @@
     document.querySelector('.btn-edit').addEventListener('click', function () {
       window.location.href = 'farmer_edit_profile.html';
     });
-    const API_BASE_URL = 'http://localhost:5000/api/v1';
+    const API_BASE_URL = 'https://digitalfarm-backend.onrender.com/api/v1';
     const getStoredProfilePhotoKey = (profileId) => `profile_photo_${profileId}`;
 
     const applyStoredPhoto = (profileId) => {

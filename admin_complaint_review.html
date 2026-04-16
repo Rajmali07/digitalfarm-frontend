@@ -615,7 +615,7 @@
     if (!id) return;
 
     try {
-      await fetch(`http://localhost:5000/api/v1/complaints/${id}/seen`, {
+      await fetch(`https://digitalfarm-backend.onrender.com/api/v1/complaints/${id}/seen`, {
         method: 'PATCH',
         headers: {
           ...getAuthHeaders()
@@ -944,7 +944,7 @@ async function fetchComplaints() {
       requestBody.append('resourceFile', attachmentFile);
     }
 
-    const res = await fetch(`http://localhost:5000/api/v1/complaints/${selectedComplaintId}`, {
+    const res = await fetch(`https://digitalfarm-backend.onrender.com/api/v1/complaints/${selectedComplaintId}`, {
       method: 'PUT',
       headers: {
         ...getAuthHeaders()

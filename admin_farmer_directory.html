@@ -265,7 +265,7 @@ if (!token) {
         // Fetch farmers, animals, and complaints in parallel
         const [res, animalsRes, complaintsRes] = await Promise.all([
             fetch(
-                `http://localhost:5000/api/v1/admin/farmers?state=${stateFilter.value}&district=${districtFilter.value}&village=${villageFilter.value}`,
+                `https://digitalfarm-backend.onrender.com/api/v1/admin/farmers?state=${stateFilter.value}&district=${districtFilter.value}&village=${villageFilter.value}`,
                 {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem("token")}`
@@ -273,7 +273,7 @@ if (!token) {
                 }
             ),
             supabaseClient.from('animals').select('*'),
-            fetch('http://localhost:5000/api/v1/complaints', {
+            fetch('https://digitalfarm-backend.onrender.com/api/v1/complaints', {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
             }).then(r => r.json())
         ]);
