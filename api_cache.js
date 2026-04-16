@@ -8,24 +8,67 @@ const pendingRequests = new Map();
   window.__digitalFarmFetchCacheInstalled = true;
 
   const CACHE_PREFIX = 'digitalFarmFetchCache::';
-  const API_HOSTS = new Set(['localhost', '127.0.0.1']);
+  const API_HOSTS = new Set(['localhost', '127.0.0.1', 'digitalfarm-backend.onrender.com']);
   const WEATHER_HOSTS = new Set(['api.open-meteo.com', 'geocoding-api.open-meteo.com']);
   const LOCAL_API_BASE = 'http://localhost:5000/api/v1';
   const RENDER_API_BASE = 'https://digitalfarm-backend.onrender.com/api/v1';
+  const SAME_ORIGIN_API_BASE = `${window.location.origin}/api/v1`;
+
+  function hasApiOnSameOrigin() {
+    const host = window.location.hostname;
+    const port = window.location.port;
+
+    if (!host) {
+      return false;
+    }
+
+    if ((host === 'localhost' || host === '127.0.0.1') && port === '5000') {
+      return true;
+    }
+
+    return host.endsWith('.onrender.com');
+  }
 
   function isLocalFrontend() {
     const host = window.location.hostname;
     return !host || host === 'localhost' || host === '127.0.0.1';
   }
 
+  function getApiBaseUrl() {
+    if (hasApiOnSameOrigin()) {
+      return SAME_ORIGIN_API_BASE;
+    }
+
+    return isLocalFrontend() ? LOCAL_API_BASE : RENDER_API_BASE;
+  }
+
+  const ACTIVE_API_BASE = getApiBaseUrl();
+
+  function stripApiBase(pathname) {
+    return pathname.startsWith('/api/v1')
+      ? pathname.slice('/api/v1'.length)
+      : pathname;
+  }
+
+  function buildApiUrl(pathname, search = '') {
+    return `${ACTIVE_API_BASE}${stripApiBase(pathname)}${search}`;
+  }
+
+  window.__DIGITAL_FARM_API_BASE = ACTIVE_API_BASE;
+  window.digitalFarmApi = (path = '') => buildApiUrl(path.startsWith('/') ? path : `/${path}`);
+
   function rewriteLocalApiUrl(url) {
     try {
       const parsed = new URL(url, window.location.href);
-      if (parsed.origin === 'http://localhost:5000' && parsed.pathname.startsWith('/api/v1/')) {
-        if (isLocalFrontend()) {
-          return url;
+      if (parsed.pathname.startsWith('/api/v1/')) {
+        const isKnownApiOrigin =
+          parsed.origin === window.location.origin ||
+          parsed.origin === 'http://localhost:5000' ||
+          parsed.origin === 'https://digitalfarm-backend.onrender.com';
+
+        if (isKnownApiOrigin) {
+          return buildApiUrl(parsed.pathname, parsed.search);
         }
-        return url.replace('http://localhost:5000/api/v1', RENDER_API_BASE);
       }
     } catch (error) {
       // Ignore parse errors and keep original URL
@@ -82,8 +125,7 @@ const pendingRequests = new Map();
     try {
       const parsed = new URL(url, window.location.href);
       const isLocalApi =
-        API_HOSTS.has(parsed.hostname) &&
-        parsed.port === '5000' &&
+        (API_HOSTS.has(parsed.hostname) || parsed.origin === window.location.origin) &&
         parsed.pathname.startsWith('/api/v1/');
       const isWeatherApi = WEATHER_HOSTS.has(parsed.hostname);
       return isLocalApi || isWeatherApi;
@@ -171,7 +213,11 @@ const pendingRequests = new Map();
     try {
       return await originalFetch(inputValue, initValue);
     } catch (error) {
-      if (typeof requestedUrl === 'string' && requestedUrl.startsWith(LOCAL_API_BASE)) {
+      if (
+        typeof requestedUrl === 'string' &&
+        requestedUrl.startsWith(LOCAL_API_BASE) &&
+        isLocalFrontend()
+      ) {
         const fallbackUrl = requestedUrl.replace(LOCAL_API_BASE, RENDER_API_BASE);
         const fallbackInput = typeof inputValue === 'string'
           ? fallbackUrl
@@ -246,8 +292,7 @@ const pendingRequests = new Map();
       try {
         const parsed = new URL(effectiveUrl, window.location.href);
         if (
-          API_HOSTS.has(parsed.hostname) &&
-          parsed.port === '5000' &&
+          (API_HOSTS.has(parsed.hostname) || parsed.origin === window.location.origin) &&
           parsed.pathname.startsWith('/api/v1/')
         ) {
           clearApiCache(authScope);

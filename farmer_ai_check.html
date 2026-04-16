@@ -63,6 +63,14 @@
         .result-content { display: none; text-align: left; width: 100%; }
         .result-badge { display: inline-block; padding: 6px 15px; border-radius: 50px; font-weight: 700; font-size: 12px; margin-bottom: 15px; text-transform: uppercase; }
         .badge-critical { background: #fee2e2; color: #991b1b; }
+        .confidence-meter { margin: 12px 0 18px; }
+        .confidence-track { width: 100%; height: 10px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+        .confidence-fill { height: 100%; width: 0%; border-radius: 999px; background: linear-gradient(90deg, #22c55e 0%, #8b5cf6 100%); transition: width 0.6s ease; }
+        .result-highlight { font-size: 13px; color: #475569; margin-bottom: 14px; }
+        .suggestion-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-top: 14px; }
+        .suggestion-box h4 { font-size: 14px; margin-bottom: 8px; color: #0f172a; }
+        .suggestion-box ul { margin: 0; padding-left: 18px; color: #334155; font-size: 13px; line-height: 1.7; }
+        .suggestion-box li { margin-bottom: 4px; }
         .treatment-box { background: #f0fdf4; border-radius: 12px; padding: 20px; border-left: 5px solid var(--primary); margin-top: 20px; }
 
         .history-container { margin: 50px auto; max-width: 1020px; background: white; padding: 30px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 1px solid var(--border); }
@@ -187,16 +195,37 @@
             </div>
 
             <div class="loader" id="loader"></div>
-            <p id="loadingText" style="display:none; color: var(--ai-purple); font-weight: 700;">Scanning Biological Data...</p>
+            <p id="loadingText" style="display:none; color: var(--ai-purple); font-weight: 700;">Analyzing image...</p>
 
             <div class="result-content" id="resultContent">
                 <span class="result-badge badge-critical" id="resSeverity">Verification Result</span>
                 <h2 id="resDisease" style="font-size: 26px; margin-bottom: 10px;">Status</h2>
                 <p id="resConfidence" style="font-size: 14px; color: var(--text-gray); margin-bottom: 20px;">AI Precision Level: 0%</p>
+                <p id="resHighlight" class="result-highlight">Confidence visualization pending...</p>
+                <div class="confidence-meter">
+                    <div class="confidence-track">
+                        <div id="resConfidenceFill" class="confidence-fill"></div>
+                    </div>
+                </div>
                 
                 <div style="border-top: 1px solid #f1f5f9; padding-top: 15px;">
                     <h4 style="font-size: 15px; margin-bottom: 8px;"><i class="fa-solid fa-list-check"></i> Symptoms Analysis:</h4>
                     <p id="resAnalysis" style="font-size: 14px; color: #475569;">Analysis report here.</p>
+                </div>
+
+                <div class="suggestion-box">
+                    <h4><i class="fa-solid fa-circle-question"></i> Likely Causes</h4>
+                    <ul id="resCauses"><li>Pending AI response.</li></ul>
+                </div>
+
+                <div class="suggestion-box">
+                    <h4><i class="fa-solid fa-syringe"></i> Treatment Suggestions</h4>
+                    <ul id="resTreatment"><li>Pending AI response.</li></ul>
+                </div>
+
+                <div class="suggestion-box">
+                    <h4><i class="fa-solid fa-shield"></i> Prevention Tips</h4>
+                    <ul id="resPrevention"><li>Pending AI response.</li></ul>
                 </div>
 
                 <div class="treatment-box">
@@ -281,7 +310,7 @@
 
     <script src="risk_engine.js"></script>
     <script>
-        const API_BASE_URL = 'https://digitalfarm-backend.onrender.com/api/v1';
+        const API_BASE_URL = '/api/v1';
 
         const profileBtn = document.getElementById('profileMenuButton');
         const profileDropdown = document.getElementById('profileDropdown');
@@ -295,6 +324,7 @@
         const uploadText = document.getElementById('uploadText');
         const historyModal = document.getElementById('historyModal');
         const historyModalClose = document.getElementById('historyModalClose');
+        const analyzeButton = aiForm.querySelector('button[type="submit"]');
         let historyItems = [];
 
         function getToken() {
@@ -335,17 +365,43 @@
         }
 
         function setLoadingState(isLoading) {
-            defaultMsg.style.display = isLoading ? 'none' : 'block';
-            resultContent.style.display = 'none';
+            if (isLoading) {
+                defaultMsg.style.display = 'none';
+                resultContent.style.display = 'none';
+            }
+
             loader.style.display = isLoading ? 'block' : 'none';
             scanLine.style.display = isLoading ? 'block' : 'none';
             loadingText.style.display = isLoading ? 'block' : 'none';
+
+            if (analyzeButton) {
+                analyzeButton.disabled = isLoading;
+                analyzeButton.innerHTML = isLoading
+                    ? '<i class="fa-solid fa-spinner fa-spin"></i> ANALYZING IMAGE...'
+                    : '<i class="fa-solid fa-wand-magic-sparkles"></i> START AI ANALYSIS';
+            }
+        }
+
+        function renderListItems(items, fallback) {
+            const list = Array.isArray(items)
+                ? items.map((item) => String(item || '').trim()).filter(Boolean)
+                : [];
+
+            if (!list.length) {
+                return `<li>${escapeHtml(fallback)}</li>`;
+            }
+
+            return list.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
         }
 
         function getFriendlyAiErrorMessage(message) {
             const normalized = String(message || '').toLowerCase();
 
             if (
+                normalized.includes('429') ||
+                normalized.includes('quota') ||
+                normalized.includes('rate limit') ||
+                normalized.includes('too many requests') ||
                 normalized.includes('503') ||
                 normalized.includes('service unavailable') ||
                 normalized.includes('high demand') ||
@@ -364,8 +420,13 @@
             const severity = result.severity || riskMeta.label;
             const gemini = result.gemini || {};
             const ml = result.ml || {};
-            const geminiConfidence = normalizeConfidence(gemini.confidence || confidence);
+            const geminiAvailable = Boolean(gemini && gemini.available !== false && (gemini.analysis || gemini.disease));
+            const geminiConfidence = geminiAvailable ? normalizeConfidence(gemini.confidence) : null;
             const mlConfidence = normalizeConfidence(ml.confidence);
+            const visualConfidence = geminiAvailable
+                ? Math.max(0, Math.min(100, geminiConfidence))
+                : Math.max(0, Math.min(100, mlConfidence));
+            const confidenceEmoji = visualConfidence >= 90 ? '🔥' : visualConfidence >= 70 ? '⚠️' : '✅';
             const mlTopPredictions = Array.isArray(ml.predictions) && ml.predictions.length
                 ? ml.predictions.slice(0, 3).map((item) => `${item.class} (${normalizeConfidence(item.confidence)}%)`).join(', ')
                 : '';
@@ -395,11 +456,26 @@
             severityBadge.className = `result-badge ${riskMeta.className}`;
 
             document.getElementById('resDisease').innerText = `Detected: ${result.disease || 'Unknown'}`;
-            document.getElementById('resConfidence').innerText = ml.available
+            document.getElementById('resConfidence').innerText = geminiAvailable
                 ? `Gemini Confidence: ${geminiConfidence}% | ML Confidence: ${mlConfidence}%`
-                : `AI Confidence: ${confidence}%`;
+                : `Gemini unavailable | ML Confidence: ${mlConfidence}%`;
+            document.getElementById('resHighlight').innerText = `${result.disease || 'Unknown'} (${visualConfidence}%) ${confidenceEmoji}`;
+            document.getElementById('resConfidenceFill').style.width = `${visualConfidence}%`;
             document.getElementById('resAnalysis').innerText = combinedAnalysis;
             document.getElementById('resAction').innerHTML = `<b>Action:</b> ${combinedRecommendation}`;
+
+            document.getElementById('resCauses').innerHTML = renderListItems(
+                result.causes,
+                'No specific causes returned. Use symptom history and consult vet.'
+            );
+            document.getElementById('resTreatment').innerHTML = renderListItems(
+                result.treatment,
+                'Follow immediate isolation and consult veterinarian treatment protocol.'
+            );
+            document.getElementById('resPrevention').innerHTML = renderListItems(
+                result.prevention,
+                'Maintain sanitation, vaccination, and early symptom monitoring.'
+            );
         }
 
         function updateProfileUI() {
@@ -495,12 +571,12 @@
                 await loadHistory();
             } catch (err) {
                 console.error(err);
-                loader.style.display = 'none';
-                scanLine.style.display = 'none';
-                loadingText.style.display = 'none';
+                setLoadingState(false);
                 defaultMsg.style.display = 'block';
                 resultContent.style.display = 'none';
                 alert(getFriendlyAiErrorMessage(err.message));
+            } finally {
+                setLoadingState(false);
             }
         };
 
